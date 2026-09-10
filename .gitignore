@@ -1,0 +1,26 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Local deployment state
+.vercel/
+supabase/.temp/
+supabase/.branches/
+
+# Logs and operating system metadata
+*.log
+.DS_Store
+Thumbs.db
