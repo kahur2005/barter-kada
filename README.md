@@ -12,8 +12,9 @@ Target awal adalah demo terintegrasi selama 9 hari × 3 jam, bukan peluncuran tr
 
 - [PRD v1.3](docs/PRD.md): kebutuhan produk dan keputusan brainstorming.
 - [RFC-001](docs/RFC-001-arsitektur-barter.md): rancangan arsitektur, database, API, otorisasi, dan pengujian.
+- [Matriks cakupan RFC-001](docs/RFC-001-matriks-cakupan.md): pemetaan butir PRD ke rancangan, data/API, tes, dan prioritas demo.
 
-Keduanya masih berupa draft. Keputusan yang belum final ditandai di dalam dokumen.
+Dokumen masih berupa draft. Keputusan yang belum final ditandai di dalam dokumen. Pemetaan kebutuhan dan skenario tes belum berarti implementasi atau pengujiannya sudah selesai.
 
 ## Teknologi
 

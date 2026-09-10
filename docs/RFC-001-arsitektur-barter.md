@@ -1,10 +1,14 @@
 # RFC-001 — Arsitektur dan Eksekusi Teknis Barter
 
 Status: **Draft untuk ditinjau**  
+Revisi dokumen: **1.1 — pelengkapan cakupan dan traceability**
+Tanggal revisi: **11 September 2026**
 Tanggal: 10 September 2026  
 Acuan produk: [PRD v1.3](./PRD.md)  
 Target: demo terintegrasi, 9 hari × 3 jam; belum menerima transaksi nyata  
 Lingkup perubahan saat penyusunan RFC: dokumentasi saja
+
+Lampiran normatif rancangan: [Matriks PRD → RFC → data/API → tes → prioritas demo](./RFC-001-matriks-cakupan.md). Revisi 1.1 melengkapi rincian di bagian 21–25. Persetujuan pengguna untuk melengkapi dokumen tidak diperlakukan sebagai persetujuan otomatis D-01–D-16 atau kebijakan produk lain yang masih terbuka. Seluruh tes dalam dokumen ini masih rencana.
 
 ## 1. Ringkasan keputusan
 
@@ -169,7 +173,7 @@ Nama berikut adalah rancangan schema, bukan SQL migration yang sudah dijalankan.
 | `service_areas` | area_id, name, polygon, enabled, source_version | Seed wilayah resmi/terverifikasi; Kepulauan Seribu dikecualikan |
 | `stores` | id, owner_id, name, slug, description, operating_hours, status | owner immutable dalam demo; jumlah toko dijaga dengan lock akun |
 | `private.store_locations` | store_id, exact_point, address, consent_public_at | Alamat lengkap hanya diproyeksikan jika pemilik mengizinkan |
-| `listings` | id, owner_id, store_id nullable, category_id, title, description, condition, lifecycle, version | store_id harus milik owner; pemilik tidak berganti setelah ada transaksi |
+| `listings` | id, owner_id, store_id nullable, category_id, title, description, condition, defects, negotiable, barter_preferences, category_attributes, lifecycle, version | store_id harus milik owner; pemilik tidak berganti setelah ada transaksi; field/validasi bagian 21 |
 | `listing_modes` | listing_id, mode: sale/barter/free | sale+barter boleh; free eksklusif |
 | `listing_variants` | id, listing_id, label, unit, price_rupiah, active | Varian harus milik listing pada baris pesanan |
 | `listing_discovery` | listing_id, area_id, approximate_point, search_vector, price_min, price_max | Hanya proyeksi tanpa koordinat/alamat privat; tidak bisa ditulis klien |
@@ -227,6 +231,8 @@ Relasi listing/variant/pool diperiksa menggunakan foreign key komposit jika memu
 | `private.rate_limit_buckets` | subject hash, purpose, window, count |
 | `private.admin_roles` | user_id, role, granted_by, revoked_at |
 | `private.system_jobs` | dedupe_key, kind, due_at, attempts, status, last_error |
+
+Entitas tambahan revisi 1.1: categories/category_field_rules, listing_fulfillment_options, catering_terms, plan_settings_versions/settings_audit (bagian 21–22), transaction_amendments/refund_requests/refund_confirmations (bagian 23), dan private.product_events/listing_visibility_periods/user_activity_days/metric_rollups (bagian 24). Entitas tersebut juga tunduk pada grants/RLS dan batas mutasi bagian 5; bukan tabel bebas CRUD untuk browser.
 
 Jangan membuat semua tabel sebagai syarat layar pertama. Migration dibagi menurut alur vertikal pada bagian 18; model lengkap memberi arah konsisten ketika modul bertambah.
 
@@ -304,7 +310,7 @@ Untuk jual preloved tidak ada kewajiban melewati processing. Untuk gratis total 
 - PO sebelum processing dapat dibatalkan pembeli dengan alasan. Setelah processing, buat cancellation request untuk keputusan penjual.
 - Jika ada DP, pembatalan menyimpan jumlah yang telah diakui dan status kebutuhan penanganan pengembalian. Ketentuan snapshot menjadi acuan; aplikasi tidak otomatis menganggap uang hangus atau sudah dikembalikan.
 - Setelah ada penerimaan barang, pembatalan biasa ditolak dengan `DISPUTE_REQUIRED`.
-- Ketika ada pembayaran tercatat, perintah edit nominal langsung ditolak `PAID_ORDER_AMENDMENT_REQUIRED` pada demo (D-03). Pembahasan perubahan tetap melalui chat/admin. Dukungan penuh membutuhkan proposal amendmen, perhitungan tambahan/refund, dan persetujuan ulang tanpa kehilangan pembayaran lama; ini pekerjaan lanjutan yang terlihat jelas di UI.
+- Ketika ada pembayaran tercatat, perintah edit nominal langsung ditolak `PAID_ORDER_AMENDMENT_REQUIRED`. Rancangan lengkap memakai proposal amendmen pada bagian 23, bukan mengubah tagihan/receipt lama. Penundaan UI amendmen untuk demo tetap usulan D-03 yang perlu keputusan prioritas; jika ditunda, UI menjelaskan jalur chat/admin dan keterbatasan secara eksplisit.
 
 ### 7.5 Pesanan dan barter menggantung
 
@@ -316,7 +322,7 @@ Setelah konfirmasi penerimaan pertama, catat `first_received_at`. Reminder mengg
 
 Semua jalur sale/barter/free/PO memakai pool dan fungsi reservasi yang sama. Tidak boleh ada stok terpisah untuk mode jual dan barter pada listing yang sama.
 
-Setiap mutasi mengikuti urutan lock konsisten: account guards yang diperlukan (urut UUID), transaksi (urut UUID jika lebih dari satu), listing terkait (urut UUID), lalu pool (urut UUID). Daftar participant/owner immutable dapat dibaca sebelum lock; setelah lock selalu validasi ulang. Jangan memperbarui transaksi pesaing saat memegang lock pool; notifikasinya diproses sebagai pekerjaan terpisah agar tidak membentuk siklus lock.
+Setiap mutasi mengikuti urutan lock konsisten: konfigurasi paket bila relevan (shared lock untuk pengguna, exclusive lock untuk perubahan admin), account guards yang diperlukan (urut UUID), transaksi (urut UUID jika lebih dari satu), listing terkait (urut UUID), lalu pool (urut UUID). Daftar participant/owner immutable dapat dibaca sebelum lock; setelah lock selalu validasi ulang. Jangan memperbarui transaksi pesaing saat memegang lock pool; notifikasinya diproses sebagai pekerjaan terpisah agar tidak membentuk siklus lock.
 
 Dalam satu database transaction:
 
@@ -428,6 +434,12 @@ Supabase dapat memakai satu function per kelompok dengan router internal; URL pa
 | Admin | `assign_report`, `record_report_decision`, `apply_sanction`, `hide_listing` | Role DB aktif, alasan wajib, audit |
 | Review | `submit_review`, `reply_review`, `report_review` | Transaksi selesai, target dari server, satu review |
 | Notifikasi | `list_notifications`, `mark_notification_read` | Recipient saja |
+| Pengaturan admin | `get_plan_settings`, `update_plan_limits`, `list_settings_history` | Admin capability settings; hanya batas yang diizinkan, versi, alasan, audit; bagian 22 |
+| Amendmen | `propose_amendment`, `accept_amendment`, `reject_amendment`, `withdraw_amendment` | Snapshot baru, counterpart consent, delta kuota dan saldo; bagian 23 |
+| Pengembalian | `propose_refund`, `accept_refund`, `record_refund_sent`, `confirm_refund_received` | Kesepakatan/judgment, uang langsung antar pihak, receipt terpisah; bagian 23 |
+| Analytics | `record_activity_day`, `get_product_metrics` | Aktivitas sendiri yang diminimalkan; hasil agregat hanya admin; bagian 24 |
+| Batch dan kapasitas | `create_preorder_batch`, `close_preorder_batch`, `update_inventory_capacity` | Owner, jadwal, pool per batch/varian, kapasitas tidak di bawah held+consumed; bagian 21.3 |
+| Blokir | `block_user`, `unblock_user` | Actor hanya mengubah daftar blokir sendiri; tidak menutup jalur kasus/transaksi aktif sesuai D-08 |
 
 Jangan sediakan endpoint umum `set_transaction_status`, `set_verified`, atau `set_plus_active` untuk browser. Completion dan perubahan entitlement adalah hasil perintah yang tervalidasi.
 
@@ -538,7 +550,7 @@ Toko yang Plus-nya habis menjadi tidak visible secara efektif tanpa harus menung
 
 ### 14.2 Simulasi pembayaran
 
-- Server membuat invoice Rp20.000 IDR, method=qris/virtual_account, mode=dummy, pending. UI menampilkan QR/VA ilustrasi yang tidak dapat dipakai untuk transfer dan tulisan simulasi.
+- Server membuat invoice Rp20.000 IDR dari versi konfigurasi harga yang berlaku, method=qris/virtual_account, mode=dummy, pending. Nominal dan versi disalin ke invoice; endpoint perubahan batas admin tidak dapat mengganti harga. UI menampilkan QR/VA ilustrasi yang tidak dapat dipakai untuk transfer dan tulisan simulasi.
 - Success hanya melalui function demo dengan token pengguna, invoice miliknya, allowlist user demo, serta konfigurasi server `BILLING_MODE=dummy` dan project environment non-live.
 - Invoice pending -> paid/failed/expired hanya sekali. Callback ulang paid mengembalikan hasil yang sama, tanpa memperpanjang dua kali.
 - Aktivasi invoice dan penambahan paid_through berada dalam satu transaksi, lock baris subscription.
@@ -625,6 +637,41 @@ Ini rencana pengujian implementasi, bukan hasil tes aplikasi yang sudah dijalank
 | T-18 | Jalur dummy dipanggil pada konfigurasi live | Ditolak server, walau request dibuat manual | Integration |
 | T-19 | Pembatalan transaksi yang sudah selesai lalu laporan pengembalian | Stock consumed tidak tiba-tiba tersedia | SQL |
 | T-20 | Logout A lalu login B pada browser sama | Tidak ada cache chat/transaksi A tersisa | E2E |
+| T-21 | Semua jalur Google/email, field profil, OTP, ganti nomor, reset password | Jalur login benar; Google tidak diminta password baru; aksi terkunci sampai profil/nomor lengkap; label hanya menyatakan verifikasi nomor | Integration + E2E |
+| T-22 | Pencarian 5 km, lintas kota, area di luar layanan, publikasi toko berbeda lokasi | Default benar; radius bisa diperluas; Kepulauan Seribu di luar area; hasil pakai lokasi penerbit; batas D-02 dinyatakan | Geo + E2E |
+| T-23 | Alamat privat, toko opt-in/opt-out, lokasi pertemuan dalam chat | Tidak membuka alamat otomatis; setiap toko independen; projection/cache/URL mengikuti batas privasi | Authorization + E2E |
+| T-24 | Listing sale, barter, sale+barter, free; negosiasi dan kategori | Mode/field valid; label gratis tanpa harga barang; preferensi barter ada; source enum/field khusus tervalidasi | Unit + SQL + E2E |
+| T-25 | Draft/publish/edit/archive, identitas personal/toko, akun gratis berjualan usaha | Tanpa approval admin untuk validasi lengkap; listing milik pihak lain tidak berubah; gratis boleh catering/PO; lifecycle konsisten | Integration + E2E |
+| T-26 | Produk berkuota dan barang tunggal sedang reserved; listing dihapus dari publik | Barang eksklusif tidak diedit; snapshot/media tetap ada; perubahan katalog kuota mengikuti D-04 | SQL + E2E |
+| T-27 | Nama produk/toko, kategori, harga, mode, sort dan kartu PO | Query mempertahankan semua filter; pilihan sort bekerja; batas/jadwal PO tampil; tab toko membuka katalog | Integration + E2E |
+| T-28 | Rotasi promosi 20 kartu, dua pemilik dengan 1 vs 3 toko, retry halaman | Maksimum 2 promosi berlabel; giliran per akun; tidak duplikat; semua filter/eligibility berlaku; retry tidak mengambil giliran baru | Integration |
+| T-29 | Multi-item trade, barang langsung, edit nama/detail/foto/jumlah/topup, sumber berubah | Tiap pihak minimal satu barang; hanya owner memasukkan barang; barang langsung tidak muncul publik; seluruh perubahan menuntut review versi baru | SQL + E2E |
+| T-30 | A siap lebih dulu, B siap lalu A/B setuju, penerimaan urutan berbeda | Persetujuan akhir memerlukan kedua Siap; UI menunggu sesuai actor; kedua penerimaan wajib; pesan pemeriksaan fisik tampil | E2E |
+| T-31 | Beberapa negosiasi pada listing sama; kesepakatan lalu pembatalan | Negosiasi boleh; final reservasi menolak pesaing dan memberi notifikasi; pembatalan sah melepaskan hold | Integration |
+| T-32 | Jual beli lengkap termasuk harga akhir dan metode penyerahan | Quote dikonfirmasi pembeli; reservasi lalu penyerahan/pembayaran/penerimaan; completed hanya jika semua syarat terpenuhi | E2E |
+| T-33 | Gratis: memilih penerima bukan yang pertama, stok dibagi, ongkir | Pemilik memilih; jumlah tidak melebihi kapasitas; barang Rp0; ongkir terpisah; penyerahan kedua pihak | SQL + E2E |
+| T-34 | Catering dan PO, jadwal, lead time, area layanan, kapasitas manual | Field/snapshot lengkap; catering tidak mengaku stok dijamin otomatis; PO tertutup tidak menerima order | Unit + E2E |
+| T-35 | Minimum campur varian, shared/per-variant, pembatalan batch terbuka/tertutup | Total satuan homogen memenuhi minimum; hold termasuk menunggu DP; PO penuh diberi label; pembatalan tidak membuka batch tertutup | SQL + E2E |
+| T-36 | PO tanpa DP, tenggat terlihat, lewat waktu, pelunasan sebelum/saat serah terima | Tanpa DP melewati tahap; DP menghalangi processing; ready boleh belum lunas; delivery/pickup mematuhi tenggat pelunasan | Integration + E2E |
+| T-37 | Pembatalan PO sebelum/sesudah processing dan setelah uang diterima | Alasan wajib; setelah processing perlu keputusan penjual; receipt lama tidak hilang; kebijakan refund tidak dikarang | SQL + E2E |
+| T-38 | Pickup/meetup/delivery, ongkir belum diketahui, perubahan jadwal/ongkir | Konfirmasi ditolak jika ongkir belum final; perubahan membutuhkan review ulang; alamat hanya peserta | Integration + E2E |
+| T-39 | Percakapan per pasangan/listing, order ulang, foto dan kartu sistem | Conversation tidak tercampur listing; order ulang pakai ID transaksi terpisah; tidak ada edit/unsend; evidence tetap tersedia | Integration + E2E |
+| T-40 | Blokir/report, read cursor, belum dibaca, reconnect | Read cursor hanya actor dan monoton; send ulang tidak duplikat; perilaku transaksi aktif sesuai D-08 | Authorization + E2E |
+| T-41 | Seluruh jenis notifikasi PRD, tautan tujuan, reminder berulang | Recipient dan konteks tepat; reminder sekali per tahap; tidak mengirim WhatsApp aktivitas/push | Integration |
+| T-42 | Laporan sebelum/setelah selesai, moderator berkepentingan, keputusan dan sanksi | Laporan bisa dibuat tanpa menunggu 72 jam; admin peserta ditolak; alasan/audit/tenggat tercatat; akses kasus dibatasi | Authorization + E2E |
+| T-43 | Timer penerimaan 24/72 jam, Cron terlambat, kasus sudah terbuka | Pengingat/bantuan sesuai jam server, tidak auto-complete, tidak membuka kasus ganda | Integration |
+| T-44 | Rating setiap jenis, profil vs tiga toko, komentar opsional, balasan/report | Actor/target tepat, skor 1–5, satu review, pemilik tidak bisa menghapus; draft tidak bocor pada agregat | SQL + E2E |
+| T-45 | Batas versi awal: fee, billing, staf, native/push, kurir, DP barter, edit chat, polisi | Tidak ada fungsi escrow/transfer/polisi otomatis atau fee barang; dummy jelas; fitur di luar scope tidak diklaim tersedia | Review kontrak + E2E |
+| T-46 | Mobile 360 px, keyboard, offline dan error | Tidak overflow; form terlabel; aksi sensitif tidak diam-diam diantre; input koreksi terjaga | E2E |
+| T-47 | Detail tiga toko, jam/lokasi berbeda, memilih penerbit, Plus habis/aktif lagi | Profil/katalog independen; hanya owner; expired tidak publik/promosi, transaksi lama tetap dapat diakses | Integration + E2E |
+| T-48 | Admin mengubah batas, request concurrent, payload harga/role ilegal, limit diturunkan | CAS/version+alasan wajib; audit; non-admin ditolak; tidak hapus data; hasil count konsisten dengan versi paket | SQL concurrency + E2E |
+| T-49 | Usulan amendmen setelah DP: harga/jumlah naik/turun, persetujuan stale, persediaan kurang | Snapshot/receipt lama utuh; hanya counterpart menyetujui; delta atomik; refund/tambahan terhitung; failure mempertahankan kontrak lama | SQL + E2E (bergantung D-03) |
+| T-50 | Refund yang disepakati: penerima belum konfirmasi, duplicate, salah actor, dana melebihi paid | Tidak mengklaim uang diterima dari klik pengirim; idempotent; nominal terikat keputusan; refund tidak melebihi net receipt | SQL + E2E (kebijakan terbuka) |
+| T-51 | Listing sempat aktif singkat, reserved, expired Plus, pindah area, timezone mingguan | Hitung periode sesuai definisi, distinct listing sekali per area, edge waktu half-open benar, demo tidak tercampur live | Analytics integration |
+| T-52 | Completion event berulang, reopened report, admin resolution | Transaksi dihitung sekali; jenis/penyelesaian admin terpisah; tidak menganggap penerimaan sepihak selesai | Analytics integration |
+| T-53 | Burst pesan, pesan sistem, percakapan berbeda, belum dibalas | Pasangan response deterministik; bot/sistem dikecualikan; unanswered dilaporkan terpisah, bukan nilai nol | Analytics unit |
+| T-54 | Cohort D7/W1/Plus belum matang, denominator nol, pengguna admin/demo | Nilai belum matang/null jelas; cohort dan denominator benar; aktivitas/minimalisasi data sesuai kontrak | Analytics integration |
+| T-55 | Build/config/seeds, seluruh alur rencana demo dan pencatatan bukti | Tidak ada credential nyata di repo; stack/lingkungan terpisah; tiap requirement punya status dan bukti tes aktual sebelum klaim selesai | Review + build + E2E |
 
 Definition of Done per alur: UI tersambung database; happy path dan penolakan peran/state diuji; error dapat dipahami; snapshot/audit tersedia; tidak ada data privat di log; keterbatasan demo ditulis. Alur tidak dinyatakan selesai jika hanya tombol/tampilan yang berubah lokal.
 
@@ -675,6 +722,8 @@ Seed demo: dua akun warga, satu pemilik tiga toko, satu admin, listing preloved,
 
 ## 19. Kesesuaian dengan PRD
 
+Tabel berikut hanya navigasi kelompok. Audit requirement individual ada pada [lampiran matriks cakupan](./RFC-001-matriks-cakupan.md), termasuk sumber baris PRD, data/API, acceptance test, status rancangan, dan prioritas demo. Tidak ada angka kelulusan implementasi yang diturunkan dari jumlah baris yang berhasil dipetakan.
+
 | Bagian PRD | Bagian RFC | Catatan |
 | --- | --- | --- |
 | 3–5: wilayah, akun, privasi | 3, 5, 11, 12 | Detail alamat/OTP/recovery tetap ditandai keputusan |
@@ -685,7 +734,7 @@ Seed demo: dua akun warga, satu pemilik tiga toko, satu admin, listing preloved,
 | 11–12: PO/DP/pengantaran | 7–9 | Konfirmasi manual, kuota, tenggat, ongkir |
 | 13: chat/notifikasi | 13 | Realtime persisted, WhatsApp OTP saja |
 | 14–15: sengketa/reputasi | 15 | Case-scoped access, review bertahap, admin audit |
-| 16–18: stack/demo/metrics | 4, 17–18 | Rancangan, bukan deployment/tes yang telah selesai |
+| 16–18: stack/demo/metrics | 4, 17–18, 24–25 | Definisi metrik dan data di bagian 24; hasil implementasi/tes belum tersedia |
 
 ## 20. Catatan verifikasi dokumentasi dan langkah berikutnya
 
@@ -694,4 +743,179 @@ Dokumentasi Supabase, Vercel, PostgreSQL, dan proyek OpenWA ditinjau saat penyus
 - Extension version pinning telah berubah; migration tidak mengasumsikan `CREATE EXTENSION ... VERSION` memilih versi arbitrer. Gunakan default extension yang tersedia pada proyek dan catat versi terpasang. [Changelog extension version](https://supabase.com/changelog/extension-version-pinning-ignored).
 - Schema `realtime` tidak boleh dimodifikasi untuk tabel aplikasi. Gunakan tabel aplikasi/publication yang didukung; jangan menambah objek aplikasi di schema internal tersebut. [Changelog Realtime schema](https://supabase.com/changelog/realtime-schema-locked-down-against-modification).
 
-RFC ini sudah memberi kontrak rancangan untuk mulai menurunkan pekerjaan, tetapi belum membuktikan kompatibilitas library, performa, delivery WhatsApp, atau kebenaran SQL yang belum ditulis. Langkah berikutnya: tinjau D-01–D-16 dan prioritas demo, lalu buat implementation backlog dengan acceptance tests di bagian 17. PRD tetap sumber keputusan produk; RFC direvisi jika keputusan produk berubah.
+RFC ini memberi kontrak rancangan untuk mulai menurunkan pekerjaan, tetapi belum membuktikan kompatibilitas library, performa, delivery WhatsApp, atau kebenaran SQL yang belum ditulis. Revisi 1.1 menambahkan detail bagian 21–25 dan lampiran matriks untuk menutup celah audit cakupan. D-01–D-16 dan register pertanyaan pada lampiran tetap perlu keputusan sesuai dampaknya; PRD tetap sumber keputusan produk.
+
+## 21. Kontrak field listing, toko, dan katalog
+
+Bagian ini melengkapi model logis 6.1 dan perintah 10.3. Nama/struktur field adalah keputusan rancangan teknis; batas panjang, enum kategori final, dan field tambahan kendaraan berikut merupakan rekomendasi untuk ditinjau, bukan kewajiban produk baru yang diam-diam ditambahkan.
+
+### 21.1 Field bersama dan aturan per mode
+
+| Field | Tipe / validasi rancangan | Penggunaan |
+| --- | --- | --- |
+| `title`, `description` | String tertrim; usulan 3–120 dan 10–5.000 karakter | Wajib saat publish, draft boleh belum lengkap |
+| `category_id` | ID kategori aktif dari tabel categories | Nilai bebas di luar registry ditolak |
+| `condition`, `defects` | Enum kondisi dan penjelasan kekurangan | Wajib menjelaskan kondisi preloved; defects boleh menyatakan tidak ada kekurangan yang diketahui |
+| `asset_ids` | Array asset milik penjual, state processed | Foto aktual, urutan cover, batas D-11; file snapshot tidak dihapus |
+| `negotiable` | Boolean, berlaku bila mode sale ada | Label Bisa ditawar/Harga tetap; negosiasi tidak mengganti harga listing otomatis |
+| `barter_preferences` | `{open_to_offers: boolean, wanted_description?: string}` | Jika tidak terbuka, barang yang diinginkan wajib dijelaskan; selalu ditampilkan pada detail barter |
+| `modes` | Set sale, barter, free tervalidasi | free eksklusif; sale+barter memakai pool yang sama |
+| `base_price_rupiah` atau harga varian | Integer/string rupiah tervalidasi server | Wajib untuk sale; barter murni tidak memerlukan harga; free = 0 |
+| `store_id` | UUID/null | Owner sama; null adalah listing pribadi, termasuk dagangan usaha gratis |
+| `location_id` | Referensi lokasi milik actor/toko | Tidak menerima arbitrary koordinat user lain; projection ikut penerbit |
+| `category_attributes` | JSON tervalidasi menurut category+schema_version | Menolak field tak dikenal dan tipe yang tidak sesuai |
+| `version` | Integer naik server | Publish/edit/quote merekam versi dan schema field yang dipakai |
+
+`negotiable=false` berarti UI tidak menawarkan aksi Tawar harga; chat tetap tersedia untuk bertanya. Harga akhir quote hanya berubah atas kesepakatan para pihak; kebijakan apakah penjual tetap boleh memberi diskon manual ditandai Q-31 pada matriks. Jangan menganggap flag ini memberikan wewenang platform memaksakan harga di luar aplikasi.
+
+Proyeksi search menyertakan mode, negotiable, preferensi barter ringkas, range harga, stok tersedia, dan jadwal PO yang publik. Field sensitif seperti nomor dokumen kendaraan tidak menjadi bagian search vector.
+
+### 21.2 Kategori dan field khusus
+
+`categories(id, parent_id, slug, name, active)` dan `category_field_rules(category_id, schema_version, allowed_fields, required_fields)` menjadi registry berversi. Seed usulan: makanan (catering/PO), pakaian, furnitur/peralatan rumah, kendaraan, hasil kebun, dan lainnya. Daftar final serta field wajib masih Q-07; admin tidak bisa menjalankan schema JSON/SQL arbitrary dari UI.
+
+Untuk kendaraan, usulan field `brand`, `model`, `year`, `mileage_km?`, `document_availability[]`, dan catatan kondisi. Kelengkapan dokumen berupa pernyataan tersedia/tidak tersedia/belum diperiksa, bukan unggahan identitas/nomor dokumen wajib. Untuk pakaian: size/brand opsional; untuk furnitur: dimensions/material opsional. Foto dan deskripsi tetap dapat dipakai sebelum fitur filter atribut khusus diimplementasikan.
+
+Perintah `save_listing_draft` menerima field yang belum lengkap; `publish_listing` mengembalikan daftar error per field. `revise_listing` memvalidasi ulang seluruh mode/varian serta snapshot yang terpengaruh. Schema version lama disimpan pada quote agar perubahan registry tidak menafsirkan ulang kesepakatan lama.
+
+### 21.3 Varian, catering, PO, dan penyerahan
+
+- Varian minimal mempunyai label unik dalam listing, satuan, harga, dan status aktif. Harga tidak dibaca kembali dari katalog setelah quote diterima.
+- `catering_terms(listing_id, minimum_qty?, unit, lead_time_hours, service_area_ids, availability_notes)` menyimpan informasi untuk ditampilkan. Tanggal acara, kapasitas yang disepakati, dan waktu penyerahan disalin ke quote; penjual tetap memeriksa kapasitas manual.
+- `listing_fulfillment_options(listing_id, method, enabled, service_area_ids?)` menyimpan pickup/meetup/delivery. Ongkir aktual dan alamat hanya ada pada terms_snapshot transaksi yang privat.
+- PO batch menyimpan penutupan, jadwal tersedia, minimum, kuota mode, DP, dan ketentuan pelunasan/pembatalan. `create_preorder_batch`, `close_preorder_batch`, `update_inventory_capacity` hanya owner; kapasitas tidak bisa dikurangi di bawah held+consumed.
+- Usulan D-05 membatasi satu batch terbuka, bukan satu batch yang belum seluruh pesanannya selesai. Batch tertutup dapat tetap punya pesanan berjalan; batch baru mempunyai pool berbeda dan tidak memakai saldo kapasitas batch lama.
+- Metadata toko lengkap berada pada stores dan tabel lokasi/opsi terkait: nama, logo, deskripsi, kategori usaha, jam per hari dan pengecualian, lokasi, pilihan penyerahan. Semua divalidasi server; jam operasional informatif, bukan scheduler penerimaan pesanan otomatis.
+
+### 21.4 Arsip dan penghapusan
+
+`archive_listing` menyembunyikan dari publik. Untuk daftar dengan reservasi aktif, UI menolak perubahan detail barang tunggal sesuai PRD dan mengarahkan ke penyelesaian/pembatalan. `delete_listing` bila ditambahkan merupakan tombstone (deleted_at), bukan cascade ke transaksi, foto snapshot, atau laporan. Listing berkuota memakai D-04; perbedaan kebijakan ditampilkan dalam matriks sebagai bersyarat sampai disetujui.
+
+## 22. Pengaturan batas oleh admin
+
+PRD 6.1 mengizinkan perubahan batas listing/produk. Kontrak berikut membatasi kewenangan itu secara eksplisit; kemampuan mengubah harga, metode pembayaran, atau status Plus secara sembarang tidak diberikan oleh endpoint yang sama.
+
+### 22.1 Data dan API
+
+- `plan_settings` mempunyai current_version dan batas aktif; `plan_settings_versions` menyimpan salinan immutable plus effective_at, actor, reason. Nilai baseline: 20 listing pribadi, 100 produk/toko, 3 toko Plus, Rp20.000/bulan.
+- `get_plan_settings()` menghasilkan batas efektif untuk user dan proyeksi admin yang sesuai role; tidak memuat credential atau billing internals.
+- `update_plan_limits({expected_version, personal_active_limit, store_product_active_limit, reason, idempotency_key})` hanya admin dengan capability `manage_plan_limits`. Maksimum toko 3 dan harga tetap read-only sampai ada keputusan produk lain.
+- Usulan validasi teknis: integer positif dengan batas operasional yang ditetapkan server; tidak memakai nol sebagai instruksi menghapus semua listing. Tolak field ekstra seperti price, role, user_id, plus_active.
+- Transaksi admin mengunci konfigurasi, memeriksa versi, menyimpan versi berikut dan audit before/after, lalu commit. Stale edit -> `SETTINGS_VERSION_CONFLICT`. Pengulangan key tidak membuat versi baru.
+- `list_settings_history(cursor)` hanya admin berhak; riwayat tidak dapat diedit/dihapus melalui panel.
+
+### 22.2 UI, efek, dan pengujian
+
+Rute `/admin/settings/limits` menampilkan nilai sekarang, jumlah pemilik yang akan di atas batas baru, input nilai baru, alasan wajib, dan konfirmasi ringkasan before/after. Perhitungan dampak preview bukan jaminan state saat commit; server menghitung ulang jika perlu.
+
+Pengguna yang di atas batas baru tetap menyimpan listing lama sesuai usulan D-14; publikasi tambahan ditolak dengan jumlah aktif dan batas efektif. Draft/arsip/selesai tidak dihitung, reserved dihitung. Naiknya limit langsung membuka kemampuan publikasi berikutnya tanpa mengubah produk lama.
+
+Perintah publish memegang shared lock konfigurasi sebelum lock akun/toko; perubahan admin menggunakan exclusive lock yang sama. Ini menentukan versi paket yang berlaku secara konsisten untuk transaksi yang berlomba, sesuai urutan bagian 8.1. Notifikasi perubahan limit kepada pemilik terdampak dapat dijalankan job idempotent; katalog mereka tidak dihapus otomatis.
+
+T-48 wajib mencakup akses non-admin, payload ilegal, versi basi, dua admin bersamaan, publish bersamaan, alasan kosong, history immutable, retry, serta penurunan limit di bawah jumlah aktif. Ini belum merupakan hasil pengujian.
+
+## 23. Rancangan amendmen pesanan dan pengembalian dana
+
+Bagian ini menutup celah rancangan yang sebelumnya hanya disebut sebagai pekerjaan lanjutan. Kebijakan hak refund/DP tetap keputusan produk terbuka; dukungan UI dalam demo masih usulan prioritas. Tidak ada perpindahan uang yang dilakukan platform.
+
+### 23.1 Proposal amendmen
+
+`transaction_amendments(id, transaction_id, base_revision, proposed_revision, proposer_id, status, expires_at?, created_at, accepted_by?, accepted_at?)` menyimpan proposal berstatus proposed/accepted/rejected/withdrawn. Hanya satu proposal aktif per transaksi; proposal mencakup barang/varian/jumlah, harga, ongkir, DP, waktu, cara penyerahan, dan alasan perubahan.
+
+- `propose_amendment` boleh dimulai peserta yang diizinkan menurut jenis transaksi; untuk pesanan, penjual menyusun rincian baru, pembeli menerima/menolak. Untuk barter, tetap berlaku dua Siap dan dua Setujui pada revisi baru.
+- Kontrak yang sudah diterima tidak ditimpa saat proposal dikirim. UI menampilkan versi berjalan dan perbandingan perubahan. Penyelesaian/penyerahan dibekukan selama proposal aktif sesuai rekomendasi D-03 agar barang tidak berpindah pada dua kontrak berbeda.
+- `accept_amendment` mewajibkan penerima proposal, expected_revision, dan idempotency_key. Harga diambil dari proposal tervalidasi, bukan dihitung ulang dari listing saat klik.
+- Lock transaksi, semua pool lama+baru, serta obligations. Validasi delta stok, lalu ganti accepted_revision, reservasi, dan kewajiban pembayaran dalam satu commit. Salinan lama/receipt tetap immutable.
+- Barang/kuota yang akan dikurangi tetap ditahan sampai proposal diterima. Tambahan kuota belum dijamin sebelum acceptance; jika habis, seluruh penerimaan amendmen gagal dan kontrak/reservasi sebelumnya utuh.
+- `reject_amendment` oleh penerima dan `withdraw_amendment` oleh pengusul membatalkan proposal saja; kontrak lama tetap berlaku, hold amendmen dilepas. Tidak otomatis membatalkan transaksi lama atau menganggap persetujuan terhadap isi baru.
+- Jika sudah ada penerimaan barang atau sengketa terbuka, gunakan kasus admin; jangan membuka editor yang bisa mengubah bukti barang yang sudah diserahkan.
+
+### 23.2 Menghitung saldo setelah perubahan
+
+Setiap payment_acknowledgement lama tetap terikat nominal/penerima/waktu aslinya. Tambahkan alokasi non-duplikatif pada tingkat transaksi, bukan menyalin pengakuan pembayaran lama ke setiap revisi seolah ada uang baru.
+
+```text
+gross_received = total pengakuan penerimaan pembayaran kepada penjual
+refund_received = total pengembalian yang dikonfirmasi pembeli telah diterima
+net_received = gross_received - refund_received
+new_total = subtotal_revisi_baru + ongkir_revisi_baru
+amount_still_due = max(0, new_total - net_received)
+excess_to_return = max(0, net_received - new_total)
+additional_dp_due = max(0, dp_due_revisi_baru - net_received)
+```
+
+Nilai di atas dihitung untuk pembayaran order yang sama dan pasangan payer/payee yang sama, tidak mencampur topup barter atau Plus. Tampilan tidak boleh menjumlahkan kewajiban lama yang sudah superseded dengan kewajiban baru. `payment_obligations` memerlukan effective/superseded state dan allocation references agar received tidak dihitung dua kali.
+
+Contoh: pesanan Rp100.000 dengan DP diterima Rp50.000 berubah menjadi Rp120.000 dengan DP 50%; tambahan DP Rp10.000, total masih harus dibayar Rp70.000. Jika total baru Rp40.000, selisih Rp10.000 menjadi pengembalian yang perlu disepakati/dilakukan, bukan saldo digital Barter. Jika selisih pengembalian belum dikonfirmasi, settlement masih pending dan completion normal ditahan.
+
+Processing yang belum dimulai tetap terhalang bila tambahan DP belum diterima. Untuk order yang sudah processing, perubahan jadwal kelanjutan dan pembayaran harus terlihat pada proposal; jangan mengubahnya kembali menjadi pesanan baru atau menghapus jejak pekerjaan sebelumnya. Batas kebijakan menerima amendmen setelah processing tetap Q-12.
+
+### 23.3 Refund dan keputusan kasus
+
+`refund_requests` menyimpan transaction_id, basis (amendment/cancellation/admin_decision), amount, payer_id (pengembali), recipient_id, reason, policy_snapshot_ref, status. Nominal harus berasal dari persetujuan kedua pihak atau keputusan admin yang tercatat. Platform tidak menyimpulkan persentase hangus/refund dari teks bebas.
+
+Alur rancangan:
+
+1. `propose_refund` menyimpan alasan dan nominal; pembeli/penjual menyepakati melalui `accept_refund`, atau admin membuat keputusan berdasarkan kasus. Tidak boleh melebihi pembayaran bersih yang diakui untuk transaksi tersebut.
+2. Pengembali melakukan transfer langsung dan menekan `record_refund_sent`, boleh melampirkan bukti. Status menjadi sent_unconfirmed; ini belum berarti pembeli telah menerima uang.
+3. Penerima menekan `confirm_refund_received`; append `refund_confirmations`, lalu hitung saldo bersih dan status tindak lanjut secara atomik/idempotent.
+4. Jika penerima membantah, membuka laporan/menambah bukti; admin menyelesaikan melalui event keputusan, bukan memalsukan konfirmasi penerima.
+
+Refund, pembatalan, dan ketersediaan barang adalah dimensi terpisah. PO yang dibatalkan dapat mengembalikan kuota sesuai aturan batch meskipun urusan refund masih terbuka; barang yang sudah diserahkan tidak otomatis tersedia kembali. Order completed yang dilaporkan tetap memiliki completed_at historis dan status sengketa/pengembalian terpisah.
+
+Policy DP per PO perlu format terstruktur atau kategori yang disetujui produk sebelum otomatisasi entitlement refund; untuk sekarang simpan teks ketentuan dalam snapshot dan nominal keputusan eksplisit. Tidak ada peraturan baru bahwa DP selalu hangus atau selalu kembali.
+
+## 24. Definisi metrik dan pengumpulan data
+
+Semua definisi operasional berikut adalah rekomendasi teknis untuk metrik PRD 18. Target angka bisnis tetap terbuka. Data demo tidak boleh dipresentasikan sebagai kinerja produk nyata.
+
+### 24.1 Event dan penyimpanan
+
+- `private.product_events(event_id, event_type, entity_id, actor_id?, occurred_at, source, environment, is_test, attributes_allowlist)` menyimpan event bisnis yang ditulis backend pada commit asli. Unique sumber+entity+event/version menghilangkan retry ganda.
+- Event: account_onboarding_completed, listing_published/visibility_changed, transaction_completed, subscription_activated, store_visibility_changed. Message sent/received/read tetap memakai tabel pesan; analytics tidak menyalin body atau lampiran.
+- `listing_visibility_periods(listing_id, area_id, valid_from, valid_to?, eligible)` menyimpan interval eligibility publik. Transisi publish/reserve/archive/moderasi/area/Plus/batch menutup atau membuka interval dengan waktu efektif, bukan waktu job terlambat dijalankan.
+- `private.user_activity_days(user_id, local_date, first_activity_at, last_activity_at, environment, is_test)` menyimpan aktivitas bermakna harian. Aksi database seperti kirim pesan, posting, atau transaksi mencatatnya; kunjungan halaman foreground user login memakai `record_activity_day`, maksimal sekali per hari untuk hitung retensi.
+- Activity dari browser hanyalah sinyal analytics yang dapat dipalsukan, bukan dasar reputasi/Plus/hak akses. Background refresh, bot, proses Cron, login admin untuk moderasi, dan refresh token tidak dihitung sebagai aktivitas warga.
+- `private.metric_rollups(metric, period_start, period_end, area_id?, kind?, numerator, denominator?, value?, definition_version, computed_at, environment)` berisi hasil agregat yang dapat dihitung ulang. Raw source tidak dihapus oleh penghitungan ulang.
+- `get_product_metrics({period, area_id?, kind?, definition_version})` memerlukan capability admin analytics, menghasilkan agregat; tidak membuka user_id, nomor, alamat atau isi chat. Sebelum pilot publik, tentukan retensi raw events dan akses ekspor.
+
+### 24.2 Rumus dan jendela waktu
+
+Semua interval menggunakan [mulai, akhir), zona pelaporan Asia/Jakarta; occurred_at disimpan UTC. Minggu pelaporan Senin 00.00 sampai Senin berikutnya. Filter environment/is_test dilakukan sebelum agregasi. Denominator nol menghasilkan null/not_applicable, bukan 0% yang menyesatkan.
+
+| Metrik PRD | Definisi operasional rancangan | Sumber / pengecualian |
+| --- | --- | --- |
+| Listing aktif mingguan per area | COUNT DISTINCT listing_id dengan interval publik eligible yang beririsan minggu | Listing yang aktif hanya satu jam tetap dihitung; draft/arsip/moderasi/expired toko tidak eligible. Barang eksklusif reserved tidak eligible untuk discovery; istilah aktif ini berbeda dari hitungan batas akun yang tetap menghitung reserved. Label dashboard menjelaskan definisi |
+| Transaksi berhasil selesai | COUNT DISTINCT transaction_id dengan first completed_at dalam interval, dikelompokkan kind | Dua kali event completion dihitung sekali. Completion admin ditandai terpisah; transaksi yang kemudian bersengketa ditampilkan sebagai completed_with_dispute, tidak menyembunyikan kasus |
+| Rata-rata waktu respons chat | Mean durasi dari pesan pertama dalam burst masuk yang belum dibalas hingga balasan manusia pertama dari pihak lain, dalam conversation yang sama | Pesan beruntun A sebelum B membalas adalah satu burst; switch arah berikutnya membentuk burst baru. System cards tidak menjadi balasan. Unanswered dilaporkan sebagai jumlah/persentase terpisah, bukan durasi nol. Tambahkan median untuk konteks |
+| Retensi D7 | Pengguna cohort onboarding hari D yang aktif pada tanggal lokal D+7 dibagi total pengguna cohort yang jendelanya sudah matang | Aktivitas pada hari lain tidak memenuhi D7. Cohort kurang dari 8 tanggal kalender sejak D diberi provisional, bukan dianggap churn |
+| Retensi W1 | Pengguna cohort onboarding yang aktif setidaknya sekali pada tanggal D+7 sampai D+13 dibagi cohort matang | Jendela harus berakhir sebelum pelaporan final; definisi disimpan bersama hasil |
+| Toko aktif | COUNT DISTINCT store_id visible dengan minimal satu produk eligible selama interval | Satu pemilik dapat dihitung sampai tiga toko; toko kosong atau Plus expired tidak dihitung |
+| Konversi Plus 7 hari | Pengguna cohort onboarding yang memperoleh aktivasi Plus pertama dalam [onboarding_at, onboarding_at+7 hari) dibagi cohort matang | Invoice pending/failed/expired bukan aktivasi; perpanjangan tidak menambah numerator. Dummy dihitung hanya dalam dashboard berlabel demo; live mengecualikan semua dummy |
+
+Untuk reply metric, tetapkan kohort berdasarkan waktu pesan pembuka burst dalam periode, lalu evaluasi reply sampai `as_of`. Contoh A jam 10.00, A jam 10.02, B jam 10.05 menghasilkan 300 detik, bukan dua sampel 300/180. Response_rate dihitung dari burst yang sudah dibalas dibagi seluruh burst hingga as_of; angka periode yang masih menerima balasan diberi provisional. Latensi diukur di server, bukan timestamp perangkat.
+
+Interval listing menggunakan lokasi area pada interval tersebut. Listing yang berpindah area dapat dihitung sekali pada masing-masing area yang benar-benar dilayani, tetapi agregat Jabodetabek menghitung distinct global, bukan menjumlahkan area. Expiry yang diketahui (Plus/batch) memotong valid_to saat waktunya tercapai walau job terlambat; tidak menghitung waktu eligibility palsu.
+
+### 24.3 Prioritas dan penerimaan
+
+Pengumpulan event dasar melekat pada mutasi bisnis sejak implementasi modulnya. Dashboard analitik lengkap merupakan kandidat P2 untuk setelah demo, tanpa menghilangkan metrik dari rancangan produk. Demo memakai fixture untuk T-51–T-54: interval singkat, batas minggu, event rangkap, response burst, cohort matang/belum matang, denominator kosong, dan pemisahan dummy/live. Tidak ada klaim metrik sudah tersedia sebelum query/tes diimplementasikan.
+
+## 25. Aturan cakupan, prioritas, dan perubahan dokumen
+
+Lampiran matriks memberi ID stabil R-xxx untuk butir PRD, Q-xx untuk keputusan terbuka, serta pemetaan ke desain/data/API dan tes. Acuan sumber adalah PRD v1.3; nomor baris membantu audit, bukan identitas requirement yang boleh dinomori ulang ketika file berubah. Dokumen PRD tetap tidak diubah oleh pelengkapan RFC ini.
+
+Status rancangan:
+
+- **Dirancang:** ada perilaku teknis dan acceptance test yang dapat diturunkan ke implementasi.
+- **Bersyarat:** ada rekomendasi teknis tetapi sebagian perilaku bergantung keputusan D/Q; tidak boleh dianggap final.
+- **Konteks:** tujuan/roadmap/stack atau target bisnis; dibuktikan lewat kumpulan alur dan dokumen, bukan satu endpoint.
+- **Eksklusi:** secara eksplisit di luar versi awal; diuji sebagai batas scope jika relevan.
+
+Prioritas rekomendasi: **P0** fondasi dan skenario inti demo; **P1** alur pelengkap versi awal setelah P0 stabil; **P2** pendalaman setelah demo atau yang bergantung keputusan lanjutan; **OUT** di luar versi awal. Prioritas belum menjadi izin menghapus requirement atau mempersempit produk. Jika estimasi 27 jam tidak cukup, status yang belum dibuat harus tetap terlihat.
+
+Status implementasi dan tes untuk seluruh matriks pada revisi ini adalah **Belum dibuat / Belum dijalankan**. Tidak ada requirement dinyatakan lulus karena telah mendapat test ID. Saat implementasi, tambahkan path kode, migration, test case, commit, dan bukti hasil; minimal satu test dapat ditelusuri balik ke setiap requirement yang dinyatakan selesai.
+
+Tidak semua paragraf PRD merupakan fungsi aplikasi: pembuka/tujuan, sumber dokumentasi, usulan roadmap dan daftar pertanyaan dicatat sebagai konteks atau keputusan. Batas OUT tidak dihitung sebagai fitur belum selesai. Seluruh butir berstatus Terbuka tetap memiliki disposisi pada register Q, termasuk hal yang belum punya solusi final.
+
+Riwayat revisi: v1.0 arsitektur awal dan 20 tes; v1.1 menambah matriks cakupan individual, field listing, pengaturan admin, rancangan amendmen/refund, definisi analytics, dan katalog total 55 skenario pengujian. Persetujuan pemilik produk diperlukan hanya untuk keputusan produk yang masih terbuka, bukan untuk menyusun dokumentasi atau melanjutkan fondasi yang sudah diotorisasi.
