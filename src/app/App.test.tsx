@@ -1,0 +1,45 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import { expect, it } from 'vitest';
+import { App } from './App';
+import { createPreviewRepository } from '../features/discovery/preview-repository';
+import { listingSchema } from '../features/discovery/types';
+import { listing } from '../test/fixtures';
+
+const repo = createPreviewRepository([listingSchema.parse(listing), listingSchema.parse({ ...listing, id: '10000000-0000-4000-8000-000000000002', title: 'Nasi kotak', category: 'food', modes: ['sale'] })], []);
+function show(path = '/') { return render(<MemoryRouter initialEntries={[path]}><App repository={repo} /></MemoryRouter>); }
+it('searches real listing rows and keeps the search value on detail return', async () => {
+  const user = userEvent.setup(); show();
+  await screen.findByRole('link', { name: 'Kursi kayu bekas' });
+  await user.type(screen.getByRole('searchbox'), 'kursi');
+  await user.click(screen.getByRole('button', { name: 'Cari' }));
+  expect(await screen.findByRole('link', { name: 'Kursi kayu bekas' })).toBeVisible();
+  expect(screen.queryByRole('link', { name: 'Nasi kotak' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('link', { name: 'Kursi kayu bekas' }));
+  expect(await screen.findByRole('heading', { name: 'Kursi kayu bekas' })).toBeVisible();
+  await user.click(screen.getByRole('link', { name: /Kembali ke hasil/ }));
+  expect(screen.getByRole('searchbox')).toHaveValue('kursi');
+});
+it('renders both barter and sale actions without fake consent', async () => {
+  const user = userEvent.setup(); show(`/listings/${listing.id}`);
+  expect(await screen.findByRole('link', { name: 'Chat penjual' })).toBeVisible();
+  await user.click(screen.getByRole('link', { name: 'Ajukan barter' }));
+  expect(await screen.findByRole('heading', { name: 'Barter belum tersedia' })).toBeVisible();
+  expect(screen.queryByText('Disepakati')).not.toBeInTheDocument();
+});
+it('shows a useful empty state instead of silently expanding the radius', async () => {
+  show('/search?q=tidakada');
+  expect(await screen.findByRole('heading', { name: 'Belum ada penawaran yang cocok' })).toBeVisible();
+  expect(screen.getByRole('button', { name: /Depok.*5 km/ })).toBeVisible();
+});
+it('retries a transport failure instead of rendering fake listings', async () => {
+  let fail = true;
+  const failingRepo = { ...repo, searchListings: async (...args: Parameters<typeof repo.searchListings>) => { if (fail) throw new Error('Tidak dapat memuat data.'); return repo.searchListings(...args); } };
+  const user = userEvent.setup();
+  render(<MemoryRouter><App repository={failingRepo} /></MemoryRouter>);
+  expect(await screen.findByRole('alert')).toHaveTextContent('Tidak dapat memuat');
+  fail = false;
+  await user.click(screen.getByRole('button', { name: 'Coba lagi' }));
+  expect(await screen.findByRole('link', { name: 'Kursi kayu bekas' })).toBeVisible();
+});
