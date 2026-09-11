@@ -9,7 +9,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | Tahap | Keluaran | Acuan | Status |
 | --- | --- | --- | --- |
 | 1 | React/Vite/TypeScript, shell mobile, penemuan/detail/toko read-only, adapter API, test harness | PDR UI-01/02, T-27/46/55 | Selesai dan diverifikasi sebagai fondasi read-only; backend belum terhubung |
-| 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Belum dibuat |
+| 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Diimplementasikan dan unit-tested; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
 | 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Belum dibuat |
 | 4 | Chat persisted/realtime, read cursor, notification jobs dan block policy | PRD 13, T-13/16/39/40/41 | Belum dibuat |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Belum dibuat |
@@ -34,7 +34,8 @@ Skenario T merupakan kelompok, bukan jumlah tes yang otomatis membuktikan seluru
 ## Rencana per subsystem
 
 - [Fondasi frontend dan penemuan](superpowers/plans/2026-09-11-frontend-foundation.md).
-- Rencana subsystem berikut diturunkan dari tahap 2–10 sebelum kode subsystem terkait dimulai; status belum dibuat di atas tetap aktif sampai ada bukti implementasi.
+- [Auth, profil, lokasi privat, dan WhatsApp OTP](superpowers/plans/2026-09-11-auth-profile-otp.md).
+- Rencana subsystem berikut diturunkan dari tahap 3–10 sebelum kode subsystem terkait dimulai; status belum dibuat di atas tetap aktif sampai ada bukti implementasi.
 
 ## Lingkungan yang harus dipenuhi sebelum verifikasi end-to-end
 
@@ -58,3 +59,15 @@ Implementasi berada pada branch `feat/barter-webapp`. Verifikasi 11 September 20
 - Pemeriksaan langsung browser: konten bermakna tampil, tidak ada error page/overlay Vite, tidak ada horizontal overflow; screenshot mobile dan desktop ditinjau. Hasil review memicu perbaikan urutan informasi detail mobile dan posisi tombol galeri desktop. Audit axe pada home serta detail mobile: 0 violation/0 incomplete untuk tag WCAG 2 A/AA dan WCAG 2.2 AA; ini bukan pengganti uji keyboard/screen reader manual.
 
 Scope bukti ini hanya tahap 1. Preview menggunakan fixture sintetis; RPC di `docs/contracts/discovery-api.md` masih provisional dan belum membuktikan Supabase, Auth, RLS, OTP, chat, transaksi, atau persistence.
+
+## Bukti parsial tahap 2
+
+Implementasi 11 September 2026 menambahkan Supabase Auth gateway untuk email/password dan Google, callback/onboarding tiga tahap, consent lokasi eksplisit, action gate, logout, migrasi privacy/RLS/OTP, Edge Function, serta adapter OpenWA. Bukti yang dapat dijalankan pada host ini:
+
+- `npm.cmd test`: 15 file, 73 tes lulus; helper/handler OTP 22 tes, auth/onboarding/action gate/provider 12 tes.
+- `npm.cmd run build`: lulus; bundle utama 129,85 kB gzip.
+- `npm.cmd run test:e2e`: 26 tes lulus pada lebar 320, 390, dan desktop; 1 skenario khusus mobile dilewati pada desktop. Inspeksi langsung halaman login mode preview menunjukkan pesan nonfungsional yang eksplisit dan tidak menampilkan form akun palsu.
+- `supabase start`: gagal sebelum menjalankan migration/test karena pipe Docker Desktop Linux Engine tidak tersedia.
+- `deno --version`: command tidak tersedia pada host, sehingga `deno check` dan Edge Function serve belum dijalankan.
+
+Karena dua runtime tersebut tidak tersedia, tahap 2 belum boleh dianggap selesai. SQL di migration sudah memiliki 19 assertion pgTAP tetapi belum pernah dieksekusi; Edge handler/adapter unit-tested melalui dependency injection tetapi belum diuji dengan Supabase/OpenWA nyata. `supabase/seed.sql` sengaja tidak menebak polygon Jabodetabek.

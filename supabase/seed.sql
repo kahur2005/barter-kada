@@ -1,0 +1,3 @@
+-- Production service-area polygons are intentionally not guessed here.
+-- Import an authoritative, versioned Jabodetabek boundary dataset before
+-- enabling onboarding in a deployed environment. Kepulauan Seribu is excluded.

@@ -4,7 +4,7 @@ Marketplace lingkungan untuk jual beli, barter, pemberian gratis, dan pemasaran 
 
 ## Status
 
-Implementasi sedang berjalan pada fondasi React mobile-first. Discovery barang, detail listing, daftar toko, dan katalog toko sudah tersedia dalam mode preview read-only. Auth, chat, transaksi, barter, OTP, moderasi, dan langganan Plus belum terhubung; halaman fitur tersebut menampilkan status yang jujur dan tidak membuat data transaksi palsu.
+Implementasi sedang berjalan pada fondasi React mobile-first. Discovery barang, detail listing, daftar toko, dan katalog toko tersedia dalam mode preview read-only. UI dan adapter Auth Supabase, onboarding privat, serta OTP OpenWA sudah dibuat dan unit-tested, tetapi backend lokal belum terverifikasi karena Docker/Deno belum tersedia. Chat, transaksi, barter, moderasi, dan langganan Plus belum terhubung; halaman fitur tersebut menampilkan status yang jujur dan tidak membuat data transaksi palsu.
 
 Target awal tetap demo terintegrasi selama 9 hari × 3 jam, bukan peluncuran transaksi nyata. Pembayaran langganan Plus masih berupa simulasi.
 
@@ -38,6 +38,16 @@ npm.cmd run test:e2e
 npm.cmd audit --omit=dev
 ```
 
+Supabase lokal telah diinisialisasi di `supabase/`. Saat Docker Desktop aktif:
+
+```powershell
+npm.cmd exec --yes --package=supabase@2.117.0 -- supabase start
+npm.cmd exec --yes --package=supabase@2.117.0 -- supabase db reset
+npm.cmd exec --yes --package=supabase@2.117.0 -- supabase test db
+```
+
+Salin `supabase/functions/.env.example` menjadi `.env.local` hanya untuk Edge Function lokal. Jangan commit file tersebut. Polygon wilayah layanan belum disertakan karena harus berasal dari dataset resmi dan berversi.
+
 Tes browser memakai Microsoft Edge melalui Playwright secara default. Untuk Chromium hasil instalasi Playwright, kosongkan/ubah `PLAYWRIGHT_CHANNEL` sesuai lingkungan.
 
 ## Dokumentasi
@@ -47,6 +57,7 @@ Tes browser memakai Microsoft Edge melalui Playwright secara default. Untuk Chro
 - [Matriks cakupan RFC-001](docs/RFC-001-matriks-cakupan.md): pemetaan butir PRD ke rancangan, data/API, tes, dan prioritas demo.
 - [PDR-001 — Desain produk](docs/PDR-001-desain-produk.md): usulan desain mobile-first terinspirasi Craigslist, fondasi visual, wireframe, spesifikasi layar, dan kriteria penerimaan UI.
 - [Kontrak discovery](docs/contracts/discovery-api.md): payload publik dan RPC provisional yang harus diimplementasikan backend Supabase.
+- [Kontrak auth/profil/OTP](docs/contracts/auth-profile-otp.md): trust boundary, RPC, Edge Function, dan status verifikasinya.
 - [Status implementasi](docs/IMPLEMENTATION.md): urutan subsystem, bukti, dan pekerjaan yang masih terbuka.
 
 Dokumen masih berupa draft. Keputusan yang belum final ditandai di dalam dokumen. Pemetaan kebutuhan dan skenario tes belum berarti implementasi atau pengujiannya sudah selesai.

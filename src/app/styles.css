@@ -19,7 +19,7 @@ button, a, input, select { -webkit-tap-highlight-color: transparent; }
 button, select { cursor: pointer; }
 button, input, select { min-height: 48px; }
 button { color: inherit; }
-input, select { width: 100%; min-width: 0; padding: 10px 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--muted); border-radius: 4px; }
+input, select, textarea { width: 100%; min-width: 0; padding: 10px 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--muted); border-radius: 4px; }
 input::placeholder { color: var(--muted); opacity: 1; }
 button { border: 1px solid transparent; background: transparent; }
 button:disabled { cursor: not-allowed; color: var(--muted); background: var(--surface); border-color: var(--rule); }
@@ -143,6 +143,33 @@ ul { padding-left: 20px; }
 .catalogue-heading form { display: flex; gap: 8px; }
 .setup-page { max-width: 680px; margin: 8vh auto; padding: 24px; }
 .setup-page > * + * { margin-top: 20px; }
+.auth-card { max-width: 480px; margin: 0 auto; display: grid; gap: 16px; }
+.auth-card > p { color: var(--muted); }
+.eyebrow { color: var(--action) !important; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.stack-form { display: grid; gap: 8px; }
+.stack-form label { margin-top: 8px; font-weight: 600; }
+.stack-form .button { margin-top: 12px; }
+.form-alert, .success-notice { padding: 12px; border-left: 4px solid var(--danger); background: color-mix(in srgb, var(--danger) 8%, var(--paper)); color: var(--danger) !important; }
+.success-notice { border-color: #18794e; background: #edf9f3; color: #12633f !important; }
+.form-help { margin-top: -4px; font-size: 14px; color: var(--muted); }
+.full-button { width: 100%; }
+.auth-divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-top: 1px solid var(--rule); }
+.onboarding-page { max-width: 720px; margin: 0 auto; display: grid; gap: 24px; }
+.onboarding-page > header { display: grid; gap: 8px; }
+.onboarding-page > header > p:last-child, .onboarding-panel section > p { color: var(--muted); }
+.onboarding-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 0; padding: 0; list-style: none; }
+.onboarding-steps li { min-width: 0; display: grid; justify-items: center; align-content: start; gap: 5px; padding: 8px 3px; border-top: 3px solid var(--rule); color: var(--muted); font-size: 12px; line-height: 16px; text-align: center; }
+.onboarding-steps li.reached { border-color: var(--action); color: var(--action); font-weight: 650; }
+.onboarding-steps li span { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid currentColor; border-radius: 50%; }
+.onboarding-panel { padding: 20px; border: 1px solid var(--rule); border-radius: 8px; }
+.onboarding-panel section { display: grid; gap: 12px; }
+.onboarding-panel .stack-form { margin-top: 4px; }
+.optional { color: var(--muted); font-weight: 400; }
+.otp-form { margin-top: 20px !important; padding-top: 20px; border-top: 1px solid var(--rule); }
+.account-page { max-width: 640px; margin: 0 auto; display: grid; gap: 20px; }
+.account-page dl { padding-block: 16px; border-block: 1px solid var(--rule); }
+.account-page .button { justify-self: start; }
 @media (max-width: 359px) {
   .listing-row { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
   .listing-row > .product-image, .listing-row > .image-fallback, .listing-row > .store-avatar { width: 64px; height: 64px; }
