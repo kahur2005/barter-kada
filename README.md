@@ -4,7 +4,7 @@ Marketplace lingkungan untuk jual beli, barter, pemberian gratis, dan pemasaran 
 
 ## Status
 
-Implementasi sedang berjalan pada fondasi React mobile-first. Discovery barang, detail listing, daftar toko, dan katalog toko tersedia dalam mode preview read-only. UI dan adapter Auth Supabase, onboarding privat, serta OTP OpenWA sudah dibuat dan unit-tested, tetapi backend lokal belum terverifikasi karena Docker/Deno belum tersedia. Chat, transaksi, barter, moderasi, dan langganan Plus belum terhubung; halaman fitur tersebut menampilkan status yang jujur dan tidak membuat data transaksi palsu.
+Implementasi sedang berjalan pada fondasi React mobile-first. Discovery barang, detail listing, daftar toko, dan katalog toko tersedia dalam mode preview read-only. UI dan adapter Auth Supabase, onboarding privat, OTP OpenWA, serta create/draft/publish/archive listing personal dan pipeline foto sudah dibuat dan unit-tested. Backend lokal belum terverifikasi karena Docker/Deno belum tersedia. Chat, transaksi, negotiation barter, moderasi, dan langganan Plus belum terhubung; halaman fitur tersebut menampilkan status yang jujur dan tidak membuat data transaksi palsu.
 
 Target awal tetap demo terintegrasi selama 9 hari × 3 jam, bukan peluncuran transaksi nyata. Pembayaran langganan Plus masih berupa simulasi.
 
@@ -27,6 +27,8 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
 Jangan memasukkan service role key, secret key, kredensial OpenWA, atau data pengguna ke variabel `VITE_*`. Tanpa konfigurasi publik yang valid, aplikasi menampilkan petunjuk setup dan tidak berpura-pura tersambung.
+
+Pemroses foto listing berjalan sebagai Vercel Function. Konfigurasikan `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, dan `SUPABASE_SECRET_KEY` sebagai environment server-only di Vercel; hanya fungsi tersebut yang boleh membaca secret key. Browser mengunggah file ke bucket karantina privat melalui RLS, kemudian fungsi memvalidasi dan mengubahnya menjadi WebP tanpa metadata sebelum dapat dipakai listing.
 
 Perintah pemeriksaan:
 

@@ -170,6 +170,46 @@ ul { padding-left: 20px; }
 .account-page { max-width: 640px; margin: 0 auto; display: grid; gap: 20px; }
 .account-page dl { padding-block: 16px; border-block: 1px solid var(--rule); }
 .account-page .button { justify-self: start; }
+.listing-editor { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
+.listing-editor > header { display: grid; gap: 8px; }
+.listing-editor > header .back-link { margin: 0; }
+.listing-editor > header > p:last-child { color: var(--muted); }
+.preview-form-notice { padding: 10px 12px; border: 1px solid var(--rule); background: var(--surface); font-size: 14px; }
+.listing-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 0; padding: 0; list-style: none; }
+.listing-steps li { display: grid; justify-items: center; gap: 4px; min-width: 0; padding: 8px 2px; border-top: 3px solid var(--rule); color: var(--muted); font-size: 11px; text-align: center; }
+.listing-steps li.reached { color: var(--action); border-color: var(--action); font-weight: 650; }
+.listing-steps li span { display: grid; place-items: center; width: 23px; height: 23px; border: 1px solid currentColor; border-radius: 50%; }
+.listing-editor-panel { display: grid; gap: 10px; padding: 20px; border: 1px solid var(--rule); border-radius: 8px; }
+.listing-editor-panel > label, .nested-fields > label { margin-top: 6px; font-weight: 600; }
+.publisher-choice { display: grid; gap: 2px; padding: 12px; border-left: 4px solid var(--action); background: var(--surface); }
+.publisher-choice span { color: var(--muted); font-size: 14px; }
+.choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.choice-grid label, .check-row { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px; border: 1px solid var(--rule); border-radius: 4px; font-weight: 500 !important; }
+.choice-grid input, .check-row input { width: 22px; min-height: 22px; flex: 0 0 auto; }
+.nested-fields { display: grid; gap: 10px; margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--rule); }
+.nested-fields label { display: grid; gap: 5px; }
+.file-list { margin: 0; color: var(--muted); font-size: 14px; }
+.listing-review { display: grid; gap: 10px; }
+.listing-review .label { justify-self: start; }
+.editor-actions { display: flex; gap: 12px; position: sticky; bottom: 0; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); background: var(--paper); border-top: 1px solid var(--rule); }
+.editor-actions .button { flex: 1; min-width: 0; }
+.draft-save { justify-self: center; }
+@media (min-width: 600px) { .choice-grid { grid-template-columns: repeat(3, 1fr); } .listing-steps li { font-size: 13px; } }
+.my-listings { max-width: 860px; margin: 0 auto; display: grid; gap: 20px; }
+.my-listings > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.my-listings > header > div { display: grid; gap: 6px; }
+.quota-counter { display: flex; justify-content: space-between; gap: 12px; padding: 12px; background: var(--surface); }
+.quota-counter span { color: var(--muted); font-size: 14px; }
+.owner-tabs { display: flex; overflow-x: auto; border-bottom: 1px solid var(--rule); }
+.owner-tabs button { flex: 1; min-width: 76px; border-bottom: 3px solid transparent; color: var(--muted); }
+.owner-tabs button[aria-selected="true"] { border-color: var(--action); color: var(--action); font-weight: 700; }
+.owner-list article { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--rule); }
+.owner-list article h2 { margin-top: 6px; }
+.owner-list article p { color: var(--muted); font-size: 14px; }
+.owner-actions { display: flex; gap: 8px; align-items: start; }
+.owner-actions .button { min-width: 0; padding-inline: 12px; }
+.reservation-note { grid-column: 1 / -1; padding: 10px; border-left: 4px solid #a15c00; background: #fff8eb; color: #704000 !important; }
+@media (max-width: 520px) { .my-listings > header { display: grid; } .my-listings > header .button { justify-self: start; } .quota-counter { display: grid; } .owner-list article { grid-template-columns: 1fr; } .owner-actions { grid-row: auto; } }
 @media (max-width: 359px) {
   .listing-row { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
   .listing-row > .product-image, .listing-row > .image-fallback, .listing-row > .store-avatar { width: 64px; height: 64px; }

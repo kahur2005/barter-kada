@@ -10,7 +10,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | --- | --- | --- | --- |
 | 1 | React/Vite/TypeScript, shell mobile, penemuan/detail/toko read-only, adapter API, test harness | PDR UI-01/02, T-27/46/55 | Selesai dan diverifikasi sebagai fondasi read-only; backend belum terhubung |
 | 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Diimplementasikan dan unit-tested; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
-| 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Belum dibuat |
+| 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Parsial: create/draft/publish/archive, aturan PO/catering, dan pipeline media sudah dibuat; edit existing serta discovery PostGIS dinamis belum dibuat |
 | 4 | Chat persisted/realtime, read cursor, notification jobs dan block policy | PRD 13, T-13/16/39/40/41 | Belum dibuat |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Belum dibuat |
 | 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Belum dibuat |
@@ -35,6 +35,7 @@ Skenario T merupakan kelompok, bukan jumlah tes yang otomatis membuktikan seluru
 
 - [Fondasi frontend dan penemuan](superpowers/plans/2026-09-11-frontend-foundation.md).
 - [Auth, profil, lokasi privat, dan WhatsApp OTP](superpowers/plans/2026-09-11-auth-profile-otp.md).
+- [Publikasi dan pengelolaan listing](superpowers/plans/2026-09-11-listing-publishing.md).
 - Rencana subsystem berikut diturunkan dari tahap 3–10 sebelum kode subsystem terkait dimulai; status belum dibuat di atas tetap aktif sampai ada bukti implementasi.
 
 ## Lingkungan yang harus dipenuhi sebelum verifikasi end-to-end
@@ -71,3 +72,15 @@ Implementasi 11 September 2026 menambahkan Supabase Auth gateway untuk email/pas
 - `deno --version`: command tidak tersedia pada host, sehingga `deno check` dan Edge Function serve belum dijalankan.
 
 Karena dua runtime tersebut tidak tersedia, tahap 2 belum boleh dianggap selesai. SQL di migration sudah memiliki 19 assertion pgTAP tetapi belum pernah dieksekusi; Edge handler/adapter unit-tested melalui dependency injection tetapi belum diuji dengan Supabase/OpenWA nyata. `supabase/seed.sql` sengaja tidak menebak polygon Jabodetabek.
+
+## Bukti parsial tahap 3
+
+Implementasi 11 September 2026 menambahkan wizard listing personal untuk jual/barter/gratis, ready stock/PO/catering, validasi shared frontend/backend, draft dan publish dengan optimistic version, batas listing aktif dari server, halaman listing milik pengguna, serta archive yang menolak listing reserved. Pipeline media memakai bucket karantina privat, pemroses Node.js Vercel dengan `sharp`, batas 5 MB/2.048 px, re-encode WebP tanpa EXIF, dan commit aset oleh service role sebelum aset dapat dipakai untuk publikasi.
+
+- `npm.cmd test -- --run`: 21 file, 93 tes lulus. Termasuk validasi listing, editor/owner UI, adapter upload, normalisasi media, dan boundary endpoint.
+- `npm.cmd run build`: TypeScript dan Vite production build lulus; bundle utama 135,49 kB gzip.
+- `npm.cmd run test:e2e`: 26 tes lulus pada lebar 320, 390, dan desktop; 1 skenario khusus mobile dilewati pada desktop.
+- Inspeksi screenshot editor 390 × 844 menunjukkan layout mobile terbaca, stepper dan CTA sticky tampil tanpa horizontal overflow.
+- Migration listing berisi 19 assertion pgTAP dan migration media berisi 8 assertion pgTAP, tetapi belum dijalankan karena Docker engine masih tidak tersedia. Endpoint Vercel belum diuji terhadap proyek Supabase nyata karena proyek dan server secret belum ditunjuk.
+
+Tahap 3 tetap parsial: editor belum memuat listing existing, area catering belum dipilih dari data area, URL media terproses belum masuk DTO discovery, dan feed/search masih memakai kontrak read-only tahap 1.

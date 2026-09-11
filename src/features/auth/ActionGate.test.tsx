@@ -26,7 +26,7 @@ describe('private action gates', () => {
   });
   it('allows a completed account to reach the requested feature', async () => {
     show('/listings/new', auth(session), onboarding('complete'));
-    expect(await screen.findByRole('heading', { name: 'Pasang penawaran belum tersedia' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Pasang penawaran' })).toBeVisible();
   });
   it('signs out from the account page without exposing provider errors', async () => {
     const user = userEvent.setup(); const authGateway = auth(session); show('/profile', authGateway, onboarding('complete'));
