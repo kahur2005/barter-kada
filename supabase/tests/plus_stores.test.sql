@@ -1,5 +1,5 @@
 begin;
-select plan(14);
+select plan(16);
 
 select has_table('public', 'subscriptions', 'Plus entitlement table exists');
 select has_table('public', 'billing_orders', 'dummy billing orders table exists');
@@ -21,6 +21,9 @@ select is((public.simulate_plus_billing(current_setting('test.invoice')::uuid, '
 select is((public.get_plus_status()->>'active'), 'true', 'server reports active Plus entitlement');
 select is((public.create_store('dapur-rina', 'Dapur Rina', 'Menu rumahan.', 'Makanan', 'plus-test', 'Plus test', 'Senin-Sabtu', array['meetup']::text[], null, false)->>'name'), 'Dapur Rina', 'Plus account can create a store');
 select is(jsonb_array_length(public.get_my_stores()), 1, 'owner can read own stores');
+select set_config('test.store', (public.get_my_stores()->0->>'id'), true);
+select is((public.update_store(current_setting('test.store')::uuid, 'Dapur Rina Baru', 'Menu terbaru.', 'Makanan', 'plus-test', 'Label palsu', 'Setiap hari', array['pickup','meetup']::text[], 'Jalan contoh', true)->>'name'), 'Dapur Rina Baru', 'owner can update store profile');
+select is((public.get_my_stores()->0->>'areaLabel'), 'Plus test', 'server keeps the service-area label authoritative');
 select lives_ok($$ select public.create_store('po-rina', 'PO Rina', 'Preorder.', 'Makanan', 'plus-test', 'Plus test', 'Senin-Sabtu', array['pickup']::text[], null, false) $$, 'second store is within quota');
 select lives_ok($$ select public.create_store('preloved-rina', 'Preloved Rina', 'Barang preloved.', 'Preloved', 'plus-test', 'Plus test', 'Sabtu', array['meetup']::text[], null, false) $$, 'third store is within quota');
 select throws_ok($$ select public.create_store('keempat', 'Toko keempat', 'Tidak boleh.', 'Lainnya', 'plus-test', 'Plus test', 'Sabtu', array['meetup']::text[], null, false) $$, 'P0001', 'STORE_LIMIT_REACHED', 'fourth store is rejected by server quota');
