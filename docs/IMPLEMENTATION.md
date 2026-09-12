@@ -235,6 +235,15 @@ Halaman Akun sekarang menyediakan landmark `Menu akun` yang menghubungkan profil
 
 - Test: `src/features/auth/AccountPage.test.tsx`.
 
+## Bukti parsial UI-08: pusat Transaksi saya
+
+Ringkasan transaksi sekarang membawa projection server-side yang memisahkan `Perlu tindakan`, `Berjalan`, dan `Selesai`. Setiap baris tetap menyimpan jenis transaksi/lifecycle, tetapi role pengguna (`Pembeli`/`Penjual` atau `Pihak A`/`Pihak B`) dan penerbit (`profil pribadi`/`toko`) ditampilkan sebagai konteks terpisah. RPC `list_my_transactions` tetap participant-scoped; migration transaction hub menggunakan projection `security definer` yang memiliki predicate actor eksplisit agar histori penerbit masih dapat dibaca ketika visibilitas publik listing/toko berubah.
+
+- Migration: `supabase/migrations/20260912075019_transaction_hub.sql`.
+- pgTAP assertions: `supabase/tests/transaction_index.test.sql`.
+- Tests: `src/features/transactions/gateway.test.ts` dan `src/features/transactions/TransactionsPage.test.tsx`.
+- Static SQL contract lulus; pgTAP belum dapat dijalankan karena local Postgres/Docker menolak koneksi ke `127.0.0.1:54322`.
+
 ## Bukti parsial UI-04: pengelolaan foto listing
 
 Editor listing sekarang menampilkan daftar asset foto yang sudah diproses. Pemilik dapat menjadikan foto mana pun sebagai foto utama, menghapus foto, dan mengulangi upload yang gagal tanpa mengulang file yang sudah berhasil diproses. Urutan `assetIds` dikirim ke gateway; migrasi katalog menyimpan urutan tersebut sebagai `listing_assets.position`, sehingga foto pertama menjadi foto utama secara konsisten. Saat keluar dengan perubahan belum tersimpan, editor meminta pengguna tetap di editor, menyimpan draft/perubahan, atau membuang perubahan.
