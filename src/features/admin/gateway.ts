@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { adminReportSchema, type AdminReport, type AdminReportPage, type PlanSettings, type PlanSettingsHistoryPage, type ReportOutcome, type ReportStatus, type SanctionKind } from './types';
+import { adminReportSchema, type AdminReport, type AdminReportPage, type PlanSettings, type PlanSettingsHistoryPage, type ProductMetrics, type ReportOutcome, type ReportStatus, type SanctionKind } from './types';
 
 export interface AdminGateway {
   listReports(input: { status: ReportStatus | 'all'; cursor: string | null }): Promise<AdminReportPage>;
@@ -9,11 +9,13 @@ export interface AdminGateway {
   getPlanSettings(): Promise<PlanSettings>;
   updatePlanLimits(input: { expectedVersion: number; personalActiveLimit: number; storeProductActiveLimit: number; reason: string; idempotencyKey: string }): Promise<PlanSettings>;
   listPlanSettingsHistory(cursor: number | null): Promise<PlanSettingsHistoryPage>;
+  getProductMetrics(input: { from: string; to: string }): Promise<ProductMetrics>;
 }
 const failure = () => new Error('Panel admin belum dapat memproses permintaan.');
 const pageSchema = z.object({ items: z.array(adminReportSchema), nextCursor: z.string().nullable() });
 const planSettingsSchema: z.ZodType<PlanSettings> = z.object({ version: z.number().int().positive(), personalActiveLimit: z.number().int().positive(), storeProductActiveLimit: z.number().int().positive(), maxStores: z.number().int().positive(), plusPriceRupiah: z.string(), personalActiveCount: z.number().int().nonnegative(), storeProductActiveCount: z.number().int().nonnegative(), personalOverLimitOwners: z.number().int().nonnegative(), storeOverLimitStores: z.number().int().nonnegative() });
 const historySchema: z.ZodType<PlanSettingsHistoryPage> = z.object({ items: z.array(z.object({ version: z.number().int().positive(), personalActiveLimit: z.number().int().positive(), storeProductActiveLimit: z.number().int().positive(), reason: z.string(), actorName: z.string().nullable(), effectiveAt: z.string().datetime() })), nextCursor: z.number().int().positive().nullable() });
+const productMetricsSchema: z.ZodType<ProductMetrics> = z.object({ window: z.object({ from: z.string(), to: z.string() }), activeListingsByArea: z.array(z.object({ weekStart: z.string(), areaId: z.string(), activeListings: z.number().int().nonnegative() })), completedTransactions: z.array(z.object({ kind: z.string(), count: z.number().int().nonnegative() })), averageChatResponseSeconds: z.number().nonnegative().nullable(), retention: z.object({ cohortUsers: z.number().int().nonnegative(), d7Users: z.number().int().nonnegative(), d7Rate: z.number().nonnegative().nullable(), w1Users: z.number().int().nonnegative(), w1Rate: z.number().nonnegative().nullable() }), activeStoreCount: z.number().int().nonnegative(), activePlusUserCount: z.number().int().nonnegative(), generatedAt: z.string().datetime() });
 export function createSupabaseAdminGateway(client: SupabaseClient): AdminGateway {
   return {
     async listReports({ status, cursor }) {
@@ -39,6 +41,10 @@ export function createSupabaseAdminGateway(client: SupabaseClient): AdminGateway
     async listPlanSettingsHistory(cursor) {
       const { data, error } = await client.rpc('list_settings_history', { p_cursor: cursor, p_limit: 20 });
       const parsed = historySchema.safeParse(data); if (error || !parsed.success) throw failure(); return parsed.data;
+    },
+    async getProductMetrics(input) {
+      const { data, error } = await client.rpc('get_product_metrics', { p_from: input.from, p_to: input.to });
+      const parsed = productMetricsSchema.safeParse(data); if (error || !parsed.success) throw failure(); return parsed.data;
     },
   };
 }

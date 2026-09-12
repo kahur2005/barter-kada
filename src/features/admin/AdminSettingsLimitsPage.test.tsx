@@ -9,6 +9,7 @@ import type { AdminGateway } from './gateway';
 it('requires an explicit before/after confirmation before changing limits', async () => {
   const gateway: AdminGateway = {
     listReports: vi.fn(), getReport: vi.fn(), decide: vi.fn(),
+    getProductMetrics: vi.fn(),
     getPlanSettings: vi.fn().mockResolvedValue({ version: 2, personalActiveLimit: 20, storeProductActiveLimit: 100, maxStores: 3, plusPriceRupiah: '20000', personalActiveCount: 4, storeProductActiveCount: 8, personalOverLimitOwners: 0, storeOverLimitStores: 0 }),
     updatePlanLimits: vi.fn().mockResolvedValue({ version: 3, personalActiveLimit: 25, storeProductActiveLimit: 120, maxStores: 3, plusPriceRupiah: '20000', personalActiveCount: 4, storeProductActiveCount: 8, personalOverLimitOwners: 0, storeOverLimitStores: 0 }),
     listPlanSettingsHistory: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),

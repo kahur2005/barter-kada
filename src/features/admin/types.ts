@@ -36,3 +36,14 @@ export type PlanSettingsHistoryItem = {
 };
 
 export type PlanSettingsHistoryPage = { items: PlanSettingsHistoryItem[]; nextCursor: number | null };
+
+export type ProductMetrics = {
+  window: { from: string; to: string };
+  activeListingsByArea: Array<{ weekStart: string; areaId: string; activeListings: number }>;
+  completedTransactions: Array<{ kind: string; count: number }>;
+  averageChatResponseSeconds: number | null;
+  retention: { cohortUsers: number; d7Users: number; d7Rate: number | null; w1Users: number; w1Rate: number | null };
+  activeStoreCount: number;
+  activePlusUserCount: number;
+  generatedAt: string;
+};

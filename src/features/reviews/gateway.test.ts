@@ -19,4 +19,11 @@ describe('review gateway', () => {
     expect(rpc).toHaveBeenNthCalledWith(1, 'list_reviews', { p_subject_id: 'f6000000-0000-4000-8000-000000000006', p_cursor: null, p_limit: 20 });
     expect(rpc).toHaveBeenNthCalledWith(2, 'reply_review', { p_review_id: 'f3000000-0000-4000-8000-000000000003', p_body: 'Terima kasih.' });
   });
+
+  it('loads store-scoped reviews separately from owner reviews', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: { items: [], nextCursor: null }, error: null });
+    const gateway = createSupabaseReviewGateway({ rpc } as never);
+    await gateway.listStore('f7000000-0000-4000-8000-000000000007', null);
+    expect(rpc).toHaveBeenCalledWith('list_store_reviews', { p_store_id: 'f7000000-0000-4000-8000-000000000007', p_cursor: null, p_limit: 20 });
+  });
 });

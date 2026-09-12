@@ -1,0 +1,31 @@
+begin;
+select plan(25);
+
+select has_table('private', 'system_jobs', 'system job queue exists');
+select ok((select relrowsecurity from pg_catalog.pg_class where oid = 'private.system_jobs'::regclass), 'system jobs are protected by RLS');
+select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'system_jobs_dedupe_key_key'), 'system jobs deduplicate by key');
+select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'system_jobs_kind'), 'job kinds are allowlisted');
+select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'system_jobs_status'), 'job statuses are allowlisted');
+select ok(exists (select 1 from pg_catalog.pg_index where indexrelid = 'system_jobs_due_idx'::regclass), 'due jobs have an index');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'enqueue_system_job'), 'enqueue helper exists');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'run_due_system_jobs'), 'worker exists');
+select ok(not has_function_privilege('authenticated', 'private.run_due_system_jobs(integer)', 'execute'), 'browser cannot run system jobs');
+select ok(has_function_privilege('service_role', 'private.run_due_system_jobs(integer)', 'execute'), 'service role can run system jobs');
+select ok(exists (select 1 from pg_catalog.pg_trigger where tgname = 'reviews_schedule_publication'), 'pending reviews enqueue publication job');
+select ok(exists (select 1 from pg_catalog.pg_trigger where tgname = 'order_payment_schedule_reminder'), 'DP obligations enqueue reminder job');
+select ok(exists (select 1 from pg_catalog.pg_trigger where tgname = 'subscriptions_schedule_expiry_reminder'), 'Plus subscriptions enqueue expiry job');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'run_order_payment_reminder'), 'DP reminder handler exists');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'run_plus_expiry_reminder'), 'Plus reminder handler exists');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'publish_due_reviews'), 'review publication handler exists');
+select ok(exists (select 1 from pg_catalog.pg_attribute where attrelid = 'private.system_jobs'::regclass and attname = 'locked_by'), 'worker lease owner is recorded');
+select ok(exists (select 1 from pg_catalog.pg_attribute where attrelid = 'private.system_jobs'::regclass and attname = 'attempts'), 'retry count is recorded');
+select ok(exists (select 1 from pg_catalog.pg_attribute where attrelid = 'private.system_jobs'::regclass and attname = 'last_error'), 'job failure is recorded');
+select ok(not exists (select 1 from pg_catalog.pg_extension where extname = 'pg_cron') or exists (select 1 from pg_catalog.pg_proc where proname = 'schedule'), 'cron schedule function is present when pg_cron is installed');
+select ok((select provolatile = 'v' from pg_catalog.pg_proc where oid = 'private.run_due_system_jobs(integer)'::regprocedure), 'worker is volatile');
+select ok((select prosecdef from pg_catalog.pg_proc where oid = 'private.run_due_system_jobs(integer)'::regprocedure), 'worker runs with server privileges');
+select ok(not has_table_privilege('authenticated', 'private.system_jobs', 'select'), 'authenticated users cannot inspect job payloads');
+select ok(not has_table_privilege('anon', 'private.system_jobs', 'select'), 'anonymous users cannot inspect job payloads');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'create_notification'), 'job handlers use in-app notification helper');
+
+select * from finish();
+rollback;

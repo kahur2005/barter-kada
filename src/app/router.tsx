@@ -26,6 +26,7 @@ import { ReviewListPage } from '../features/reviews/ReviewListPage';
 import { AdminReportsPage } from '../features/admin/AdminReportsPage';
 import { AdminReportDetailPage } from '../features/admin/AdminReportDetailPage';
 import { AdminSettingsLimitsPage } from '../features/admin/AdminSettingsLimitsPage';
+import { AdminAnalyticsPage } from '../features/admin/AdminAnalyticsPage';
 import { TransactionsPage } from '../features/transactions/TransactionsPage';
 
 export function AppRoutes() {
@@ -59,6 +60,7 @@ export function AppRoutes() {
     <Route path="/admin/reports" element={<AdminReportsPage />} />
     <Route path="/admin/reports/:id" element={<AdminReportDetailPage />} />
     <Route path="/admin/settings/limits" element={<AdminSettingsLimitsPage />} />
+    <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
     <Route path="/admin/*" element={<UnavailablePage />} />
     <Route path="*" element={<UnavailablePage title="Halaman tidak ditemukan" />} />
   </Routes>;

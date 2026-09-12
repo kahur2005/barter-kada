@@ -1,0 +1,22 @@
+begin;
+select plan(17);
+
+select has_column('public', 'reviews', 'store_id', 'reviews can target a store separately from its owner');
+select ok(exists (select 1 from pg_catalog.pg_index where indexrelid = 'reviews_store_recent_idx'::regclass), 'store reviews have a recent index');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'store_reputation_json'), 'store reputation aggregate exists');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'list_store_reviews'), 'store review listing RPC exists');
+select ok(has_function_privilege('anon', 'public.list_store_reviews(uuid,text,integer)', 'execute'), 'public store reviews are readable anonymously');
+select ok(not has_function_privilege('anon', 'public.submit_review(text,uuid,integer,text)', 'execute'), 'anonymous users cannot submit reviews');
+select ok(exists (select 1 from pg_catalog.pg_trigger where tgname = 'reviews_schedule_publication'), 'store reviews use the same publication lifecycle');
+select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'reviews_store_id_fkey'), 'store review target is foreign-keyed');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'search_stores'), 'store search projection exists');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'get_store'), 'store detail projection exists');
+select ok(exists (select 1 from pg_catalog.pg_attribute where attrelid = 'public.reviews'::regclass and attname = 'subject_id'), 'seller identity remains available for replies');
+select ok(exists (select 1 from pg_catalog.pg_attribute where attrelid = 'public.reviews'::regclass and attname = 'transaction_id'), 'review remains tied to a completed transaction');
+select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'reply_review'), 'store owners can use scoped review replies');
+select ok(not has_table_privilege('authenticated', 'public.reviews', 'insert'), 'review writes remain RPC-only');
+select ok((select prosecdef from pg_catalog.pg_proc where oid = 'public.submit_review(text,uuid,integer,text)'::regprocedure), 'review target resolution runs server-side');
+select ok((select prosecdef from pg_catalog.pg_proc where oid = 'private.store_reputation_json(uuid)'::regprocedure), 'store aggregate is server-owned');
+select ok((select provolatile = 's' from pg_catalog.pg_proc where oid = 'public.list_store_reviews(uuid,text,integer)'::regprocedure), 'store review list is stable');
+select * from finish();
+rollback;

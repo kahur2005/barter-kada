@@ -11,12 +11,12 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | 1 | React/Vite/TypeScript, shell mobile, penemuan/detail/toko read-only, adapter API, test harness | PDR UI-01/02, T-27/46/55 | Selesai dan diverifikasi sebagai fondasi read-only; backend belum terhubung |
 | 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Diimplementasikan dan unit-tested; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
 | 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
-| 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center dan event notification server-side diimplementasikan; scheduled reminder jobs serta runtime Supabase belum diverifikasi |
+| 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center, event notification server-side, dan idempotent reminder worker diimplementasikan; runtime Supabase belum diverifikasi |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
 | 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover, pembatalan sebelum proses, dan permintaan pembatalan pascaproses dengan keputusan penjual diimplementasikan; amend/refund/admin belum |
 | 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, katalog, selector penerbit, batas produk toko dan rotasi promosi per akun diimplementasikan; runtime database belum diverifikasi |
-| 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, serta restriction/ban foundation diimplementasikan; scheduled worker dan verifikasi database belum |
-| 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Admin limits/version history sudah diimplementasikan; amend/refund dan analytics belum dibuat karena kebijakan produk/target metrik belum final |
+| 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, restriction/ban foundation, dan scheduler publikasi/reminder diimplementasikan; runtime database belum |
+| 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Admin limits/version history, product event privacy boundary, activity-day retention, listing visibility periods, live metrics RPC, halaman `/admin/analytics`, serta rating toko terpisah diimplementasikan; amend/refund belum |
 | 10 | E2E dua akun, RLS/race/security, mobile/a11y, build Vercel, panduan/demo evidence | Semua requirement R yang berlaku; T-45/46/55; UX-01–13 | Belum diverifikasi |
 
 Skenario T merupakan kelompok, bukan jumlah tes yang otomatis membuktikan seluruh PRD. Saat bagian selesai, catat path test, command, hasil, commit dan keterbatasannya. Matrix 244 R tetap sumber audit akhir; jangan mengubah semua status menjadi selesai berdasarkan build frontend.
@@ -124,7 +124,7 @@ Implementasi lanjutan 12 September 2026 menambahkan pusat notifikasi in-app, tri
 - `npm run test:e2e`: 26 lulus, 1 dilewati karena skenario desktop-only; suite tetap memakai lebar 320, 390, dan desktop.
 - Migration/tap test baru: notifications/reviews 14 assertion dan admin cases 18 assertion. Belum dieksekusi karena Docker Linux engine/Supabase lokal masih tidak tersedia.
 
-Batas penting: scheduled reminder/cleanup jobs, worker pemanggil publikasi review tertunda, keputusan return/cancel yang benar-benar mengubah fulfillment/refund, amendmen pasca-DP, analytics, store rating terpisah per toko, dan runtime/RLS integration test tetap belum selesai. Pembatalan order yang sudah mengakui pembayaran hanya menandai tindak lanjut refund antar pihak; tidak ada transfer atau refund otomatis.
+Batas penting: keputusan return/cancel yang benar-benar mengubah fulfillment/refund, amendmen pasca-DP, dan runtime/RLS integration test tetap belum selesai. Pembatalan order yang sudah mengakui pembayaran hanya menandai tindak lanjut refund antar pihak; tidak ada transfer atau refund otomatis.
 
 Daftar transaksi participant-scoped (`/transactions`) juga ditambahkan dari Akun. Migration dan pgTAP statisnya ada di `20260912075000_transaction_index.sql` dan `transaction_index.test.sql`; verifikasi database runtime tetap tertahan karena Docker Linux engine belum tersedia.
 
@@ -132,8 +132,24 @@ Daftar transaksi participant-scoped (`/transactions`) juga ditambahkan dari Akun
 
 Implementasi berikutnya menambahkan migration `20260912082000_admin_settings_limits.sql`, `20260912083000_store_listing_publish_limits.sql`, `20260912084000_plus_promotion_rotation.sql`, dan `20260912085000_reviews_lifecycle_replies.sql`. Cakupannya: panel `/admin/settings/limits` dengan optimistic version, audit history immutable, batas produk toko server-side, promotion rotation maksimal satu slot per sepuluh listing dan satu akun per slot, review barter pending hingga kedua pihak/14 hari, scheduled publication RPC untuk service role, daftar review publik, serta balasan pemilik satu kali.
 
-- `npm.cmd test -- --run`: 42 file, 135 tes lulus.
-- `npm.cmd run build`: lulus; bundle entry 152,67 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
-- Migration/tap test baru: admin settings 18 assertion, promotion 16 assertion, review lifecycle/replies 18 assertion. Belum dieksekusi karena Docker Linux engine/Supabase lokal masih tidak tersedia.
+- `npm.cmd test -- --run`: 42 file, 139 tes lulus.
+- `npm.cmd run build`: lulus; bundle entry 154,19 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
+- Migration/tap test baru: admin settings 18 assertion, promotion 16 assertion, review lifecycle/replies 18 assertion, system jobs 25 assertion, product events/metrics 35 assertion, dan store ratings 17 assertion. Belum dieksekusi karena Docker Linux engine/Supabase lokal masih tidak tersedia.
 - Order cancellation workflow memiliki 17 assertion pgTAP; reservasi/obligation yang masih due dilepas atomik, sementara pembayaran yang sudah diakui hanya ditandai perlu tindak lanjut langsung antar pihak.
-- Scheduler/Cron belum dikonfigurasi pada project Supabase tertentu; `publish_due_reviews()` hanya menjadi entry point service-role sampai target deployment dan jadwal resmi ditentukan.
+- `20260912090000_system_jobs_and_reminders.sql` menambahkan queue idempotent dengan retry/lease, trigger untuk review/DP/Plus, dan registrasi Cron kondisional melalui `cron.schedule`; target Supabase tertentu belum ditunjuk sehingga belum ada runtime proof.
+- `20260912091000_product_events_metrics.sql` menambahkan event allowlist tanpa PII, activity-day cohort, listing visibility periods, dan RPC admin `get_product_metrics`; UI agregat tersedia di `/admin/analytics`. Metrik sengaja mengecualikan `is_test`, tetapi backfill historical event selain listing visibility belum dilakukan.
+- `20260912092000_store_ratings.sql` menautkan review order ke katalog toko melalui `store_id`, mengganti projection rating toko agar tidak mengambil rating personal pemilik, dan menyediakan ulasan toko scoped di `/reviews?storeId=...`.
+
+## Bukti parsial tahap 4/8/9: jobs dan metrics
+
+Implementasi 12 September 2026 menambahkan `private.system_jobs`, retry maksimal tiga kali dengan lease stale 10 menit, handler publikasi review tertunda, reminder DP 24 jam sebelum tenggat/ketika sudah overdue, dan reminder Plus tiga hari sebelum expiry. Queue tidak dapat dibaca role browser; hanya `service_role` yang diberi execute pada worker. Registrasi Cron bersifat kondisional dan idempotent sehingga migration tidak memaksa extension pada lingkungan yang belum menyediakan pg_cron.
+
+Product analytics menyimpan event terstruktur dengan source key idempotent, activity day tanpa isi pesan/nomor telepon/alamat, periode visibilitas listing per area, dan RPC admin yang mengembalikan transaksi selesai, listing aktif mingguan, response chat, retention D7/W1, store aktif, serta Plus aktif. Halaman admin menggunakan rentang tanggal eksplisit dan tidak menampilkan payload event mentah.
+
+Bukti host:
+
+- `npm.cmd test -- --run`: 42 file, 139 tes lulus.
+- `npm.cmd run build`: lulus; entry 154,19 kB gzip.
+- `npm.cmd run test:e2e`: 26 lulus, 1 dilewati pada skenario desktop-only.
+- `git diff --check`: tidak menemukan whitespace error; warning CRLF dari Git tidak memengaruhi isi.
+- `supabase start` masih tidak dapat dijalankan karena Docker Linux engine tidak tersedia; seluruh assertion pgTAP pada dua migration baru masih static-only.

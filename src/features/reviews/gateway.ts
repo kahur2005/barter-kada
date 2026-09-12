@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { ReviewInput, ReviewPage, ReviewReply, ReviewResult } from './types';
 
-export interface ReviewGateway { submit(input: ReviewInput): Promise<ReviewResult>; list(subjectId: string, cursor: string | null): Promise<ReviewPage>; reply(reviewId: string, body: string): Promise<ReviewReply>; }
+export interface ReviewGateway { submit(input: ReviewInput): Promise<ReviewResult>; list(subjectId: string, cursor: string | null): Promise<ReviewPage>; listStore(storeId: string, cursor: string | null): Promise<ReviewPage>; reply(reviewId: string, body: string): Promise<ReviewReply>; }
 
 const failure = () => new Error('Ulasan belum dapat disimpan.');
 export function createSupabaseReviewGateway(client: SupabaseClient): ReviewGateway {
@@ -20,6 +20,12 @@ export function createSupabaseReviewGateway(client: SupabaseClient): ReviewGatew
     },
     async list(subjectId, cursor) {
       const { data, error } = await client.rpc('list_reviews', { p_subject_id: subjectId, p_cursor: cursor, p_limit: 20 });
+      const parsed = z.object({ items: z.array(z.object({ id: z.string().uuid(), kind: z.enum(['barter', 'order']), transactionId: z.string().uuid(), authorName: z.string(), rating: z.number().int().min(1).max(5), comment: z.string(), createdAt: z.string().datetime(), reply: z.object({ id: z.string().uuid(), body: z.string(), createdAt: z.string().datetime() }).nullable(), canReply: z.boolean() })), nextCursor: z.string().nullable() }).safeParse(data);
+      if (error || !parsed.success) throw failure();
+      return parsed.data;
+    },
+    async listStore(storeId, cursor) {
+      const { data, error } = await client.rpc('list_store_reviews', { p_store_id: storeId, p_cursor: cursor, p_limit: 20 });
       const parsed = z.object({ items: z.array(z.object({ id: z.string().uuid(), kind: z.enum(['barter', 'order']), transactionId: z.string().uuid(), authorName: z.string(), rating: z.number().int().min(1).max(5), comment: z.string(), createdAt: z.string().datetime(), reply: z.object({ id: z.string().uuid(), body: z.string(), createdAt: z.string().datetime() }).nullable(), canReply: z.boolean() })), nextCursor: z.string().nullable() }).safeParse(data);
       if (error || !parsed.success) throw failure();
       return parsed.data;
