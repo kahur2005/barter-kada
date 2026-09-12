@@ -371,6 +371,8 @@ ul { padding-left: 20px; }
 .plus-panel { display: grid; gap: 12px; padding: 20px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
 .plus-panel h2 { margin: 0; }
 .simulation-warning { padding: 12px; border-left: 4px solid #a15c00; background: #fff8eb; color: #704000; }
+.plus-expired-banner { display: grid; gap: 8px; padding: 16px; border-left: 4px solid #a15c00; background: #fff8eb; color: #704000; }
+.plus-expired-banner h2, .plus-expired-banner p { margin: 0; }
 .billing-simulation { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--action); background: var(--paper); }
 .stores-page .owner-list { margin: 0; }
 .report-page { max-width: 46rem; margin: 0 auto; display: grid; gap: 16px; }

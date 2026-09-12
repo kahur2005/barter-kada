@@ -112,6 +112,7 @@ export function MyStoresPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const stores = useQuery({ queryKey: ['stores', 'mine'], queryFn: () => gateway!.getMyStores(), enabled: Boolean(gateway) });
+  const plus = useQuery({ queryKey: ['plus', 'status'], queryFn: () => gateway!.getPlusStatus(), enabled: Boolean(gateway) });
   const reset = () => {
     setInput(emptyInput);
     setEditingId(null);
@@ -180,6 +181,16 @@ export function MyStoresPage() {
         <h1>Profil usaha</h1>
         <p>Satu akun dapat memiliki sampai tiga toko Plus. Produk tetap dikelola lewat listing.</p>
       </header>
+      {stores.data?.length && plus.data && !plus.data.active && (
+        <div className="plus-expired-banner" role="status">
+          <h2>Plus berakhir</h2>
+          <p>Toko disembunyikan karena Plus berakhir. Data dan transaksi berjalan tetap tersedia.</p>
+          <div className="form-actions">
+            <Link className="button" to="/plus">Perpanjang Plus</Link>
+            <Link className="button secondary" to="/transactions">Buka transaksi</Link>
+          </div>
+        </div>
+      )}
       {stores.data?.length ? (
         <div className="owner-list">
           {stores.data.map(store => (
@@ -188,6 +199,7 @@ export function MyStoresPage() {
                 <span className="label">{store.status === 'active' ? 'Aktif' : 'Tersembunyi'}</span>
                 <h2>{store.name}</h2>
                 <p>barter.app/stores/{store.slug} · {store.category} · {store.areaLabel}</p>
+                <p>Produk aktif: {store.activeProductCount ?? '—'}</p>
               </div>
               <div className="form-actions">
                 <Link className="button secondary" to={`/listings/new?storeId=${store.id}`}>Tambah produk</Link>

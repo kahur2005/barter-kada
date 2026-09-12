@@ -13,7 +13,7 @@ const auth: AuthGateway = { getSession: vi.fn().mockResolvedValue({ userId: '100
 const onboarding: OnboardingGateway = { getState: vi.fn().mockResolvedValue({ nextStep: 'complete', displayName: 'Rina', bio: null, areaId: 'depok', maskedPhone: '+62••••7890', phoneVerified: true }), listAreas: vi.fn().mockResolvedValue([]), completeProfile: vi.fn(), setLocation: vi.fn(), requestOtp: vi.fn(), verifyOtp: vi.fn() };
 
 function storeGateway(): StoreGateway {
-  return { getPlusStatus: vi.fn(), createBillingOrder: vi.fn(), simulateBilling: vi.fn(), createStore: vi.fn(), getMyStores: vi.fn().mockResolvedValue([{ id: 'd1000000-0000-4000-8000-000000000001', slug: 'dapur-rina', name: 'Dapur Rina', description: 'Menu rumahan.', category: 'Makanan', areaId: 'depok', areaLabel: 'Depok', operatingHours: 'Senin-Sabtu', handoverMethods: ['meetup'], publicAddress: null, publicAddressConsent: false, status: 'active' }]), updateStore: vi.fn().mockResolvedValue({ id: 'd1000000-0000-4000-8000-000000000001', slug: 'dapur-rina', name: 'Dapur Rina Baru', description: 'Menu rumahan.', category: 'Makanan', areaId: 'depok', areaLabel: 'Depok', operatingHours: 'Senin-Sabtu', handoverMethods: ['meetup'], publicAddress: null, publicAddressConsent: false, status: 'active' }) };
+  return { getPlusStatus: vi.fn().mockResolvedValue({ priceRupiah: '20000', maxStores: 3, active: false, paidThrough: '2026-09-01T00:00:00.000Z', storeCount: 1 }), createBillingOrder: vi.fn(), simulateBilling: vi.fn(), createStore: vi.fn(), getMyStores: vi.fn().mockResolvedValue([{ id: 'd1000000-0000-4000-8000-000000000001', slug: 'dapur-rina', name: 'Dapur Rina', description: 'Menu rumahan.', category: 'Makanan', areaId: 'depok', areaLabel: 'Depok', operatingHours: 'Senin-Sabtu', handoverMethods: ['meetup'], publicAddress: null, publicAddressConsent: false, activeProductCount: 2, status: 'active' }]), updateStore: vi.fn().mockResolvedValue({ id: 'd1000000-0000-4000-8000-000000000001', slug: 'dapur-rina', name: 'Dapur Rina Baru', description: 'Menu rumahan.', category: 'Makanan', areaId: 'depok', areaLabel: 'Depok', operatingHours: 'Senin-Sabtu', handoverMethods: ['meetup'], publicAddress: null, publicAddressConsent: false, activeProductCount: 2, status: 'active' }) };
 }
 
 describe('my stores', () => {
@@ -23,6 +23,10 @@ describe('my stores', () => {
     await user.click(await screen.findByRole('button', { name: 'Edit profil' }));
     const name = screen.getByLabelText('Nama toko');
     expect(name).toHaveValue('Dapur Rina');
+    expect(screen.getByText('Produk aktif: 2')).toBeVisible();
+    expect(await screen.findByText(/Toko disembunyikan karena Plus berakhir/)).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Perpanjang Plus' })).toHaveAttribute('href', '/plus');
+    expect(screen.getByRole('link', { name: 'Buka transaksi' })).toHaveAttribute('href', '/transactions');
     expect(screen.getByRole('link', { name: 'Tambah produk' })).toHaveAttribute('href', '/listings/new?storeId=d1000000-0000-4000-8000-000000000001');
     await user.clear(name); await user.type(name, 'Dapur Rina Baru');
     await user.click(screen.getByRole('button', { name: 'Simpan perubahan' }));
