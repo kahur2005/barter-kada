@@ -22,7 +22,7 @@ const states: Record<'profile' | 'location' | 'phone' | 'complete', OnboardingSt
 function gateway(initial: keyof typeof states): OnboardingGateway {
   return {
     getState: vi.fn().mockResolvedValue(states[initial]), listAreas: vi.fn().mockResolvedValue([{ areaId: 'depok', name: 'Depok' }]),
-    completeProfile: vi.fn().mockResolvedValue(states.location), setLocation: vi.fn().mockResolvedValue(states.phone),
+    completeProfile: vi.fn().mockResolvedValue(initial === 'complete' ? states.complete : states.location), setLocation: vi.fn().mockResolvedValue(initial === 'complete' ? states.complete : states.phone),
     requestOtp: vi.fn().mockResolvedValue({ challengeId: '20000000-0000-4000-8000-000000000002', expiresAt: '2026-09-11T15:05:00Z', resendAt: '2026-09-11T15:01:00Z', deliveryStatus: 'accepted' }),
     verifyOtp: vi.fn().mockResolvedValue(states.complete),
   };
@@ -62,5 +62,20 @@ describe('account onboarding', () => {
     expect(screen.getByLabelText('Kode verifikasi')).toHaveAttribute('autocomplete', 'one-time-code');
     expect(screen.getByLabelText('Kode verifikasi')).toHaveAttribute('inputmode', 'numeric');
     expect(screen.queryByText(/nomor terverifikasi/i)).not.toBeInTheDocument();
+  });
+
+  it('lets a completed account edit its profile and start a change-phone OTP flow', async () => {
+    const user = userEvent.setup(); const api = gateway('complete'); show(api);
+    expect(await screen.findByRole('heading', { name: 'Perbarui data diri' })).toBeVisible();
+    expect(screen.getByLabelText('Wilayah')).toHaveValue('depok');
+    const name = screen.getByLabelText('Nama yang ditampilkan');
+    await user.clear(name); await user.type(name, 'Rina Baru');
+    await user.click(screen.getByRole('button', { name: 'Simpan data diri' }));
+    expect(api.completeProfile).toHaveBeenCalledWith({ displayName: 'Rina Baru', bio: null });
+
+    await user.type(screen.getByLabelText('Nomor WhatsApp baru'), '081234567890');
+    await user.click(screen.getByRole('button', { name: 'Kirim kode ke nomor baru' }));
+    expect(api.requestOtp).toHaveBeenCalledWith({ phone: '081234567890', purpose: 'change_phone' });
+    expect(await screen.findByText(/permintaan kode diterima OpenWA/i)).toBeVisible();
   });
 });

@@ -213,6 +213,8 @@ ul { padding-left: 20px; }
 .onboarding-panel { padding: 20px; border: 1px solid var(--rule); border-radius: 8px; }
 .onboarding-panel section { display: grid; gap: 12px; }
 .onboarding-panel .stack-form { margin-top: 4px; }
+.account-settings { gap: 24px; }
+.account-settings > section + section { padding-top: 24px; border-top: 1px solid var(--rule); }
 .optional { color: var(--muted); font-weight: 400; }
 .otp-form { margin-top: 20px !important; padding-top: 20px; border-top: 1px solid var(--rule); }
 .account-page { max-width: 640px; margin: 0 auto; display: grid; gap: 20px; }

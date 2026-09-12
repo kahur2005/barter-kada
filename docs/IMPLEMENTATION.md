@@ -9,7 +9,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | Tahap | Keluaran | Acuan | Status |
 | --- | --- | --- | --- |
 | 1 | React/Vite/TypeScript, shell mobile, penemuan/detail/toko read-only, adapter API, test harness | PDR UI-01/02, T-27/46/55 | Selesai dan diverifikasi sebagai fondasi read-only; backend belum terhubung |
-| 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Diimplementasikan dan unit-tested; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
+| 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Profil/lokasi privat, OTP OpenWA, pengeditan data diri, pembaruan lokasi, dan penggantian nomor melalui OTP `change_phone` sudah memiliki UI/gateway; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
 | 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
 | 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center, event notification server-side, dan idempotent reminder worker diimplementasikan; runtime Supabase belum diverifikasi |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
@@ -40,6 +40,7 @@ Skenario T merupakan kelompok, bukan jumlah tes yang otomatis membuktikan seluru
 - [Notifikasi, review, dan admin case minimum](superpowers/plans/2026-09-12-notifications-reviews.md).
 - [Amendment order dan refund offline](superpowers/plans/2026-09-12-amendment-refund.md).
 - [Bantuan admin untuk transaksi yang menggantung](superpowers/plans/2026-09-12-stuck-transaction-help.md).
+- [Pengaturan akun dan penggantian nomor](superpowers/plans/2026-09-12-account-settings.md).
 - Rencana subsystem berikut diturunkan dari tahap 5–10 sebelum kode subsystem terkait dimulai; status belum dibuat di atas tetap aktif sampai ada bukti implementasi.
 
 ## Lingkungan yang harus dipenuhi sebelum verifikasi end-to-end
@@ -198,3 +199,14 @@ Bukti host pada checkpoint ini:
 - `npm.cmd run build`: TypeScript dan Vite production build lulus; entry 156,84 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
 - `supabase/tests/receipt_followup.test.sql`: 18 assertion pgTAP static-only untuk trigger reminder, validator queue, worker dispatch, RPC bantuan, privilege, dan field DTO.
 - `supabase start` tetap tertahan karena Docker Desktop Linux Engine/API tidak merespons, sehingga migration, RLS, race, dan RPC belum diuji pada PostgreSQL.
+
+## Bukti parsial tahap 2: pengaturan akun
+
+Implementasi 12 September 2026 memakai ulang alur onboarding untuk state akun yang sudah lengkap. Pengguna sekarang dapat memperbarui nama/bio, meminta lokasi perangkat secara eksplisit lalu mengganti lokasi privat, dan memulai penggantian nomor WhatsApp. Permintaan nomor baru mengirim `purpose: change_phone`; nomor lama tetap berlaku sampai kode baru berhasil diverifikasi. UI tidak menganggap status pengiriman OpenWA sebagai verifikasi.
+
+Bukti host pada checkpoint ini:
+
+- `npm.cmd test -- --run`: 45 file, 150 tes lulus.
+- `npm.cmd run build`: TypeScript dan Vite production build lulus; entry 157,12 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
+- Test onboarding memeriksa edit profil dan payload OTP `change_phone`.
+- Runtime Supabase dan Edge Function OpenWA belum diuji pada server karena Docker Linux Engine dan credential belum tersedia.
