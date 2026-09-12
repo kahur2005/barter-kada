@@ -42,7 +42,7 @@ test('area dialog closes with Escape and returns focus; price validation preserv
   await expect(page.getByRole('link', { name: 'Sepeda kota untuk perjalanan dekat' })).toHaveCount(0);
 });
 
-test('store catalogue, preorder terms and honest pending chat', async ({ page }) => {
+test('store catalogue, preorder terms and honest inactive chat', async ({ page }) => {
   await page.goto('/stores');
   await page.getByRole('link', { name: 'Dapur Bu Rina' }).click();
   await expect(page.getByRole('heading', { name: 'Dapur Bu Rina' })).toBeVisible();
@@ -53,8 +53,8 @@ test('store catalogue, preorder terms and honest pending chat', async ({ page })
   await expect(page.getByRole('heading', { name: 'Ketentuan pre-order' })).toBeVisible();
   await expect(page.getByText('50% dari total termasuk ongkir')).toBeVisible();
   await page.getByRole('link', { name: 'Tanya pesanan' }).click();
-  await expect(page.getByRole('heading', { name: 'Chat belum tersedia' })).toBeVisible();
-  await expect(page.getByText(/Belum ada pesan, tawaran, pembayaran, atau data akun yang dikirim/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Chat belum aktif' })).toBeVisible();
+  await expect(page.getByText('Hubungkan backend untuk memakai percakapan nyata.')).toBeVisible();
 });
 
 test('empty search keeps the selected radius and offers recovery', async ({ page }) => {

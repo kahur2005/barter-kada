@@ -45,7 +45,7 @@ export function ListingDetailPage() {
         <Link className="report-link" to={pending('report')} state={{ from: location.pathname }}>Laporkan listing</Link>
       </div>
     </div>
-    <div className="context-actions"><div><p className="metadata">Periksa kondisi barang sebelum menerima.</p><div className="action-buttons">{available ? <>{(sale || free) && <Link className="button" to={pending('chat')} state={{ from: location.pathname }}>{chatLabel}</Link>}{barter && <Link className={`button ${sale ? 'secondary' : ''}`} to={pending('barter')} state={{ from: location.pathname }}>Ajukan barter</Link>}</> : <button className="button" disabled>Tidak tersedia</button>}</div></div></div>
+    <div className="context-actions"><div><p className="metadata">Periksa kondisi barang sebelum menerima.</p><div className="action-buttons">{available ? <>{(sale || free) && <Link className="button" to={`/chat/open/${listing.id}`} state={{ from: location.pathname }}>{chatLabel}</Link>}{barter && <Link className={`button ${sale ? 'secondary' : ''}`} to={pending('barter')} state={{ from: location.pathname }}>Ajukan barter</Link>}</> : <button className="button" disabled>Tidak tersedia</button>}</div></div></div>
     {gallery && <Dialog title={`Foto ${photo + 1} dari ${listing.images.length}`} onClose={() => setGallery(false)}><ProductImage image={listing.images[photo]} className="gallery-image" eager /><div className="form-actions"><button className="button secondary" disabled={photo === 0} onClick={() => setPhoto(photo - 1)}>Sebelumnya</button><button className="button secondary" disabled={photo === listing.images.length - 1} onClick={() => setPhoto(photo + 1)}>Berikutnya</button></div></Dialog>}
   </div>;
 }

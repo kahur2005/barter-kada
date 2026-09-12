@@ -7,6 +7,8 @@ import { OnboardingProvider } from '../features/onboarding/OnboardingContext';
 import type { OnboardingGateway } from '../features/onboarding/types';
 import { ListingProvider } from '../features/listings/ListingContext';
 import type { ListingGateway } from '../features/listings/gateway';
+import { ChatProvider } from '../features/chat/ChatContext';
+import type { ChatGateway } from '../features/chat/gateway';
 
 const RepositoryContext = createContext<DiscoveryRepository | null>(null);
 export function useRepository() {
@@ -14,7 +16,7 @@ export function useRepository() {
   if (!repository) throw new Error('Repository belum tersedia.');
   return repository;
 }
-export function Providers({ repository, authGateway, onboardingGateway, listingGateway, children }: { repository: DiscoveryRepository; authGateway: AuthGateway | null; onboardingGateway: OnboardingGateway | null; listingGateway: ListingGateway | null; children: ReactNode }) {
+export function Providers({ repository, authGateway, onboardingGateway, listingGateway, chatGateway, children }: { repository: DiscoveryRepository; authGateway: AuthGateway | null; onboardingGateway: OnboardingGateway | null; listingGateway: ListingGateway | null; chatGateway: ChatGateway | null; children: ReactNode }) {
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 30_000, refetchOnWindowFocus: true }, mutations: { retry: false } } }));
-  return <RepositoryContext.Provider value={repository}><QueryClientProvider client={client}><AuthProvider gateway={authGateway}><OnboardingProvider gateway={onboardingGateway}><ListingProvider gateway={listingGateway}>{children}</ListingProvider></OnboardingProvider></AuthProvider></QueryClientProvider></RepositoryContext.Provider>;
+  return <RepositoryContext.Provider value={repository}><QueryClientProvider client={client}><AuthProvider gateway={authGateway}><OnboardingProvider gateway={onboardingGateway}><ListingProvider gateway={listingGateway}><ChatProvider gateway={chatGateway}>{children}</ChatProvider></ListingProvider></OnboardingProvider></AuthProvider></QueryClientProvider></RepositoryContext.Provider>;
 }

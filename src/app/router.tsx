@@ -11,6 +11,7 @@ import { RequireCompletedProfile } from '../features/auth/RequireCompletedProfil
 import { AccountPage } from '../features/auth/AccountPage';
 import { ListingEditorPage } from '../features/listings/ListingEditorPage';
 import { MyListingsPage } from '../features/listings/MyListingsPage';
+import { ChatInboxPage, ChatRoomPage, OpenConversationPage } from '../features/chat/ChatPages';
 
 export function AppRoutes() {
   return <Routes>
@@ -25,7 +26,10 @@ export function AppRoutes() {
     <Route path="/onboarding" element={<OnboardingPage />} />
     <Route path="/profile" element={<AccountPage />} />
     <Route path="/my/listings" element={<RequireCompletedProfile><MyListingsPage /></RequireCompletedProfile>} />
-    {['/chat/*', '/plus', '/my/stores', '/transactions/*', '/notifications'].map(path => <Route key={path} path={path} element={<RequireCompletedProfile><UnavailablePage /></RequireCompletedProfile>} />)}
+    <Route path="/chat" element={<RequireCompletedProfile><ChatInboxPage /></RequireCompletedProfile>} />
+    <Route path="/chat/open/:listingId" element={<RequireCompletedProfile><OpenConversationPage /></RequireCompletedProfile>} />
+    <Route path="/chat/:id" element={<RequireCompletedProfile><ChatRoomPage /></RequireCompletedProfile>} />
+    {['/plus', '/my/stores', '/transactions/*', '/notifications'].map(path => <Route key={path} path={path} element={<RequireCompletedProfile><UnavailablePage /></RequireCompletedProfile>} />)}
     <Route path="/admin/*" element={<UnavailablePage />} />
     <Route path="*" element={<UnavailablePage title="Halaman tidak ditemukan" />} />
   </Routes>;
