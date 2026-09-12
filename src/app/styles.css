@@ -323,4 +323,7 @@ ul { padding-left: 20px; }
 .simulation-warning { padding: 12px; border-left: 4px solid #a15c00; background: #fff8eb; color: #704000; }
 .billing-simulation { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--action); background: var(--paper); }
 .stores-page .owner-list { margin: 0; }
+.report-page { max-width: 46rem; margin: 0 auto; display: grid; gap: 16px; }
+.report-page > header { display: grid; gap: 8px; }
+.report-page > header .back-link { justify-self: start; margin: 0; }
 @media (min-width: 768px) { .trade-room, .trade-editor { max-width: 720px; } .trade-package { padding: 20px; } }

@@ -19,6 +19,7 @@ import { OrderQuotePage } from '../features/orders/OrderQuotePage';
 import { OrderRoomPage } from '../features/orders/OrderRoomPage';
 import { PlusPage } from '../features/stores/PlusPage';
 import { MyStoresPage } from '../features/stores/MyStoresPage';
+import { ReportPage } from '../features/reports/ReportPage';
 
 export function AppRoutes() {
   return <Routes>
@@ -43,6 +44,7 @@ export function AppRoutes() {
     <Route path="/orders/:id" element={<RequireCompletedProfile><OrderRoomPage /></RequireCompletedProfile>} />
     <Route path="/plus" element={<RequireCompletedProfile><PlusPage /></RequireCompletedProfile>} />
     <Route path="/my/stores" element={<RequireCompletedProfile><MyStoresPage /></RequireCompletedProfile>} />
+    <Route path="/reports/new" element={<RequireCompletedProfile><ReportPage /></RequireCompletedProfile>} />
     {['/transactions/*', '/notifications'].map(path => <Route key={path} path={path} element={<RequireCompletedProfile><UnavailablePage /></RequireCompletedProfile>} />)}
     <Route path="/admin/*" element={<UnavailablePage />} />
     <Route path="*" element={<UnavailablePage title="Halaman tidak ditemukan" />} />

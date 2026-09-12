@@ -24,7 +24,7 @@ export function ListingDetailPage() {
   const available = listing.availability === 'available';
   const free = listing.modes.includes('free'); const sale = listing.modes.includes('sale'); const barter = listing.modes.includes('barter');
   const chatLabel = free ? 'Hubungi pemberi' : listing.fulfillment !== 'ready_stock' ? 'Tanya pesanan' : 'Chat penjual';
-  const pending = (feature: string) => `/unavailable?feature=${feature}&listing=${listing.id}`;
+  const pending = (feature: string) => feature === 'report' ? `/reports/new?targetType=listing&targetId=${listing.id}` : `/unavailable?feature=${feature}&listing=${listing.id}`;
   return <div className="detail-page">
     <Link className="back-link" to={back}><Icon name="back" />Kembali ke hasil</Link>
     <div className="detail-layout">
