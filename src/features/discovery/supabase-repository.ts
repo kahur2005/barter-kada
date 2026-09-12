@@ -4,23 +4,43 @@ import type { DiscoveryRepository } from './repository';
 import { listingPageSchema, listingSchema, storePageSchema, storeSchema } from './types';
 
 export function createSupabaseRepository(client: SupabaseClient): DiscoveryRepository {
-  async function call<T>(name: string, args: Record<string, unknown>, schema: z.ZodType<T>, signal?: AbortSignal): Promise<T> {
+  const processedPath = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/i;
+  function materializeListing(value: unknown): unknown {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+    const listing = value as Record<string, unknown>;
+    if (!Array.isArray(listing.images)) return value;
+    return {
+      ...listing,
+      images: listing.images.map(image => {
+        if (!image || typeof image !== 'object') return image;
+        const candidate = image as Record<string, unknown>;
+        if (typeof candidate.path !== 'string' || !processedPath.test(candidate.path)) return image;
+        return { ...candidate, url: client.storage.from('listing-media').getPublicUrl(candidate.path).data.publicUrl };
+      }),
+    };
+  }
+  function materializePage(value: unknown): unknown {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+    const page = value as Record<string, unknown>;
+    return Array.isArray(page.items) ? { ...page, items: page.items.map(materializeListing) } : value;
+  }
+  async function call<T>(name: string, args: Record<string, unknown>, schema: z.ZodType<T>, signal?: AbortSignal, prepare: (value: unknown) => unknown = value => value): Promise<T> {
     signal?.throwIfAborted();
     const request = client.rpc(name, args);
     if (signal) request.abortSignal(signal);
     const { data, error } = await request;
     signal?.throwIfAborted();
     if (error) throw new Error('Tidak dapat memuat data. Periksa koneksi lalu coba lagi.');
-    const parsed = schema.safeParse(data);
+    const parsed = schema.safeParse(prepare(data));
     if (!parsed.success) throw new Error('Data belum dapat ditampilkan karena format respons tidak sesuai.');
     return parsed.data;
   }
   return {
     source: 'supabase',
-    searchListings: (query, signal) => call('search_listings', { p_query: query }, listingPageSchema, signal),
-    getListing: (id, signal) => call('get_listing', { p_id: id }, listingSchema.nullable(), signal),
+    searchListings: (query, signal) => call('search_listings', { p_query: query }, listingPageSchema, signal, materializePage),
+    getListing: (id, signal) => call('get_listing', { p_id: id }, listingSchema.nullable(), signal, materializeListing),
     searchStores: (query, signal) => call('search_stores', { p_query: query }, storePageSchema, signal),
     getStore: (slug, signal) => call('get_store', { p_slug: slug }, storeSchema.nullable(), signal),
-    getStoreListings: (slug, query, signal) => call('get_store_listings', { p_slug: slug, p_query: query }, listingPageSchema, signal),
+    getStoreListings: (slug, query, signal) => call('get_store_listings', { p_slug: slug, p_query: query }, listingPageSchema, signal, materializePage),
   };
 }

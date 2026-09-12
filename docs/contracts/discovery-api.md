@@ -1,6 +1,6 @@
 # Kontrak API Discovery Publik
 
-Status: provisional, 11 September 2026. Kontrak ini mendefinisikan bentuk data yang sudah dikonsumsi frontend. Implementasi RPC dan bukti RLS belum tersedia pada tahap fondasi frontend.
+Status: diimplementasikan, belum diverifikasi pada runtime Supabase, 12 September 2026. Frontend, RPC, migration, dan pgTAP tersedia; migration belum dapat dijalankan pada host ini karena Docker engine tidak aktif.
 
 ## Prinsip keamanan
 
@@ -104,6 +104,8 @@ Aturan validasi utama:
 - `handoverMethods`: `pickup`, `meetup`, dan/atau `delivery`.
 - Rating null berarti belum ada ulasan; verifikasi nomor bukan jaminan identitas.
 
+RPC Supabase mengirim `{path, alt}` untuk gambar terproses, bukan URL penuh. Adapter frontend hanya menerima path canonical `OWNER_UUID/ASSET_UUID.webp`, membentuk public URL bucket `listing-media`, lalu memvalidasi hasil akhir ke bentuk `{url, alt}` di atas. Bucket hanya menerima output WebP dari Vercel Function service-role setelah validasi/re-encode; bucket karantina tetap privat.
+
 `variants` berisi `{ id, name, price, unit }`. Untuk pre-order, `preorder` berisi ISO datetime `closesAt`/`availableAt`, integer positif `minimumQty`, `remainingQty` nonnegatif atau null, dan `dpPercent` 1–100 atau null. Untuk catering, `catering` berisi `minimumQty`, `leadTimeHours`, `serviceAreas[]`, dan `notes`.
 
 ## StorePage dan PublicStore
@@ -137,6 +139,6 @@ Toko dan profil pribadi mempunyai reputasi terpisah. Keanggotaan Plus mengaktifk
 
 Supabase mengembalikan error transport/otorisasi melalui field `error`; frontend menampilkan pesan generik berbahasa Indonesia dan tidak mengekspos detail server. Payload sukses yang tidak lolos schema Zod ditolak seluruhnya. `get_listing`/`get_store` boleh mengembalikan JSON null untuk not-found; error jaringan tidak boleh diubah menjadi null atau data contoh.
 
-## Contoh pemeriksaan frontend
+## Pemeriksaan
 
-Kontrak ini diuji di `src/features/discovery/supabase-repository.test.ts`: transport HTTP Supabase dimock, sedangkan serialisasi RPC dan parsing DTO memakai client/adaptor sesungguhnya. Schema publik diuji di `src/features/discovery/types.test.ts`, termasuk penghapusan field tidak dikenal dan penolakan nominal yang tidak canonical.
+Kontrak ini diuji di `src/features/discovery/supabase-repository.test.ts`: transport HTTP Supabase dimock, sedangkan serialisasi RPC, materialisasi path media, dan parsing DTO memakai client/adaptor sesungguhnya. Schema publik diuji di `src/features/discovery/types.test.ts`, termasuk penghapusan field tidak dikenal dan penolakan nominal yang tidak canonical. Migration `20260912014230_listing_edit_discovery.sql` dan `listing_edit_discovery.test.sql` mencakup owner-only edit payload, filter publik, penyembunyian draft, trust signal tanpa nomor telepon, serta respons toko kosong sebelum Plus; pgTAP belum dieksekusi karena runtime lokal belum tersedia.

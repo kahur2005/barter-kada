@@ -4,6 +4,7 @@ export type ListingCondition = 'new' | 'like_new' | 'good' | 'fair' | 'needs_rep
 export type HandoverMethod = 'pickup' | 'meetup' | 'delivery';
 export type ListingVariantDraft = { clientId: string; label: string; unit: string; priceRupiah: string; quota: string | null };
 export type ListingDraft = {
+  sourceLifecycle?: 'draft' | 'active' | 'archived' | 'completed' | null;
   listingId: string | null;
   expectedVersion: number | null;
   publisher: { kind: 'personal' } | { kind: 'store'; storeId: string };

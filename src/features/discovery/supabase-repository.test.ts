@@ -30,3 +30,10 @@ it('rejects malformed response data rather than rendering it', async () => {
   const { repo } = setup(Response.json({ items: [{ ...listing, priceMin: -10 }], nextCursor: null }));
   await expect(repo.searchListings(parseDiscoveryQuery(new URLSearchParams()))).rejects.toThrow(/format/);
 });
+it('materializes processed storage paths without accepting private source paths', async () => {
+  const path = '00000000-0000-4000-8000-000000000002/00000000-0000-4000-8000-000000000001.webp';
+  const raw = { ...listing, images: [{ path, alt: 'Foto aman' }] };
+  const { repo } = setup(Response.json(raw));
+  const result = await repo.getListing(listing.id);
+  expect(result?.images).toEqual([{ url: `https://demo.supabase.co/storage/v1/object/public/listing-media/${path}`, alt: 'Foto aman' }]);
+});

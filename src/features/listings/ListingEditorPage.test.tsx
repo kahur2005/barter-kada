@@ -10,9 +10,9 @@ import type { ListingGateway } from './gateway';
 
 const repository = createPreviewRepository([], []);
 const auth: AuthGateway = { getSession: vi.fn().mockResolvedValue({ userId: '10000000-0000-4000-8000-000000000001', email: 'rina@example.test' }), subscribe: vi.fn(() => () => undefined), signInWithPassword: vi.fn(), signUpWithPassword: vi.fn(), signInWithGoogle: vi.fn(), signOut: vi.fn() };
-const onboarding: OnboardingGateway = { getState: vi.fn().mockResolvedValue({ nextStep: 'complete', displayName: 'Rina', bio: null, areaId: 'depok', maskedPhone: '+62••••7890', phoneVerified: true }), listAreas: vi.fn().mockResolvedValue([]), completeProfile: vi.fn(), setLocation: vi.fn(), requestOtp: vi.fn(), verifyOtp: vi.fn() };
-function gateway(): ListingGateway { return { saveDraft: vi.fn().mockResolvedValue({ listingId: '20000000-0000-4000-8000-000000000002', version: 1, lifecycle: 'draft' }), publish: vi.fn(), uploadImage: vi.fn(), listMine: vi.fn(), archive: vi.fn() }; }
-function show(listingGateway: ListingGateway | null) { return render(<MemoryRouter initialEntries={['/listings/new']}><App repository={repository} authGateway={auth} onboardingGateway={onboarding} listingGateway={listingGateway} /></MemoryRouter>); }
+const onboarding: OnboardingGateway = { getState: vi.fn().mockResolvedValue({ nextStep: 'complete', displayName: 'Rina', bio: null, areaId: 'depok', maskedPhone: '+62••••7890', phoneVerified: true }), listAreas: vi.fn().mockResolvedValue([{ areaId: 'depok', name: 'Depok' }]), completeProfile: vi.fn(), setLocation: vi.fn(), requestOtp: vi.fn(), verifyOtp: vi.fn() };
+function gateway(): ListingGateway { return { saveDraft: vi.fn().mockResolvedValue({ listingId: '20000000-0000-4000-8000-000000000002', version: 1, lifecycle: 'draft' }), publish: vi.fn().mockResolvedValue({ listingId: '20000000-0000-4000-8000-000000000002', version: 8, lifecycle: 'active' }), getMine: vi.fn().mockResolvedValue(null), uploadImage: vi.fn().mockResolvedValue('30000000-0000-4000-8000-000000000003'), listMine: vi.fn(), archive: vi.fn() }; }
+function show(listingGateway: ListingGateway | null, path = '/listings/new') { return render(<MemoryRouter initialEntries={[path]}><App repository={repository} authGateway={auth} onboardingGateway={onboarding} listingGateway={listingGateway} /></MemoryRouter>); }
 
 describe('listing editor', () => {
   it('shows all four stages and keeps personal publishing independent from Plus', async () => {
@@ -45,5 +45,33 @@ describe('listing editor', () => {
     show(null);
     expect(await screen.findByText(/Form contoh — perubahan tidak disimpan/)).toBeVisible();
     expect(screen.getByRole('button', { name: 'Simpan draft tidak aktif' })).toBeDisabled();
+  });
+
+  it('loads an existing owner listing and saves with its optimistic version', async () => {
+    const user = userEvent.setup(); const api = gateway();
+    vi.mocked(api.getMine).mockResolvedValue({
+      sourceLifecycle: 'active', listingId: '20000000-0000-4000-8000-000000000002', expectedVersion: 7, publisher: { kind: 'personal' },
+      modes: ['sale'], fulfillment: 'ready_stock', categoryId: 'home', title: 'Meja kayu', description: 'Masih kokoh untuk dipakai.',
+      condition: 'good', defects: 'Ada gores tipis.', negotiable: true, barter: null, basePriceRupiah: '120000', variants: [], assetIds: ['30000000-0000-4000-8000-000000000003'], handoverMethods: ['meetup'], preorder: null, catering: null,
+    });
+    show(api, '/my/listings/20000000-0000-4000-8000-000000000002/edit');
+
+    expect(await screen.findByDisplayValue('Meja kayu')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Simpan perubahan' }));
+    expect(api.publish).toHaveBeenCalledWith(expect.objectContaining({ expectedVersion: 7, title: 'Meja kayu' }));
+  });
+
+  it('offers real service-area choices for catering terms', async () => {
+    const user = userEvent.setup(); show(gateway()); await screen.findByRole('heading', { name: 'Pasang penawaran' });
+    await user.selectOptions(screen.getByLabelText('Kategori'), 'food');
+    await user.selectOptions(screen.getByLabelText('Bentuk pemenuhan'), 'catering');
+    await user.click(screen.getByRole('button', { name: 'Lanjut ke detail' }));
+    await user.type(screen.getByLabelText('Nama penawaran'), 'Nasi kotak');
+    await user.type(screen.getByLabelText('Detail'), 'Masakan rumahan untuk acara tetangga.');
+    await user.type(screen.getByLabelText('Harga utama (rupiah)'), '25000');
+    await user.upload(screen.getByLabelText(/Foto aktual/), new File(['image'], 'nasi.png', { type: 'image/png' }));
+    await user.click(screen.getByRole('button', { name: 'Lanjut ke ketersediaan' }));
+    await user.click(screen.getByRole('button', { name: 'Isi ketentuan catering' }));
+    expect(await screen.findByRole('checkbox', { name: 'Depok' })).toBeVisible();
   });
 });

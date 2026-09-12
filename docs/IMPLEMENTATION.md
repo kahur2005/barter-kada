@@ -10,7 +10,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | --- | --- | --- | --- |
 | 1 | React/Vite/TypeScript, shell mobile, penemuan/detail/toko read-only, adapter API, test harness | PDR UI-01/02, T-27/46/55 | Selesai dan diverifikasi sebagai fondasi read-only; backend belum terhubung |
 | 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Diimplementasikan dan unit-tested; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
-| 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Parsial: create/draft/publish/archive, aturan PO/catering, dan pipeline media sudah dibuat; edit existing serta discovery PostGIS dinamis belum dibuat |
+| 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
 | 4 | Chat persisted/realtime, read cursor, notification jobs dan block policy | PRD 13, T-13/16/39/40/41 | Belum dibuat |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Belum dibuat |
 | 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Belum dibuat |
@@ -83,4 +83,4 @@ Implementasi 11 September 2026 menambahkan wizard listing personal untuk jual/ba
 - Inspeksi screenshot editor 390 × 844 menunjukkan layout mobile terbaca, stepper dan CTA sticky tampil tanpa horizontal overflow.
 - Migration listing berisi 19 assertion pgTAP dan migration media berisi 8 assertion pgTAP, tetapi belum dijalankan karena Docker engine masih tidak tersedia. Endpoint Vercel belum diuji terhadap proyek Supabase nyata karena proyek dan server secret belum ditunjuk.
 
-Tahap 3 tetap parsial: editor belum memuat listing existing, area catering belum dipilih dari data area, URL media terproses belum masuk DTO discovery, dan feed/search masih memakai kontrak read-only tahap 1.
+Tambahan 12 September 2026: editor kini memuat listing owner beserta optimistic version, menjaga listing aktif tetap aktif saat menyimpan perubahan, menyediakan area catering dari backend dan kuota PO, serta mengirim jadwal lokal sebagai WIB eksplisit. RPC search/detail memakai lokasi tepat requester hanya di fungsi privat, centroid area untuk lokasi seller, cursor terikat filter, dan DTO publik tanpa koordinat/nomor telepon; adapter membentuk URL hanya dari path media WebP canonical. Test frontend bertambah menjadi 98. Tahap 3 belum dinyatakan terverifikasi end-to-end sampai 11 assertion pgTAP discovery dan migration terkait berhasil dijalankan pada Supabase.

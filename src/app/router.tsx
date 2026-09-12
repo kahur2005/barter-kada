@@ -16,6 +16,7 @@ export function AppRoutes() {
   return <Routes>
     {['/', '/search', '/stores'].map(path => <Route key={path} path={path} element={<DiscoveryPage />} />)}
     <Route path="/listings/new" element={<RequireCompletedProfile><ListingEditorPage /></RequireCompletedProfile>} />
+    <Route path="/my/listings/:id/edit" element={<RequireCompletedProfile><ListingEditorPage /></RequireCompletedProfile>} />
     <Route path="/listings/:id" element={<ListingDetailPage />} /><Route path="/stores/:slug" element={<StoreDetailPage />} />
     <Route path="/unavailable" element={<UnavailablePage />} />
     <Route path="/auth/login" element={<LoginPage />} />
