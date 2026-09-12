@@ -196,7 +196,7 @@ export function MyStoresPage() {
           {stores.data.map(store => (
             <article key={store.id}>
               <div>
-                <span className="label">{store.status === 'active' ? 'Aktif' : 'Tersembunyi'}</span>
+                <span className="label">{store.status === 'active' && plus.data?.active !== false ? 'Aktif' : 'Tersembunyi'}</span>
                 <h2>{store.name}</h2>
                 <p>barter.app/stores/{store.slug} · {store.category} · {store.areaLabel}</p>
                 <p>Produk aktif: {store.activeProductCount ?? '—'}</p>

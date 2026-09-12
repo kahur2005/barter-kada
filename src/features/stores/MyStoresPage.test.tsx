@@ -25,6 +25,7 @@ describe('my stores', () => {
     expect(name).toHaveValue('Dapur Rina');
     expect(screen.getByText('Produk aktif: 2')).toBeVisible();
     expect(await screen.findByText(/Toko disembunyikan karena Plus berakhir/)).toBeVisible();
+    expect(screen.getByText('Tersembunyi')).toBeVisible();
     expect(screen.getByRole('link', { name: 'Perpanjang Plus' })).toHaveAttribute('href', '/plus');
     expect(screen.getByRole('link', { name: 'Buka transaksi' })).toHaveAttribute('href', '/transactions');
     expect(screen.getByRole('link', { name: 'Tambah produk' })).toHaveAttribute('href', '/listings/new?storeId=d1000000-0000-4000-8000-000000000001');
