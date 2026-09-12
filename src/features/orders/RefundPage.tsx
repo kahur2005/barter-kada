@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { StatusPanel } from '../../components/StatusPanel';
 import { formatRupiah } from '../../lib/money';
+import { refundStatusLabel } from '../shared/status-labels';
 import { useOrderGateway } from './OrderContext';
 
 export function RefundPage() {

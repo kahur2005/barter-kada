@@ -242,6 +242,12 @@ Editor listing sekarang menampilkan daftar asset foto yang sudah diproses. Pemil
 - Test: `src/features/listings/ListingEditorPage.test.tsx`.
 - Runtime upload dan storage Supabase belum diverifikasi karena Docker Desktop Linux Engine/API belum tersedia.
 
+## Bukti parsial lintas layar: copy status pengguna
+
+Status lifecycle internal tidak lagi dirender mentah pada ringkasan transaksi, ruang pesanan, detail kasus admin, refund manual, atau invoice Plus. Helper `src/features/shared/status-labels.ts` menjaga istilah teknis seperti `awaiting_dp` dan `under_review` tetap berada di boundary data, sementara pengguna melihat label Bahasa Indonesia yang konsisten. Nilai yang belum dikenal memakai `Status terbaru` agar state internal baru tidak bocor ke UI.
+
+- Test mapping dan pemakaian UI: `src/features/shared/status-labels.test.ts`, `src/features/transactions/TransactionsPage.test.tsx`, `src/features/orders/OrderRoomPage.test.tsx`, dan `src/features/admin/AdminReportDetailPage.test.tsx`.
+
 ## Bukti parsial tahap 7: preview alamat publik toko
 
 Form profil toko sekarang menampilkan preview lokal ketika pemilik mengisi alamat dan secara eksplisit mencentang consent alamat publik. Preview memperlihatkan nama toko, wilayah, dan alamat yang akan dilihat pengunjung; ketika consent tidak aktif, preview tidak muncul dan perilaku RPC yang mengosongkan alamat publik tetap dipertahankan. Tidak ada endpoint publik tambahan atau perubahan pada kebijakan lokasi perkiraan.

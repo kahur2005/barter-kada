@@ -15,6 +15,7 @@ describe('order room', () => {
   it('lets the buyer confirm a quote with an idempotency key', async () => {
     const gateway: OrderGateway = { get: vi.fn().mockResolvedValue(base), createQuote: vi.fn(), confirm: vi.fn().mockResolvedValue({ ...base, lifecycle: 'confirmed', acceptedRevision: 1 }), acknowledgePayment: vi.fn(), markProcessing: vi.fn(), markReady: vi.fn(), markHandedOver: vi.fn(), confirmReceived: vi.fn(), cancel: vi.fn(), requestCancellation: vi.fn(), respondCancellation: vi.fn(), proposeAmendment: vi.fn(), acceptAmendment: vi.fn(), rejectAmendment: vi.fn(), withdrawAmendment: vi.fn(), proposeRefund: vi.fn(), acceptRefund: vi.fn(), rejectRefund: vi.fn(), recordRefundSent: vi.fn(), confirmRefundReceived: vi.fn(), subscribe: vi.fn(() => () => undefined) };
     show(gateway); const user = userEvent.setup();
+    expect(await screen.findByText('Status: Menunggu konfirmasi')).toBeVisible();
     await user.click(await screen.findByRole('button', { name: 'Konfirmasi pesanan' }));
     expect(gateway.confirm).toHaveBeenCalledWith(base.id, 1, expect.stringMatching(/^[0-9a-f-]{36}$/));
   });

@@ -18,6 +18,7 @@ describe('admin report detail', () => {
   it('requires a return party and deadline for a return decision', async () => {
     const gateway: AdminGateway = { listReports: vi.fn(), getReport: vi.fn().mockResolvedValue(report), decide: vi.fn().mockResolvedValue(report), getPlanSettings: vi.fn(), updatePlanLimits: vi.fn(), listPlanSettingsHistory: vi.fn(), getProductMetrics: vi.fn() };
     show(gateway); const user = userEvent.setup();
+    expect(await screen.findByText('Status: Terbuka · dilaporkan oleh Pelapor')).toBeVisible();
     await user.selectOptions(await screen.findByLabelText('Outcome'), 'return_required');
     await user.type(screen.getByLabelText('Pihak yang wajib mengembalikan barang'), 'f4000000-0000-4000-8000-000000000004');
     await user.clear(screen.getByLabelText('Tenggat pengembalian')); await user.type(screen.getByLabelText('Tenggat pengembalian'), '2026-09-20T10:00');

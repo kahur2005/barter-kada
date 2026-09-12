@@ -12,4 +12,5 @@ it('renders participant-scoped transaction summaries', async () => {
   render(<QueryClientProvider client={client}><TransactionProvider gateway={gateway}><MemoryRouter><TransactionsPage /></MemoryRouter></TransactionProvider></QueryClientProvider>);
   expect(await screen.findByRole('heading', { name: 'Transaksi saya' })).toBeVisible();
   expect(screen.getByRole('link', { name: 'Jaket dan rak' })).toBeVisible();
+  expect(screen.getByText('Barter · Sedang dinegosiasikan')).toBeVisible();
 });

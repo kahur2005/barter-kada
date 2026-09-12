@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { StatusPanel } from '../../components/StatusPanel';
 import { formatRupiah } from '../../lib/money';
+import { billingStatusLabel } from '../shared/status-labels';
 import { useStoreGateway } from './StoreContext';
 import type { BillingOrder } from './types';
 
