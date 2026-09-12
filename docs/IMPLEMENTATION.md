@@ -12,9 +12,9 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Diimplementasikan dan unit-tested; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
 | 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
 | 4 | Chat persisted/realtime, read cursor, notification jobs dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation dan block policy diimplementasikan; notification jobs serta runtime Supabase belum diverifikasi |
-| 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Belum dibuat |
-| 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Belum dibuat |
-| 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Belum dibuat |
+| 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
+| 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover dan order room diimplementasikan; amend/refund/admin belum |
+| 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, katalog read path dan selector penerbit diimplementasikan; promosi/admin limits belum |
 | 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Belum dibuat |
 | 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Belum dibuat; keputusan produk terkait belum final |
 | 10 | E2E dua akun, RLS/race/security, mobile/a11y, build Vercel, panduan/demo evidence | Semua requirement R yang berlaku; T-45/46/55; UX-01–13 | Belum diverifikasi |
@@ -95,3 +95,21 @@ Implementasi 12 September 2026 menambahkan conversation per listing dan pasangan
 - `npm.cmd run test:e2e`: 26 skenario lulus pada mobile 320/390 dan desktop; 1 pemeriksaan urutan khusus mobile dilewati pada desktop. Skenario preview memastikan CTA chat tidak membuat percakapan palsu ketika backend tidak terhubung.
 - Dua migration chat disertai 44 assertion pgTAP untuk membership/RLS, idempotensi, sequence, cursor, blokir, media privat, dan anti-forgery. Assertion belum dijalankan karena Docker Linux engine belum tersedia.
 - Laporan dari chat sementara menuju halaman status jujur; evidence case dan admin panel dibangun pada tahap moderasi. Notification jobs juga belum dibuat, sehingga tahap 4 masih parsial.
+
+## Bukti parsial tahap 5–7
+
+Implementasi 12 September 2026 menambahkan tiga subsystem berikut:
+
+- Barter immutable revision: package listing/direct privat, reset Siap/Setuju pada revisi, dua readiness + dua approval, atomic reservation, receipt barang, top-up payee-only, cancel sebelum receipt, dan editor revisi.
+- Order quote: seller membuat snapshot harga/jumlah/ongkir/DP dari percakapan, buyer mengonfirmasi, server memeriksa minimum/window/kuota, reservasi dibuat atomik, seller mengakui DP/pelunasan manual, lalu processing → ready → handover → receipt.
+- Plus/store: harga server Rp20.000/bulan, dummy QRIS/VA dengan label jangan transfer, entitlement aktif/expired, maksimum tiga toko, RLS/public visibility, profil usaha, dan penerbit toko pada wizard listing.
+
+Bukti host:
+
+- `npm test`: 31 file, 121 tes lulus.
+- `npm run build`: lulus; bundle entry 147,36 kB gzip.
+- `npm audit --omit=dev`: 0 kerentanan produksi.
+- `npm run test:e2e`: 26 lulus, 1 dilewati karena skenario desktop-only; suite memakai lebar 320, 390, dan desktop.
+- Migration tambahan menyertakan pgTAP: barter 26 assertion, order 15 assertion, Plus/store 14 assertion. Belum dieksekusi karena Docker Linux engine/Supabase lokal tidak tersedia; hasil ini tidak boleh disebut verifikasi database runtime.
+
+Batas yang masih eksplisit: store catalogue editor/promosi rotation, notifikasi jobs, pembatalan/refund order, amendmen setelah DP/processing, laporan/evidence/admin decision/sanction, review/reputation, admin limits, analytics, dan verifikasi OpenWA/QRIS/VA nyata belum selesai.

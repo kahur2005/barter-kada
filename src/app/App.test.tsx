@@ -25,7 +25,7 @@ it('renders both barter and sale actions without fake consent', async () => {
   const user = userEvent.setup(); show(`/listings/${listing.id}`);
   expect(await screen.findByRole('link', { name: 'Chat penjual' })).toBeVisible();
   await user.click(screen.getByRole('link', { name: 'Ajukan barter' }));
-  expect(await screen.findByRole('heading', { name: 'Barter belum tersedia' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: 'Pengajuan barter belum aktif' })).toBeVisible();
   expect(screen.queryByText('Disepakati')).not.toBeInTheDocument();
 });
 it('shows a useful empty state instead of silently expanding the radius', async () => {

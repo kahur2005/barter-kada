@@ -12,6 +12,13 @@ import { AccountPage } from '../features/auth/AccountPage';
 import { ListingEditorPage } from '../features/listings/ListingEditorPage';
 import { MyListingsPage } from '../features/listings/MyListingsPage';
 import { ChatInboxPage, ChatRoomPage, OpenConversationPage } from '../features/chat/ChatPages';
+import { NewTradePage } from '../features/trades/NewTradePage';
+import { TradeRoomPage } from '../features/trades/TradeRoomPage';
+import { TradeEditPage } from '../features/trades/TradeEditPage';
+import { OrderQuotePage } from '../features/orders/OrderQuotePage';
+import { OrderRoomPage } from '../features/orders/OrderRoomPage';
+import { PlusPage } from '../features/stores/PlusPage';
+import { MyStoresPage } from '../features/stores/MyStoresPage';
 
 export function AppRoutes() {
   return <Routes>
@@ -29,7 +36,14 @@ export function AppRoutes() {
     <Route path="/chat" element={<RequireCompletedProfile><ChatInboxPage /></RequireCompletedProfile>} />
     <Route path="/chat/open/:listingId" element={<RequireCompletedProfile><OpenConversationPage /></RequireCompletedProfile>} />
     <Route path="/chat/:id" element={<RequireCompletedProfile><ChatRoomPage /></RequireCompletedProfile>} />
-    {['/plus', '/my/stores', '/transactions/*', '/notifications'].map(path => <Route key={path} path={path} element={<RequireCompletedProfile><UnavailablePage /></RequireCompletedProfile>} />)}
+    <Route path="/barter/new/:listingId" element={<RequireCompletedProfile><NewTradePage /></RequireCompletedProfile>} />
+    <Route path="/transactions/:id/edit" element={<RequireCompletedProfile><TradeEditPage /></RequireCompletedProfile>} />
+    <Route path="/transactions/:id" element={<RequireCompletedProfile><TradeRoomPage /></RequireCompletedProfile>} />
+    <Route path="/orders/new/:conversationId" element={<RequireCompletedProfile><OrderQuotePage /></RequireCompletedProfile>} />
+    <Route path="/orders/:id" element={<RequireCompletedProfile><OrderRoomPage /></RequireCompletedProfile>} />
+    <Route path="/plus" element={<RequireCompletedProfile><PlusPage /></RequireCompletedProfile>} />
+    <Route path="/my/stores" element={<RequireCompletedProfile><MyStoresPage /></RequireCompletedProfile>} />
+    {['/transactions/*', '/notifications'].map(path => <Route key={path} path={path} element={<RequireCompletedProfile><UnavailablePage /></RequireCompletedProfile>} />)}
     <Route path="/admin/*" element={<UnavailablePage />} />
     <Route path="*" element={<UnavailablePage title="Halaman tidak ditemukan" />} />
   </Routes>;

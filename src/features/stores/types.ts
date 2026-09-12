@@ -1,0 +1,4 @@
+export type PlusStatus = { priceRupiah: string; maxStores: number; active: boolean; paidThrough: string | null; storeCount: number };
+export type BillingOrder = { id: string; amountRupiah: string; method: 'qris' | 'virtual_account'; mode: 'dummy'; status: 'pending' | 'succeeded' | 'failed' | 'expired'; expiresAt: string };
+export type StoreSummary = { id: string; slug: string; name: string; description: string; category: string; areaLabel: string; status: 'active' | 'hidden'; updatedAt?: string };
+export type StoreInput = { slug: string; name: string; description: string; category: string; areaId: string; areaLabel: string; operatingHours: string; handoverMethods: string[]; publicAddress: string; publicAddressConsent: boolean };

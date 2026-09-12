@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useListingGateway } from './ListingContext';
 import type { ListingDraft, ListingValidationIssue } from './types';
 import { validateListingDraft } from './validation';
 import { useOnboardingGateway } from '../onboarding/OnboardingContext';
 import type { ServiceArea } from '../onboarding/types';
+import { useStoreGateway } from '../stores/StoreContext';
 
 const stages = ['Penawaran', 'Detail', 'Ketersediaan', 'Tinjau'] as const;
 const categories = [['food', 'Makanan'], ['clothing', 'Pakaian'], ['home', 'Rumah & furnitur'], ['vehicles', 'Kendaraan'], ['garden', 'Hasil kebun'], ['other', 'Lainnya']] as const;
@@ -19,6 +21,7 @@ function WizardSteps({ current }: { current: number }) {
 export function ListingEditorPage() {
   const gateway = useListingGateway();
   const onboarding = useOnboardingGateway();
+  const storesGateway = useStoreGateway();
   const { id: listingId } = useParams<{ id: string }>();
   const [draft, setDraft] = useState<ListingDraft>(initialDraft);
   const [stage, setStage] = useState(listingId ? 1 : 0);
@@ -30,6 +33,7 @@ export function ListingEditorPage() {
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(Boolean(listingId && gateway));
   const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
+  const stores = useQuery({ queryKey: ['stores', 'mine', 'listing-editor'], queryFn: () => storesGateway!.getMyStores(), enabled: Boolean(storesGateway) });
   const patch = (next: Partial<ListingDraft>) => { setDraft(current => ({ ...current, ...next })); setDirty(true); setNotice(null); };
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => { if (dirty) event.preventDefault(); };
@@ -114,7 +118,7 @@ export function ListingEditorPage() {
     {issues.length > 0 && <div className="form-alert" role="alert" tabIndex={-1}><strong>Periksa bagian berikut:</strong><ul>{issues.map((issue, index) => <li key={`${issue.field}-${index}`}>{issue.message}</li>)}</ul></div>}
     {notice && <p className="success-notice" role="status">{notice}</p>}
     <section className="listing-editor-panel">
-      {stage === 0 && <><h2>Pilih jenis penawaran</h2><div className="publisher-choice"><strong>Profil pribadi</strong><span>Semua akun lengkap dapat menerbitkan dagangan, PO, dan catering.</span></div><p className="inline-notice">Toko adalah fitur Plus. Kamu tetap bisa <Link to="/plus">pelajari Plus</Link> atau lanjut lewat profil pribadi.</p>
+      {stage === 0 && <><h2>Pilih jenis penawaran</h2><div className="publisher-choice"><strong>Profil pribadi</strong><span>Semua akun lengkap dapat menerbitkan dagangan, PO, dan catering.</span></div>{stores.data && stores.data.length > 0 && <fieldset><legend>Penerbit</legend><div className="choice-grid"><label><input type="radio" name="publisher" checked={draft.publisher.kind === 'personal'} onChange={() => patch({ publisher: { kind: 'personal' } })} />Profil pribadi</label>{stores.data.map(store => <label key={store.id}><input type="radio" name="publisher" checked={draft.publisher.kind === 'store' && draft.publisher.storeId === store.id} onChange={() => patch({ publisher: { kind: 'store', storeId: store.id } })} />{store.name}</label>)}</div></fieldset>}<p className="inline-notice">Toko adalah fitur Plus. Kamu tetap bisa <Link to="/plus">pelajari Plus</Link> atau lanjut lewat profil pribadi.</p>
         <fieldset><legend>Jenis transaksi</legend><div className="choice-grid">{([['sale', 'Jual'], ['barter', 'Barter'], ['free', 'Gratis']] as const).map(([mode, label]) => <label key={mode}><input type="checkbox" checked={draft.modes.includes(mode)} onChange={event => toggleMode(mode, event.target.checked)} />{label}</label>)}</div></fieldset>
         <label htmlFor="category">Kategori</label><select id="category" value={draft.categoryId} onChange={event => patch({ categoryId: event.target.value })}><option value="">Pilih kategori</option>{categories.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select>
         <label htmlFor="fulfillment">Bentuk pemenuhan</label><select id="fulfillment" value={draft.fulfillment} onChange={event => patch({ fulfillment: event.target.value as ListingDraft['fulfillment'] })}><option value="ready_stock">Ready stock / barang tersedia</option><option value="preorder">Pre-order</option><option value="catering">Catering</option></select><p className="form-help">PO dan catering harus memakai Jual. Barter dan Gratis tersedia untuk barang ready stock.</p>

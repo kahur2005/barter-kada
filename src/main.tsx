@@ -14,19 +14,25 @@ async function start() {
     let onboardingGateway = null;
     let listingGateway = null;
     let chatGateway = null;
+    let tradeGateway = null;
+    let orderGateway = null;
+    let storeGateway = null;
     if (config.mode === 'preview') {
       const [{ createPreviewRepository }, { demoListings, demoStores }] = await Promise.all([import('./features/discovery/preview-repository'), import('./features/discovery/fixtures')]);
       repository = createPreviewRepository(demoListings, demoStores);
     } else {
-      const [{ createClient }, { createSupabaseRepository }, { createSupabaseAuthGateway }, { createSupabaseOnboardingGateway }, { createSupabaseListingGateway }, { createSupabaseChatGateway }] = await Promise.all([import('@supabase/supabase-js'), import('./features/discovery/supabase-repository'), import('./features/auth/gateway'), import('./features/onboarding/gateway'), import('./features/listings/gateway'), import('./features/chat/gateway')]);
+      const [{ createClient }, { createSupabaseRepository }, { createSupabaseAuthGateway }, { createSupabaseOnboardingGateway }, { createSupabaseListingGateway }, { createSupabaseChatGateway }, { createSupabaseTradeGateway }, { createSupabaseOrderGateway }, { createSupabaseStoreGateway }] = await Promise.all([import('@supabase/supabase-js'), import('./features/discovery/supabase-repository'), import('./features/auth/gateway'), import('./features/onboarding/gateway'), import('./features/listings/gateway'), import('./features/chat/gateway'), import('./features/trades/gateway'), import('./features/orders/gateway'), import('./features/stores/gateway')]);
       const client = createClient(config.url, config.key);
       repository = createSupabaseRepository(client);
       authGateway = createSupabaseAuthGateway(client);
       onboardingGateway = createSupabaseOnboardingGateway(client);
       listingGateway = createSupabaseListingGateway(client);
       chatGateway = createSupabaseChatGateway(client);
+      tradeGateway = createSupabaseTradeGateway(client);
+      orderGateway = createSupabaseOrderGateway(client);
+      storeGateway = createSupabaseStoreGateway(client);
     }
-    root.render(<StrictMode><BrowserRouter><App repository={repository} authGateway={authGateway} onboardingGateway={onboardingGateway} listingGateway={listingGateway} chatGateway={chatGateway} /></BrowserRouter></StrictMode>);
+    root.render(<StrictMode><BrowserRouter><App repository={repository} authGateway={authGateway} onboardingGateway={onboardingGateway} listingGateway={listingGateway} chatGateway={chatGateway} tradeGateway={tradeGateway} orderGateway={orderGateway} storeGateway={storeGateway} /></BrowserRouter></StrictMode>);
   } catch (error) {
     root.render(<main className="setup-page"><span className="wordmark">barter.</span><h1>Aplikasi belum terhubung</h1><p role="alert">{error instanceof Error ? error.message : 'Konfigurasi belum dapat dimuat.'}</p><p>Pengembang: isi konfigurasi publik sesuai <a href="https://github.com/kahur2005/barter-kada#menjalankan-aplikasi">README repository</a>, lalu jalankan ulang Vite. Jangan memasukkan credential server.</p><p>Untuk memeriksa UI dengan data contoh, jalankan <code>npm run dev:preview</code>.</p></main>);
   }

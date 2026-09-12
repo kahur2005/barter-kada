@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { StatusPanel } from '../../components/StatusPanel';
 import { useChatGateway } from './ChatContext';
+import { useRepository } from '../../app/providers';
 
 const time = (value: string) => new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(value));
 
@@ -17,7 +18,7 @@ export function ChatInboxPage() {
 }
 
 export function ChatRoomPage() {
-  const { id = '' } = useParams(); const gateway = useChatGateway(); const auth = useAuth(); const client = useQueryClient();
+  const { id = '' } = useParams(); const gateway = useChatGateway(); const auth = useAuth(); const repository = useRepository(); const client = useQueryClient();
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -33,6 +34,7 @@ export function ChatRoomPage() {
     enabled: Boolean(gateway && id),
   });
   const conversation = useMemo(() => inbox.data?.find(item => item.id === id), [id, inbox.data]);
+  const listing = useQuery({ queryKey: [repository.source, 'listing', conversation?.listing.id], queryFn: ({ signal }) => repository.getListing(conversation!.listing.id, signal), enabled: Boolean(conversation) });
   const visibleMessages = useMemo(() => messages.data ? [...messages.data.pages].reverse().flatMap(page => page.items) : [], [messages.data]);
   const counterpartLastRead = messages.data?.pages.at(0)?.counterpartLastRead ?? 0;
   useEffect(() => gateway?.subscribe(id, () => { void client.invalidateQueries({ queryKey: ['chat', id, 'messages'] }); void client.invalidateQueries({ queryKey: ['chat', 'inbox'] }); }), [client, gateway, id]);
@@ -54,7 +56,7 @@ export function ChatRoomPage() {
   if (!gateway) return <StatusPanel title="Chat belum aktif"><p>Hubungkan backend untuk memakai percakapan nyata.</p></StatusPanel>;
   if (messages.isPending || inbox.isPending) return <StatusPanel title="Memuat percakapan…" />;
   if (messages.error || inbox.error || !conversation) return <StatusPanel title="Percakapan tidak tersedia" error><Link to="/chat">Kembali ke pesan</Link></StatusPanel>;
-  return <section className="chat-room"><header className="chat-header"><Link className="back-link" to="/chat">Kembali</Link><div><h1>{conversation.counterpart.name}</h1><Link to={`/listings/${conversation.listing.id}`}>{conversation.listing.title}</Link></div><div className="chat-header-actions"><Link className="text-button" to={`/unavailable?feature=laporkan&conversation=${id}`}>Laporkan</Link>{!blocked && !confirmBlock && <button className="text-button" type="button" onClick={() => setConfirmBlock(true)}>Blokir</button>}{confirmBlock && <div className="block-confirm" role="group" aria-label="Konfirmasi blokir"><button className="text-button danger" type="button" disabled={block.isPending} onClick={() => block.mutate()}>Ya, blokir</button><button className="text-button" type="button" onClick={() => setConfirmBlock(false)}>Batal</button></div>}</div></header>
+  return <section className="chat-room"><header className="chat-header"><Link className="back-link" to="/chat">Kembali</Link><div><h1>{conversation.counterpart.name}</h1><Link to={`/listings/${conversation.listing.id}`}>{conversation.listing.title}</Link></div><div className="chat-header-actions">{listing.data?.publisher.id === auth.session?.userId && <Link className="text-button" to={`/orders/new/${id}`}>Buat ringkasan pesanan</Link>}<Link className="text-button" to={`/unavailable?feature=laporkan&conversation=${id}`}>Laporkan</Link>{!blocked && !confirmBlock && <button className="text-button" type="button" onClick={() => setConfirmBlock(true)}>Blokir</button>}{confirmBlock && <div className="block-confirm" role="group" aria-label="Konfirmasi blokir"><button className="text-button danger" type="button" disabled={block.isPending} onClick={() => block.mutate()}>Ya, blokir</button><button className="text-button" type="button" onClick={() => setConfirmBlock(false)}>Batal</button></div>}</div></header>
     {(block.error || unblock.error) && <p className="form-alert" role="alert">Pengaturan blokir belum tersimpan. Coba lagi.</p>}
     <div className="message-list" aria-live="polite">{messages.hasNextPage && <button className="text-button" type="button" disabled={messages.isFetchingNextPage} onClick={() => void messages.fetchNextPage()}>{messages.isFetchingNextPage ? 'Memuat…' : 'Muat pesan lama'}</button>}{visibleMessages.map(message => <article key={message.id} className={message.senderId === auth.session?.userId ? 'message own' : 'message'}>{message.body.imageUrls?.length ? <div className="message-images">{message.body.imageUrls.map((url, index) => <a key={url} href={url} target="_blank" rel="noreferrer"><img src={url} alt={`Foto ${index + 1} dari ${message.senderId === auth.session?.userId ? 'Anda' : conversation.counterpart.name}`} /></a>)}</div> : <p>{message.body.text ?? (message.type === 'system' ? 'Status transaksi diperbarui.' : 'Foto sedang dimuat.')}</p>}<footer><time>{time(message.sentAt)}</time>{message.senderId === auth.session?.userId && <span>{message.seq <= counterpartLastRead ? 'Dibaca' : 'Terkirim'}</span>}</footer></article>)}</div>
     {send.error && <p className="form-alert" role="alert">Pesan belum terkirim. Teks tetap ada; coba lagi.</p>}

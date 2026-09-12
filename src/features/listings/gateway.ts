@@ -36,7 +36,7 @@ const draftSchema: z.ZodType<ListingDraft> = z.object({
   catering: z.object({ minimumQty: z.string(), unit: z.string(), leadTimeHours: z.string(), serviceAreaIds: z.array(z.string()), availabilityNotes: z.string() }).nullable(),
 });
 export function createSupabaseListingGateway(client: SupabaseClient): ListingGateway {
-  async function command(name: 'save_listing_draft' | 'publish_listing', draft: ListingDraft): Promise<ListingSaveResult> {
+  async function command(name: 'save_listing_draft' | 'publish_listing' | 'save_store_listing_draft' | 'publish_store_listing', draft: ListingDraft): Promise<ListingSaveResult> {
     const { data, error } = await client.rpc(name, { p_payload: commandPayload(draft) });
     if (error || !data || typeof data !== 'object') throw unavailable();
     const value = data as Record<string, unknown>;
@@ -44,7 +44,7 @@ export function createSupabaseListingGateway(client: SupabaseClient): ListingGat
     return { listingId: value.listingId, version: value.version, lifecycle: value.lifecycle };
   }
   return {
-    saveDraft: draft => command('save_listing_draft', draft), publish: draft => command('publish_listing', draft),
+    saveDraft: draft => command(draft.publisher.kind === 'store' ? 'save_store_listing_draft' : 'save_listing_draft', draft), publish: draft => command(draft.publisher.kind === 'store' ? 'publish_store_listing' : 'publish_listing', draft),
     async getMine(listingId) {
       const { data, error } = await client.rpc('get_my_listing', { p_listing_id: listingId });
       if (error) throw unavailable();
