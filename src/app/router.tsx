@@ -20,6 +20,10 @@ import { OrderRoomPage } from '../features/orders/OrderRoomPage';
 import { PlusPage } from '../features/stores/PlusPage';
 import { MyStoresPage } from '../features/stores/MyStoresPage';
 import { ReportPage } from '../features/reports/ReportPage';
+import { NotificationsPage } from '../features/notifications/NotificationsPage';
+import { ReviewPage } from '../features/reviews/ReviewPage';
+import { AdminReportsPage } from '../features/admin/AdminReportsPage';
+import { AdminReportDetailPage } from '../features/admin/AdminReportDetailPage';
 
 export function AppRoutes() {
   return <Routes>
@@ -45,7 +49,10 @@ export function AppRoutes() {
     <Route path="/plus" element={<RequireCompletedProfile><PlusPage /></RequireCompletedProfile>} />
     <Route path="/my/stores" element={<RequireCompletedProfile><MyStoresPage /></RequireCompletedProfile>} />
     <Route path="/reports/new" element={<RequireCompletedProfile><ReportPage /></RequireCompletedProfile>} />
-    {['/transactions/*', '/notifications'].map(path => <Route key={path} path={path} element={<RequireCompletedProfile><UnavailablePage /></RequireCompletedProfile>} />)}
+    <Route path="/notifications" element={<RequireCompletedProfile><NotificationsPage /></RequireCompletedProfile>} />
+    <Route path="/reviews/new" element={<RequireCompletedProfile><ReviewPage /></RequireCompletedProfile>} />
+    <Route path="/admin/reports" element={<AdminReportsPage />} />
+    <Route path="/admin/reports/:id" element={<AdminReportDetailPage />} />
     <Route path="/admin/*" element={<UnavailablePage />} />
     <Route path="*" element={<UnavailablePage title="Halaman tidak ditemukan" />} />
   </Routes>;

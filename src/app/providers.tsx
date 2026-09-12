@@ -17,6 +17,12 @@ import { StoreProvider } from '../features/stores/StoreContext';
 import type { StoreGateway } from '../features/stores/gateway';
 import { ReportProvider } from '../features/reports/ReportContext';
 import type { ReportGateway } from '../features/reports/gateway';
+import { NotificationProvider } from '../features/notifications/NotificationContext';
+import type { NotificationGateway } from '../features/notifications/gateway';
+import { ReviewProvider } from '../features/reviews/ReviewContext';
+import type { ReviewGateway } from '../features/reviews/gateway';
+import { AdminProvider } from '../features/admin/AdminContext';
+import type { AdminGateway } from '../features/admin/gateway';
 
 const RepositoryContext = createContext<DiscoveryRepository | null>(null);
 export function useRepository() {
@@ -24,7 +30,7 @@ export function useRepository() {
   if (!repository) throw new Error('Repository belum tersedia.');
   return repository;
 }
-export function Providers({ repository, authGateway, onboardingGateway, listingGateway, chatGateway, tradeGateway, orderGateway = null, storeGateway = null, reportGateway = null, children }: { repository: DiscoveryRepository; authGateway: AuthGateway | null; onboardingGateway: OnboardingGateway | null; listingGateway: ListingGateway | null; chatGateway: ChatGateway | null; tradeGateway: TradeGateway | null; orderGateway?: OrderGateway | null; storeGateway?: StoreGateway | null; reportGateway?: ReportGateway | null; children: ReactNode }) {
+export function Providers({ repository, authGateway, onboardingGateway, listingGateway, chatGateway, tradeGateway, orderGateway = null, storeGateway = null, reportGateway = null, notificationGateway = null, reviewGateway = null, adminGateway = null, children }: { repository: DiscoveryRepository; authGateway: AuthGateway | null; onboardingGateway: OnboardingGateway | null; listingGateway: ListingGateway | null; chatGateway: ChatGateway | null; tradeGateway: TradeGateway | null; orderGateway?: OrderGateway | null; storeGateway?: StoreGateway | null; reportGateway?: ReportGateway | null; notificationGateway?: NotificationGateway | null; reviewGateway?: ReviewGateway | null; adminGateway?: AdminGateway | null; children: ReactNode }) {
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 30_000, refetchOnWindowFocus: true }, mutations: { retry: false } } }));
-  return <RepositoryContext.Provider value={repository}><QueryClientProvider client={client}><AuthProvider gateway={authGateway}><OnboardingProvider gateway={onboardingGateway}><ListingProvider gateway={listingGateway}><ChatProvider gateway={chatGateway}><TradeProvider gateway={tradeGateway}><OrderProvider gateway={orderGateway}><StoreProvider gateway={storeGateway}><ReportProvider gateway={reportGateway}>{children}</ReportProvider></StoreProvider></OrderProvider></TradeProvider></ChatProvider></ListingProvider></OnboardingProvider></AuthProvider></QueryClientProvider></RepositoryContext.Provider>;
+  return <RepositoryContext.Provider value={repository}><QueryClientProvider client={client}><AuthProvider gateway={authGateway}><OnboardingProvider gateway={onboardingGateway}><ListingProvider gateway={listingGateway}><ChatProvider gateway={chatGateway}><TradeProvider gateway={tradeGateway}><OrderProvider gateway={orderGateway}><StoreProvider gateway={storeGateway}><ReportProvider gateway={reportGateway}><NotificationProvider gateway={notificationGateway}><ReviewProvider gateway={reviewGateway}><AdminProvider gateway={adminGateway}>{children}</AdminProvider></ReviewProvider></NotificationProvider></ReportProvider></StoreProvider></OrderProvider></TradeProvider></ChatProvider></ListingProvider></OnboardingProvider></AuthProvider></QueryClientProvider></RepositoryContext.Provider>;
 }

@@ -26,7 +26,7 @@ function consentStatus(ready: boolean, approved: boolean) {
 function TradeActions({ room, onApprove, onReceive, onTopup, onCancel, pending }: {
   room: TradeRoom; onApprove: () => void; onReceive: () => void; onTopup: () => void; onCancel: () => void; pending: boolean;
 }) {
-  if (room.lifecycle === 'completed') return <p className="success-notice">Barter selesai. Ringkasan kesepakatan tetap tersimpan.</p>;
+  if (room.lifecycle === 'completed') return <div className="trade-action-stack"><p className="success-notice">Barter selesai. Ringkasan kesepakatan tetap tersimpan.</p><Link className="button secondary" to={`/reviews/new?kind=barter&id=${room.id}`}>Beri ulasan</Link></div>;
   if (room.lifecycle === 'cancelled') return <p className="inline-notice">Barter dibatalkan: {room.cancellationReason}</p>;
   if (room.lifecycle === 'agreed') return <div className="trade-action-stack">
     <p className="inspection-notice">Periksa barang asli dan cocokkan dengan foto, detail, serta kekurangan sebelum menerima.</p>
