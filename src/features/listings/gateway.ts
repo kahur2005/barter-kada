@@ -3,7 +3,8 @@ import { z } from 'zod';
 import type { ListingDraft } from './types';
 
 export type ListingSaveResult = { listingId: string; version: number; lifecycle: 'draft' | 'active' };
-export type MineListing = { listingId: string; title: string; lifecycle: 'draft' | 'active' | 'archived' | 'completed'; version: number; reserved: boolean; updatedAt: string };
+export type MineListingPublisher = { kind: 'personal' } | { kind: 'store'; storeId: string; storeName: string; storeSlug: string };
+export type MineListing = { listingId: string; title: string; lifecycle: 'draft' | 'active' | 'archived' | 'completed'; version: number; reserved: boolean; updatedAt: string; publisher?: MineListingPublisher };
 export interface ListingGateway {
   saveDraft(draft: ListingDraft): Promise<ListingSaveResult>;
   publish(draft: ListingDraft): Promise<ListingSaveResult>;

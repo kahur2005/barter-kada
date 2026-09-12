@@ -1,5 +1,5 @@
 begin;
-select plan(19);
+select plan(21);
 
 select has_table('public', 'listings', 'listing lifecycle table exists');
 select has_table('public', 'listing_modes', 'listing modes are normalized');
@@ -38,6 +38,8 @@ select lives_ok(
   'a completed account publishes a valid personal sale plus barter listing'
 );
 select is((select lifecycle from public.listings where listing_id = '44000000-0000-4000-8000-000000000004'), 'active', 'published listing is active');
+select ok(exists (select 1 from jsonb_array_elements(public.get_my_listings('active')->'items') item where item->>'title' = 'Kemeja batik' and item->'publisher'->>'kind' = 'personal'), 'owner listing projection includes personal publisher context');
+select ok((select prosrc like '%storeName%' and prosrc like '%storeSlug%' from pg_catalog.pg_proc where oid = 'private.get_my_listings_command(text)'::regprocedure), 'owner listing projection includes store publisher context');
 select set_eq($$ select mode from public.listing_modes where listing_id = '44000000-0000-4000-8000-000000000004' $$, array['sale', 'barter'], 'both modes persist once');
 select is((select count(*)::integer from public.listing_assets where listing_id = '44000000-0000-4000-8000-000000000004'), 1, 'only processed owner media is attached');
 select lives_ok(
