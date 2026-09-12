@@ -17,6 +17,8 @@ import { TradeRoomPage } from '../features/trades/TradeRoomPage';
 import { TradeEditPage } from '../features/trades/TradeEditPage';
 import { OrderQuotePage } from '../features/orders/OrderQuotePage';
 import { OrderRoomPage } from '../features/orders/OrderRoomPage';
+import { OrderAmendmentPage } from '../features/orders/OrderAmendmentPage';
+import { RefundPage } from '../features/orders/RefundPage';
 import { PlusPage } from '../features/stores/PlusPage';
 import { MyStoresPage } from '../features/stores/MyStoresPage';
 import { ReportPage } from '../features/reports/ReportPage';
@@ -50,6 +52,8 @@ export function AppRoutes() {
     <Route path="/transactions/:id" element={<RequireCompletedProfile><TradeRoomPage /></RequireCompletedProfile>} />
     <Route path="/orders/new/:conversationId" element={<RequireCompletedProfile><OrderQuotePage /></RequireCompletedProfile>} />
     <Route path="/orders/:id" element={<RequireCompletedProfile><OrderRoomPage /></RequireCompletedProfile>} />
+    <Route path="/orders/:id/amend" element={<RequireCompletedProfile><OrderAmendmentPage /></RequireCompletedProfile>} />
+    <Route path="/orders/:id/refund" element={<RequireCompletedProfile><RefundPage /></RequireCompletedProfile>} />
     <Route path="/plus" element={<RequireCompletedProfile><PlusPage /></RequireCompletedProfile>} />
     <Route path="/my/stores" element={<RequireCompletedProfile><MyStoresPage /></RequireCompletedProfile>} />
     <Route path="/transactions" element={<RequireCompletedProfile><TransactionsPage /></RequireCompletedProfile>} />

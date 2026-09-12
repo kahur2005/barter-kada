@@ -13,18 +13,28 @@ function show(gateway: OrderGateway) { const client = new QueryClient({ defaultO
 
 describe('order room', () => {
   it('lets the buyer confirm a quote with an idempotency key', async () => {
-    const gateway: OrderGateway = { get: vi.fn().mockResolvedValue(base), createQuote: vi.fn(), confirm: vi.fn().mockResolvedValue({ ...base, lifecycle: 'confirmed', acceptedRevision: 1 }), acknowledgePayment: vi.fn(), markProcessing: vi.fn(), markReady: vi.fn(), markHandedOver: vi.fn(), confirmReceived: vi.fn(), cancel: vi.fn(), requestCancellation: vi.fn(), respondCancellation: vi.fn(), subscribe: vi.fn(() => () => undefined) };
+    const gateway: OrderGateway = { get: vi.fn().mockResolvedValue(base), createQuote: vi.fn(), confirm: vi.fn().mockResolvedValue({ ...base, lifecycle: 'confirmed', acceptedRevision: 1 }), acknowledgePayment: vi.fn(), markProcessing: vi.fn(), markReady: vi.fn(), markHandedOver: vi.fn(), confirmReceived: vi.fn(), cancel: vi.fn(), requestCancellation: vi.fn(), respondCancellation: vi.fn(), proposeAmendment: vi.fn(), acceptAmendment: vi.fn(), rejectAmendment: vi.fn(), withdrawAmendment: vi.fn(), proposeRefund: vi.fn(), acceptRefund: vi.fn(), rejectRefund: vi.fn(), recordRefundSent: vi.fn(), confirmRefundReceived: vi.fn(), subscribe: vi.fn(() => () => undefined) };
     show(gateway); const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Konfirmasi pesanan' }));
     expect(gateway.confirm).toHaveBeenCalledWith(base.id, 1, expect.stringMatching(/^[0-9a-f-]{36}$/));
   });
 
   it('requires a reason before pre-processing cancellation', async () => {
-    const gateway: OrderGateway = { get: vi.fn().mockResolvedValue(base), createQuote: vi.fn(), confirm: vi.fn(), acknowledgePayment: vi.fn(), markProcessing: vi.fn(), markReady: vi.fn(), markHandedOver: vi.fn(), confirmReceived: vi.fn(), cancel: vi.fn().mockResolvedValue({ ...base, lifecycle: 'cancelled', cancellationReason: 'Tidak jadi membeli.' }), requestCancellation: vi.fn(), respondCancellation: vi.fn(), subscribe: vi.fn(() => () => undefined) };
+    const gateway: OrderGateway = { get: vi.fn().mockResolvedValue(base), createQuote: vi.fn(), confirm: vi.fn(), acknowledgePayment: vi.fn(), markProcessing: vi.fn(), markReady: vi.fn(), markHandedOver: vi.fn(), confirmReceived: vi.fn(), cancel: vi.fn().mockResolvedValue({ ...base, lifecycle: 'cancelled', cancellationReason: 'Tidak jadi membeli.' }), requestCancellation: vi.fn(), respondCancellation: vi.fn(), proposeAmendment: vi.fn(), acceptAmendment: vi.fn(), rejectAmendment: vi.fn(), withdrawAmendment: vi.fn(), proposeRefund: vi.fn(), acceptRefund: vi.fn(), rejectRefund: vi.fn(), recordRefundSent: vi.fn(), confirmRefundReceived: vi.fn(), subscribe: vi.fn(() => () => undefined) };
     show(gateway); const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Batalkan pesanan' }));
     await user.type(screen.getByLabelText('Alasan'), 'Tidak jadi membeli.');
     await user.click(screen.getAllByRole('button', { name: 'Batalkan pesanan' }).at(-1)!);
     expect(gateway.cancel).toHaveBeenCalledWith(base.id, 1, 'Tidak jadi membeli.', expect.stringMatching(/^[0-9a-f-]{36}$/));
+  });
+
+  it('lets the buyer review and accept a pending amendment', async () => {
+    const amendment = { id: 'c7000000-0000-4000-8000-000000000007', status: 'proposed' as const, baseRevision: 1, proposedRevision: 2, proposerRole: 'seller' as const, reason: 'Stok berubah', createdAt: '2026-09-12T02:00:00.000Z', expiresAt: '2026-09-14T02:00:00.000Z', items: [{ ...base.items[0], quantity: 2 }], terms: { ...base.terms, totalRupiah: '200000', dpAmountRupiah: '0' } };
+    const gateway: OrderGateway = { get: vi.fn().mockResolvedValue({ ...base, lifecycle: 'confirmed', acceptedRevision: 1, amendment }), createQuote: vi.fn(), confirm: vi.fn(), acknowledgePayment: vi.fn(), markProcessing: vi.fn(), markReady: vi.fn(), markHandedOver: vi.fn(), confirmReceived: vi.fn(), cancel: vi.fn(), requestCancellation: vi.fn(), respondCancellation: vi.fn(), proposeAmendment: vi.fn(), acceptAmendment: vi.fn().mockResolvedValue({ ...base, lifecycle: 'confirmed', acceptedRevision: 2 }), rejectAmendment: vi.fn(), withdrawAmendment: vi.fn(), proposeRefund: vi.fn(), acceptRefund: vi.fn(), rejectRefund: vi.fn(), recordRefundSent: vi.fn(), confirmRefundReceived: vi.fn(), subscribe: vi.fn(() => () => undefined) };
+    show(gateway); const user = userEvent.setup();
+    expect(await screen.findByText('Usulan perubahan pesanan')).toBeVisible();
+    expect(screen.getByText('Meja × 2')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Setujui perubahan' }));
+    expect(gateway.acceptAmendment).toHaveBeenCalledWith(amendment.id, 1, expect.stringMatching(/^[0-9a-f-]{36}$/));
   });
 });

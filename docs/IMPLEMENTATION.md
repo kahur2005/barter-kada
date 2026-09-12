@@ -13,11 +13,11 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
 | 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center, event notification server-side, dan idempotent reminder worker diimplementasikan; runtime Supabase belum diverifikasi |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
-| 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover, pembatalan sebelum proses, dan permintaan pembatalan pascaproses dengan keputusan penjual diimplementasikan; amend/refund/admin belum |
+| 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover, pembatalan sebelum proses, permintaan pembatalan pascaproses, amendment sebelum proses, dan refund offline setelah pembatalan diimplementasikan; keputusan admin dan kebijakan refund final tetap terbuka |
 | 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, katalog, selector penerbit, batas produk toko dan rotasi promosi per akun diimplementasikan; runtime database belum diverifikasi |
 | 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, restriction/ban foundation, dan scheduler publikasi/reminder diimplementasikan; runtime database belum |
-| 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Admin limits/version history, product event privacy boundary, activity-day retention, listing visibility periods, live metrics RPC, halaman `/admin/analytics`, serta rating toko terpisah diimplementasikan; amend/refund belum |
-| 10 | E2E dua akun, RLS/race/security, mobile/a11y, build Vercel, panduan/demo evidence | Semua requirement R yang berlaku; T-45/46/55; UX-01–13 | Belum diverifikasi |
+| 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Admin limits/version history, product event privacy boundary, activity-day retention, listing visibility periods, live metrics RPC, halaman `/admin/analytics`, rating toko terpisah, amendment pre-processing, dan ledger refund offline diimplementasikan; runtime database belum diverifikasi |
+| 10 | E2E dua akun, RLS/race/security, mobile/a11y, build Vercel, panduan/demo evidence | Semua requirement R yang berlaku; T-45/46/55; UX-01–13 | Frontend unit/build/E2E/audit terverifikasi; dua akun, RLS/race, Supabase runtime, dan deployment Vercel masih belum diverifikasi |
 
 Skenario T merupakan kelompok, bukan jumlah tes yang otomatis membuktikan seluruh PRD. Saat bagian selesai, catat path test, command, hasil, commit dan keterbatasannya. Matrix 244 R tetap sumber audit akhir; jangan mengubah semua status menjadi selesai berdasarkan build frontend.
 
@@ -38,6 +38,7 @@ Skenario T merupakan kelompok, bukan jumlah tes yang otomatis membuktikan seluru
 - [Publikasi dan pengelolaan listing](superpowers/plans/2026-09-11-listing-publishing.md).
 - [Chat privat dan realtime](superpowers/plans/2026-09-12-private-chat.md).
 - [Notifikasi, review, dan admin case minimum](superpowers/plans/2026-09-12-notifications-reviews.md).
+- [Amendment order dan refund offline](superpowers/plans/2026-09-12-amendment-refund.md).
 - Rencana subsystem berikut diturunkan dari tahap 5–10 sebelum kode subsystem terkait dimulai; status belum dibuat di atas tetap aktif sampai ada bukti implementasi.
 
 ## Lingkungan yang harus dipenuhi sebelum verifikasi end-to-end
@@ -153,3 +154,21 @@ Bukti host:
 - `npm.cmd run test:e2e`: 26 lulus, 1 dilewati pada skenario desktop-only.
 - `git diff --check`: tidak menemukan whitespace error; warning CRLF dari Git tidak memengaruhi isi.
 - `supabase start` masih tidak dapat dijalankan karena Docker Linux engine tidak tersedia; seluruh assertion pgTAP pada dua migration baru masih static-only.
+
+## Bukti parsial tahap 6/9: amendment dan refund offline
+
+Implementasi 12 September 2026 menambahkan `20260912093000_order_amendments.sql` dan `20260912094000_offline_refunds.sql`. Amendment menyimpan proposal sebagai revisi order baru tanpa menghapus revisi lama, hanya dapat diajukan penjual pada status `confirmed`/`awaiting_dp`, dan harus diterima pembeli dengan expected revision. Acceptance melepas hold/obligation lama yang masih terbuka, memvalidasi ulang stok, lalu membuat snapshot revisi dan obligation baru secara atomik. Perubahan setelah proposal tidak dapat memakai persetujuan lama.
+
+Refund dipisahkan dari state fulfillment: nominal harus eksplisit dan dibatasi oleh pembayaran direct yang sudah diakui dikurangi refund yang sudah dikonfirmasi. Alurnya `proposed → accepted → sent_unconfirmed → confirmed`; Barter tidak menerima, menahan, memindahkan, atau membalikkan uang. Basis `cancellation` mensyaratkan order sudah cancelled, basis `amendment` mensyaratkan amendment accepted, dan basis `admin_decision` hanya dapat dibuat admin. Ledger dan proposal tidak memiliki field gateway/platform balance serta tidak memiliki direct table grant untuk browser.
+
+RPC utama: `propose_order_amendment`, `accept_order_amendment`, `reject_order_amendment`, `withdraw_order_amendment`, `propose_refund`, `accept_refund`, `reject_refund`, `record_refund_sent`, dan `confirm_refund_received`. UI mobile tersedia di `/orders/:id/amend` dan `/orders/:id/refund`, termasuk review proposal pembeli, status transfer offline, dan konfirmasi penerimaan.
+
+Bukti host pada checkpoint ini:
+
+- `npm.cmd test -- --run`: 44 file, 144 tes lulus.
+- `npm.cmd run build`: TypeScript dan Vite production build lulus; entry 155,95 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
+- `npm.cmd run test:e2e -- --workers=1`: 26 lulus, 1 dilewati karena skenario desktop-only.
+- `npm.cmd audit --omit=dev`: 0 kerentanan dependency produksi.
+- `supabase/tests/order_amendments_refunds.test.sql`: 45 assertion pgTAP static-only; `supabase --version` tidak tersedia pada host ini, sehingga migration, RLS, race, dan RPC belum diuji pada PostgreSQL.
+
+Q-12/Q-17 tetap tidak dikunci diam-diam: kebijakan pengembalian nominal dan keputusan admin final masih memerlukan keputusan produk/legal. Implementasi saat ini hanya menyediakan ledger proposal, consent, bukti catatan transfer opsional, dan konfirmasi penerima.
