@@ -61,3 +61,13 @@ it('uses backend discovery areas instead of the preview area list', async () => 
   expect(await screen.findByRole('option', { name: 'Kota Adm. Jakarta Selatan' })).toBeVisible();
   expect(screen.getByRole('option', { name: 'Kota Bekasi' })).toBeVisible();
 });
+it('explains when a bookmarked area is no longer active', async () => {
+  const backendRepo: DiscoveryRepository = {
+    ...repo,
+    source: 'supabase',
+    listAreas: vi.fn().mockResolvedValue([{ areaId: 'depok', name: 'Depok' }]),
+  };
+  show('/?area=kota-tangerang-selatan', backendRepo);
+  expect(await screen.findByRole('heading', { name: 'Area pencarian tidak tersedia' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Pilih area' })).toBeVisible();
+});

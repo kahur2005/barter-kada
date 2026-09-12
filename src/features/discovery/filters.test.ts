@@ -11,6 +11,9 @@ it('round trips non-sensitive search state without retaining injected coordinate
   expect(serialized.has('lat')).toBe(false);
   expect(parseDiscoveryQuery(serialized)).toEqual(parsed);
 });
+it('preserves backend area ids that are not part of the preview fixture list', () => {
+  expect(parseDiscoveryQuery(new URLSearchParams('area=kota-tangerang-selatan')).areaId).toBe('kota-tangerang-selatan');
+});
 it('uses relevance for a query and newest for a blank query', () => {
   expect(parseDiscoveryQuery(new URLSearchParams('q=kursi')).sort).toBe('relevance');
   expect(parseDiscoveryQuery(new URLSearchParams()).sort).toBe('newest');

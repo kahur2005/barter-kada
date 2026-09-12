@@ -19,8 +19,9 @@ function option<T extends string>(value: string | null, options: readonly T[]): 
 export function parseDiscoveryQuery(params: URLSearchParams): DiscoveryQuery {
   const query = (params.get('q') ?? '').trim().slice(0, 120);
   const radius = Number(params.get('radius'));
+  const areaCandidate = (params.get('area') ?? '').trim().toLocaleLowerCase('en-US').slice(0, 100);
   return {
-    query, areaId: option(params.get('area'), areas.map(a => a.id)) ?? 'depok',
+    query, areaId: /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(areaCandidate) ? areaCandidate : 'depok',
     radiusKm: radii.includes(radius) ? radius : 5,
     category: option(params.get('category'), categories.map(c => c.id)),
     mode: option(params.get('mode'), ['sale', 'barter', 'free']),
