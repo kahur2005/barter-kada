@@ -268,3 +268,16 @@ Bukti host pada checkpoint ini:
 - `npm.cmd run test:e2e -- --workers=1`: 26 lulus, 1 dilewati pada skenario desktop-only.
 - `npm.cmd audit --omit=dev`: 0 kerentanan dependency produksi.
 - Runtime Supabase, RLS, race, dan RPC tetap belum diverifikasi karena Docker Desktop Linux Engine/API belum merespons.
+
+## Bukti parsial UI-07: ruang pesanan
+
+Implementasi 12 September 2026 memperjelas ruang pesanan mobile-first dengan memisahkan ringkasan `Pembayaran langsung` dan `Penyerahan`. Nominal DP, status konfirmasi penjual, sisa pelunasan, tenggat DP, metode serah-terima, catatan, dan milestone fulfillment sekarang ditampilkan dalam Bahasa Indonesia dengan waktu WIB. Copy selalu menegaskan bahwa Barter tidak menerima, menahan, atau memindahkan uang; pembayaran tetap langsung antar pihak.
+
+Urutan aksi pembeli juga diperbaiki: pada status `ready`/`awaiting_receipt`, tombol `Pesanan sudah diterima` kini tersedia bersama opsi `Ajukan pembatalan`. Sebelumnya cabang pembatalan menutup cabang konfirmasi penerimaan sehingga aksi tersebut tidak pernah dapat dipakai.
+
+- Test UI: `src/features/orders/OrderRoomPage.test.tsx`.
+- Helper label dan formatter: `src/features/orders/order-presenters.ts`.
+- `npm.cmd test -- --run`: 48 file, 163 tes lulus.
+- `npm.cmd run build`: TypeScript dan Vite production build lulus; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
+- `CI=1 npm.cmd run test:e2e -- --workers=1`: 26 lulus, 1 dilewati karena skenario desktop-only; preview server dijalankan oleh Playwright agar fixture data contoh aktif.
+- Tidak ada perubahan migration, schema, payment gateway, atau alur pembayaran.

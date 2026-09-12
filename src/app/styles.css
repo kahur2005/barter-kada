@@ -366,6 +366,12 @@ ul { padding-left: 20px; }
 .trade-item-editor .nested-fields { margin-top: 0; }
 .trade-item-editor .text-button { justify-self: start; padding-inline: 0; }
 .order-room, .order-editor { max-width: 46rem; margin: 0 auto; display: grid; gap: 16px; }
+.order-status-grid { display: grid; gap: 16px; }
+.order-status-card { min-width: 0; }
+.order-status-card .metadata { line-height: 1.5; }
+.order-timeline { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.order-timeline li { padding-left: 18px; border-left: 2px solid var(--rule); color: var(--muted); }
+.order-timeline li.complete { border-color: var(--action); color: var(--ink); }
 .order-editor > header { display: grid; gap: 8px; }
 .order-editor > header .back-link { margin: 0; }
 .order-line { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rule); }
@@ -388,4 +394,4 @@ ul { padding-left: 20px; }
 .report-page { max-width: 46rem; margin: 0 auto; display: grid; gap: 16px; }
 .report-page > header { display: grid; gap: 8px; }
 .report-page > header .back-link { justify-self: start; margin: 0; }
-@media (min-width: 768px) { .trade-room, .trade-editor { max-width: 720px; } .trade-package { padding: 20px; } }
+@media (min-width: 768px) { .trade-room, .trade-editor { max-width: 720px; } .trade-package { padding: 20px; } .order-status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
