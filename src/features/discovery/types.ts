@@ -33,6 +33,7 @@ export const storeSchema = z.object({
 }).transform(store => ({ ...store, publicAddress: store.publicAddressConsent ? store.publicAddress : null }));
 export const listingPageSchema = z.object({ items: z.array(listingSchema), nextCursor: z.string().nullable() });
 export const storePageSchema = z.object({ items: z.array(storeSchema), nextCursor: z.string().nullable() });
+export const serviceAreaRowsSchema = z.array(z.object({ area_id: z.string().min(1).max(100), name: z.string().min(2).max(100) }));
 export type PublicListing = z.infer<typeof listingSchema>;
 export type PublicStore = z.infer<typeof storeSchema>;
 export type ListingPage = z.infer<typeof listingPageSchema>;

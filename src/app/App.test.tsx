@@ -1,14 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { App } from './App';
+import type { DiscoveryRepository } from '../features/discovery/repository';
 import { createPreviewRepository } from '../features/discovery/preview-repository';
 import { listingSchema } from '../features/discovery/types';
 import { listing } from '../test/fixtures';
 
 const repo = createPreviewRepository([listingSchema.parse(listing), listingSchema.parse({ ...listing, id: '10000000-0000-4000-8000-000000000002', title: 'Nasi kotak', category: 'food', modes: ['sale'] })], []);
-function show(path = '/') { return render(<MemoryRouter initialEntries={[path]}><App repository={repo} /></MemoryRouter>); }
+function show(path = '/', repository: DiscoveryRepository = repo) { return render(<MemoryRouter initialEntries={[path]}><App repository={repository} /></MemoryRouter>); }
 it('searches real listing rows and keeps the search value on detail return', async () => {
   const user = userEvent.setup(); show();
   await screen.findByRole('link', { name: 'Kursi kayu bekas' });
@@ -42,4 +43,21 @@ it('retries a transport failure instead of rendering fake listings', async () =>
   fail = false;
   await user.click(screen.getByRole('button', { name: 'Coba lagi' }));
   expect(await screen.findByRole('link', { name: 'Kursi kayu bekas' })).toBeVisible();
+});
+it('uses backend discovery areas instead of the preview area list', async () => {
+  const user = userEvent.setup();
+  const backendRepo: DiscoveryRepository = {
+    ...repo,
+    source: 'supabase',
+    listAreas: vi.fn().mockResolvedValue([
+      { areaId: 'depok', name: 'Depok' },
+      { areaId: 'jakarta-selatan', name: 'Kota Adm. Jakarta Selatan' },
+      { areaId: 'kota-bekasi', name: 'Kota Bekasi' },
+    ]),
+  };
+  show('/', backendRepo);
+  await screen.findByRole('link', { name: 'Kursi kayu bekas' });
+  await user.click(screen.getByRole('button', { name: /Depok.*5 km/ }));
+  expect(await screen.findByRole('option', { name: 'Kota Adm. Jakarta Selatan' })).toBeVisible();
+  expect(screen.getByRole('option', { name: 'Kota Bekasi' })).toBeVisible();
 });

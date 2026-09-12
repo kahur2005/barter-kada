@@ -9,6 +9,25 @@ function setup(response: Response) {
   const client = createClient('https://demo.supabase.co', 'sb_publishable_test', { auth: { storageKey: crypto.randomUUID(), persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }, global: { fetch: transport } });
   return { repo: createSupabaseRepository(client), transport };
 }
+it('reads enabled discovery areas from the public service-area view', async () => {
+  const { repo, transport } = setup(Response.json([
+    { area_id: 'depok', name: 'Depok' },
+    { area_id: 'jakarta-selatan', name: 'Kota Adm. Jakarta Selatan' },
+  ]));
+  expect(await repo.listAreas()).toEqual([
+    { areaId: 'depok', name: 'Depok' },
+    { areaId: 'jakarta-selatan', name: 'Kota Adm. Jakarta Selatan' },
+  ]);
+  const url = String(transport.mock.calls[0][0]);
+  expect(url).toContain('/rest/v1/service_areas?');
+  expect(url).toContain('select=area_id%2Cname');
+  expect(url).toContain('enabled=eq.true');
+  expect(url).toContain('order=name.asc');
+});
+it('rejects malformed discovery area rows', async () => {
+  const { repo } = setup(Response.json([{ area_id: 'depok' }]));
+  await expect(repo.listAreas()).rejects.toThrow(/format/);
+});
 it('calls the real RPC transport with filters and strips private additions', async () => {
   const { repo, transport } = setup(Response.json({ items: [{ ...listing, phone: 'private' }], nextCursor: null }));
   const query = parseDiscoveryQuery(new URLSearchParams('q=kursi&radius=10'));

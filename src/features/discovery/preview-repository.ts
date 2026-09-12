@@ -1,4 +1,5 @@
 import type { DiscoveryQuery, PublicListing, PublicStore } from './types';
+import { areas } from './filters';
 import type { DiscoveryRepository } from './repository';
 
 const areaOrder = ['depok', 'jakarta-selatan', 'bogor', 'bekasi', 'tangerang'];
@@ -48,6 +49,7 @@ export function createPreviewRepository(listings: PublicListing[], stores: Publi
   }
   return {
     source: 'preview',
+    listAreas: async signal => { signal?.throwIfAborted(); return areas.map(area => ({ areaId: area.id, name: area.name })); },
     searchListings: async (query, signal) => search(query, signal),
     getListing: async (id, signal) => { signal?.throwIfAborted(); return listings.find(item => item.id === id && visible(item)) ?? null; },
     searchStores: async (query, signal) => {

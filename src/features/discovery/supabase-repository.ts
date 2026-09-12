@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { z } from 'zod';
 import type { DiscoveryRepository } from './repository';
-import { listingPageSchema, listingSchema, storePageSchema, storeSchema } from './types';
+import { listingPageSchema, listingSchema, serviceAreaRowsSchema, storePageSchema, storeSchema } from './types';
 
 export function createSupabaseRepository(client: SupabaseClient): DiscoveryRepository {
   const processedPath = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/i;
@@ -39,6 +39,17 @@ export function createSupabaseRepository(client: SupabaseClient): DiscoveryRepos
   }
   return {
     source: 'supabase',
+    async listAreas(signal) {
+      signal?.throwIfAborted();
+      let request = client.from('service_areas').select('area_id,name').eq('enabled', true).order('name', { ascending: true });
+      if (signal) request = request.abortSignal(signal);
+      const { data, error } = await request;
+      signal?.throwIfAborted();
+      if (error) throw new Error('Tidak dapat memuat area pencarian. Periksa koneksi lalu coba lagi.');
+      const parsed = serviceAreaRowsSchema.safeParse(data);
+      if (!parsed.success) throw new Error('Data area belum dapat ditampilkan karena format respons tidak sesuai.');
+      return parsed.data.map(area => ({ areaId: area.area_id, name: area.name }));
+    },
     searchListings: (query, signal) => call('search_listings', { p_query: query }, listingPageSchema, signal, materializePage),
     getListing: (id, signal) => call('get_listing', { p_id: id }, listingSchema.nullable(), signal, materializeListing),
     searchStores: (query, signal) => call('search_stores', { p_query: query }, storePageSchema, signal),

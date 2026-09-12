@@ -8,6 +8,17 @@ const a = listingSchema.parse(listing);
 const b = { ...a, id: '10000000-0000-4000-8000-000000000002', title: 'Nasi kotak', category: 'food', modes: ['sale'] as const, priceMin: '10000', priceMax: '10000' };
 const query = parseDiscoveryQuery(new URLSearchParams());
 
+it('exposes the synthetic area choices only through the explicit preview repository', async () => {
+  const repo = createPreviewRepository([a], []);
+  expect(await repo.listAreas()).toEqual([
+    { areaId: 'depok', name: 'Depok' },
+    { areaId: 'jakarta-selatan', name: 'Jakarta Selatan' },
+    { areaId: 'bogor', name: 'Bogor' },
+    { areaId: 'bekasi', name: 'Bekasi' },
+    { areaId: 'tangerang', name: 'Tangerang' },
+  ]);
+});
+
 it('combines query, mode, category, price and approximate radius', async () => {
   const repo = createPreviewRepository([a, { ...b, modes: [...b.modes] }], []);
   expect((await repo.searchListings({ ...query, query: 'kursi', mode: 'barter', category: 'home', minPrice: '100000', maxPrice: '200000' })).items.map(i => i.id)).toEqual([a.id]);

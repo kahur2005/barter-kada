@@ -21,6 +21,12 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 
 Skenario T merupakan kelompok, bukan jumlah tes yang otomatis membuktikan seluruh PRD. Saat bagian selesai, catat path test, command, hasil, commit dan keterbatasannya. Matrix 244 R tetap sumber audit akhir; jangan mengubah semua status menjadi selesai berdasarkan build frontend.
 
+### Bukti slice 2026-09-12: area discovery dari backend
+
+Discovery sekarang membaca area aktif melalui `DiscoveryRepository.listAreas()`. Adapter Supabase hanya memilih `public.service_areas.area_id,name` dengan filter `enabled = true` dan urutan nama; adapter preview tetap menyediakan lima area sintetis yang sudah dipakai fixture. `DiscoveryPage` menahan query listing/toko sampai area valid tersedia dan menampilkan status eksplisit bila area belum dikonfigurasi, sehingga tidak lagi mengirim RPC dengan area hardcoded yang belum tentu ada.
+
+Bukti: `src/features/discovery/supabase-repository.test.ts`, `src/features/discovery/preview-repository.test.ts`, dan `src/app/App.test.tsx`; `npm.cmd test -- --run` menghasilkan 48 file/167 tes lulus, `npm.cmd run build` lulus, dan E2E preview menghasilkan 26 lulus/1 dilewati. Pada Supabase project `barter`, tabel `service_areas` masih kosong; polygon area resmi belum diimpor karena menunggu persetujuan eksplisit sumber data. Keterbatasan ini sengaja ditampilkan sebagai “Belum ada area layanan aktif”, bukan fallback ke data contoh.
+
 ## Keputusan eksekusi dan batas
 
 - Pilihan pengguna: bekerja pada branch fitur di folder sekarang, tidak membuat worktree baru.

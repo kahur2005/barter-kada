@@ -1,8 +1,8 @@
 import { useId, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useRepository } from '../../app/providers';
-import { areas, categories, parseDiscoveryQuery, serializeDiscoveryQuery } from './filters';
+import { categories, parseDiscoveryQuery, serializeDiscoveryQuery } from './filters';
 import type { DiscoveryQuery, PublicListing, PublicStore } from './types';
 import { ListingRow } from '../../components/ListingRow';
 import { StoreRow } from '../../components/StoreRow';
@@ -20,8 +20,16 @@ export function DiscoveryPage() {
   const repo = useRepository();
   const [dialog, setDialog] = useState<'filter' | 'area' | null>(null);
   const inputId = useId();
+  const areaResults = useQuery({
+    queryKey: [repo.source, 'discovery-areas'],
+    queryFn: ({ signal }) => repo.listAreas(signal),
+  });
+  const areaOptions = areaResults.data ?? [];
+  const selectedArea = areaOptions.find(candidate => candidate.areaId === query.areaId);
+  const areaReady = areaResults.isSuccess && selectedArea !== undefined;
   const results = useInfiniteQuery({
     queryKey: [repo.source, 'discovery', isStores, query], initialPageParam: null as string | null,
+    enabled: areaReady,
     queryFn: async ({ pageParam, signal }): Promise<{ items: (PublicListing | PublicStore)[]; nextCursor: string | null }> => {
       return isStores ? repo.searchStores({ ...query, cursor: pageParam }, signal) : repo.searchListings({ ...query, cursor: pageParam }, signal);
     },
@@ -30,7 +38,7 @@ export function DiscoveryPage() {
   function apply(next: DiscoveryQuery) { setParams(serializeDiscoveryQuery(next)); setDialog(null); }
   const filterCount = [query.category, !isStores && query.mode, !isStores && query.fulfillment, !isStores && query.minPrice, !isStores && query.maxPrice].filter(Boolean).length;
   const items = results.data?.pages.flatMap(page => page.items) ?? [];
-  const area = areas.find(a => a.id === query.areaId)?.name ?? 'Depok';
+  const area = selectedArea?.name ?? 'Area belum tersedia';
   const stateKey = location.pathname + params.toString();
   return <>
     <div className="discovery-heading"><h1>{isStores ? 'Toko sekitar' : 'Penawaran di sekitar'}</h1><button className="area-button" onClick={() => setDialog('area')}><Icon name="pin" />{area} · {query.radiusKm} km<Icon name="chevron" /></button></div>
@@ -45,15 +53,18 @@ export function DiscoveryPage() {
       </aside>
       <section className="results-section" aria-label={isStores ? 'Daftar toko' : 'Daftar penawaran'}>
         <div className="results-toolbar"><button className="filter-toggle" onClick={() => setDialog('filter')}><Icon name="filter" />Filter{filterCount ? ` (${filterCount})` : ''}</button><p className="results-caption">{query.query ? `Hasil untuk “${query.query}”` : 'Temukan yang kamu perlukan'}</p><label className="sort-label">Urut<select aria-label="Urutkan hasil" value={query.sort} onChange={e => apply({ ...query, sort: e.target.value as DiscoveryQuery['sort'] })}><option value="newest">Terbaru</option><option value="nearest">Terdekat</option><option value="relevance">Relevansi</option></select></label></div>
-        {results.isPending && <LoadingRows />}
-        {results.isError && <StatusPanel title="Tidak dapat memuat penawaran" error><p>{results.error.message}</p><button className="button secondary" onClick={() => void results.refetch()}>Coba lagi</button></StatusPanel>}
-        {!results.isPending && !results.isError && items.length === 0 && <StatusPanel title="Belum ada penawaran yang cocok"><p>Coba kategori lain atau ubah area pencarianmu.</p><button className="button secondary" onClick={() => apply({ ...query, query: '', category: null, mode: null, fulfillment: null, minPrice: null, maxPrice: null })}>Hapus filter pencarian</button><button className="text-button" onClick={() => setDialog('area')}>Ubah area</button></StatusPanel>}
+        {areaResults.isPending && <LoadingRows />}
+        {areaResults.isError && <StatusPanel title="Tidak dapat memuat area pencarian" error><p>{areaResults.error.message}</p><button className="button secondary" onClick={() => void areaResults.refetch()}>Coba lagi</button></StatusPanel>}
+        {areaResults.isSuccess && areaOptions.length === 0 && <StatusPanel title="Belum ada area layanan aktif"><p>Area pencarian belum dikonfigurasi oleh server.</p><button className="button secondary" onClick={() => void areaResults.refetch()}>Coba lagi</button></StatusPanel>}
+        {areaReady && results.isPending && <LoadingRows />}
+        {areaReady && results.isError && <StatusPanel title="Tidak dapat memuat penawaran" error><p>{results.error.message}</p><button className="button secondary" onClick={() => void results.refetch()}>Coba lagi</button></StatusPanel>}
+        {areaReady && !results.isPending && !results.isError && items.length === 0 && <StatusPanel title="Belum ada penawaran yang cocok"><p>Coba kategori lain atau ubah area pencarianmu.</p><button className="button secondary" onClick={() => apply({ ...query, query: '', category: null, mode: null, fulfillment: null, minPrice: null, maxPrice: null })}>Hapus filter pencarian</button><button className="text-button" onClick={() => setDialog('area')}>Ubah area</button></StatusPanel>}
         <div className="result-list">{items.map((item, index) => 'slug' in item ? <StoreRow key={item.id} store={item} /> : <ListingRow key={item.id} listing={item} eager={index < 3} />)}</div>
         {results.hasNextPage && <button className="button secondary load-more" disabled={results.isFetchingNextPage} onClick={() => void results.fetchNextPage()}>{results.isFetchingNextPage ? 'Memuat…' : 'Tampilkan lagi'}</button>}
         <p className="results-footer">Lokasi disamarkan. Periksa barang dan sepakati penyerahan langsung dengan penjual.</p>
       </section>
     </div>
     {dialog === 'filter' && <Dialog title="Filter pencarian" onClose={() => setDialog(null)}><FilterForm query={query} onApply={apply} stores={isStores} /></Dialog>}
-    {dialog === 'area' && <Dialog title="Area pencarian" onClose={() => setDialog(null)}><AreaPicker query={query} onApply={apply} preview={repo.source === 'preview'} /></Dialog>}
+    {dialog === 'area' && <Dialog title="Area pencarian" onClose={() => setDialog(null)}><AreaPicker query={query} areas={areaOptions} onApply={apply} preview={repo.source === 'preview'} /></Dialog>}
   </>;
 }
