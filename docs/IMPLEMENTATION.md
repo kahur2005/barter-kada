@@ -13,10 +13,10 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
 | 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center dan event notification server-side diimplementasikan; scheduled reminder jobs serta runtime Supabase belum diverifikasi |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
-| 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover dan order room diimplementasikan; amend/refund/admin belum |
-| 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, katalog read path dan selector penerbit diimplementasikan; promosi/admin limits belum |
-| 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review submission/reputation aggregate, admin case queue/detail/decision version, serta restriction/ban foundation diimplementasikan; review reply, pending barter publication window, reminder assistance, dan verifikasi database belum |
-| 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Belum dibuat; keputusan produk terkait belum final |
+| 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover, pembatalan sebelum proses, dan permintaan pembatalan pascaproses dengan keputusan penjual diimplementasikan; amend/refund/admin belum |
+| 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, katalog, selector penerbit, batas produk toko dan rotasi promosi per akun diimplementasikan; runtime database belum diverifikasi |
+| 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, serta restriction/ban foundation diimplementasikan; scheduled worker dan verifikasi database belum |
+| 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Admin limits/version history sudah diimplementasikan; amend/refund dan analytics belum dibuat karena kebijakan produk/target metrik belum final |
 | 10 | E2E dua akun, RLS/race/security, mobile/a11y, build Vercel, panduan/demo evidence | Semua requirement R yang berlaku; T-45/46/55; UX-01–13 | Belum diverifikasi |
 
 Skenario T merupakan kelompok, bukan jumlah tes yang otomatis membuktikan seluruh PRD. Saat bagian selesai, catat path test, command, hasil, commit dan keterbatasannya. Matrix 244 R tetap sumber audit akhir; jangan mengubah semua status menjadi selesai berdasarkan build frontend.
@@ -113,7 +113,7 @@ Bukti host:
 - `npm run test:e2e`: 26 lulus, 1 dilewati karena skenario desktop-only; suite memakai lebar 320, 390, dan desktop.
 - Migration tambahan menyertakan pgTAP: barter 26 assertion, order 15 assertion, Plus/store 14 assertion. Belum dieksekusi karena Docker Linux engine/Supabase lokal tidak tersedia; hasil ini tidak boleh disebut verifikasi database runtime.
 
-Batas yang masih eksplisit: store catalogue editor/promosi rotation, scheduled notifikasi jobs, pembatalan/refund order, amendmen setelah DP/processing, review reply/publish window, admin limits, analytics, dan verifikasi OpenWA/QRIS/VA nyata belum selesai.
+Batas yang masih eksplisit pada checkpoint ini: scheduled notifikasi jobs, pembatalan/refund order, amendmen setelah DP/processing, analytics, store rating terpisah, dan verifikasi OpenWA/QRIS/VA nyata belum selesai.
 
 ## Bukti parsial tahap 8
 
@@ -124,6 +124,16 @@ Implementasi lanjutan 12 September 2026 menambahkan pusat notifikasi in-app, tri
 - `npm run test:e2e`: 26 lulus, 1 dilewati karena skenario desktop-only; suite tetap memakai lebar 320, 390, dan desktop.
 - Migration/tap test baru: notifications/reviews 14 assertion dan admin cases 18 assertion. Belum dieksekusi karena Docker Linux engine/Supabase lokal masih tidak tersedia.
 
-Batas penting: scheduled reminder/cleanup jobs, barter review publish setelah kedua pihak/14 hari, balasan ulasan, halaman daftar review, admin settings limits, keputusan return/cancel yang benar-benar mengubah fulfillment/refund, analytics, dan runtime/RLS integration test tetap belum selesai.
+Batas penting: scheduled reminder/cleanup jobs, worker pemanggil publikasi review tertunda, keputusan return/cancel yang benar-benar mengubah fulfillment/refund, amendmen pasca-DP, analytics, store rating terpisah per toko, dan runtime/RLS integration test tetap belum selesai. Pembatalan order yang sudah mengakui pembayaran hanya menandai tindak lanjut refund antar pihak; tidak ada transfer atau refund otomatis.
 
 Daftar transaksi participant-scoped (`/transactions`) juga ditambahkan dari Akun. Migration dan pgTAP statisnya ada di `20260912075000_transaction_index.sql` dan `transaction_index.test.sql`; verifikasi database runtime tetap tertahan karena Docker Linux engine belum tersedia.
+
+## Bukti parsial tahap 7–9 lanjutan
+
+Implementasi berikutnya menambahkan migration `20260912082000_admin_settings_limits.sql`, `20260912083000_store_listing_publish_limits.sql`, `20260912084000_plus_promotion_rotation.sql`, dan `20260912085000_reviews_lifecycle_replies.sql`. Cakupannya: panel `/admin/settings/limits` dengan optimistic version, audit history immutable, batas produk toko server-side, promotion rotation maksimal satu slot per sepuluh listing dan satu akun per slot, review barter pending hingga kedua pihak/14 hari, scheduled publication RPC untuk service role, daftar review publik, serta balasan pemilik satu kali.
+
+- `npm.cmd test -- --run`: 42 file, 135 tes lulus.
+- `npm.cmd run build`: lulus; bundle entry 152,67 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
+- Migration/tap test baru: admin settings 18 assertion, promotion 16 assertion, review lifecycle/replies 18 assertion. Belum dieksekusi karena Docker Linux engine/Supabase lokal masih tidak tersedia.
+- Order cancellation workflow memiliki 17 assertion pgTAP; reservasi/obligation yang masih due dilepas atomik, sementara pembayaran yang sudah diakui hanya ditandai perlu tindak lanjut langsung antar pihak.
+- Scheduler/Cron belum dikonfigurasi pada project Supabase tertentu; `publish_due_reviews()` hanya menjadi entry point service-role sampai target deployment dan jadwal resmi ditentukan.

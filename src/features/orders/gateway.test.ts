@@ -3,7 +3,7 @@ import { createSupabaseOrderGateway } from './gateway';
 
 const room = {
   id: 'b1000000-0000-4000-8000-000000000001', conversationId: 'b2000000-0000-4000-8000-000000000002', listingId: 'b3000000-0000-4000-8000-000000000003', kind: 'sale', lifecycle: 'quoted', revision: 1, acceptedRevision: null, actorRole: 'seller',
-  buyer: { id: 'b4000000-0000-4000-8000-000000000004', name: 'Pembeli' }, seller: { id: 'b5000000-0000-4000-8000-000000000005', name: 'Penjual' }, items: [{ id: 'b6000000-0000-4000-8000-000000000006', listingId: 'b3000000-0000-4000-8000-000000000003', variantId: null, name: 'Meja', unit: 'unit', quantity: 1, unitPriceRupiah: '100000', lineTotalRupiah: '100000' }], terms: { handoverMethod: 'meetup', handoverNote: 'Lobi', shippingAmountRupiah: '0', subtotalRupiah: '100000', totalRupiah: '100000', dpPercent: 0, dpAmountRupiah: '0', dpDeadline: null }, payments: [], fulfillment: { processingAt: null, readyAt: null, handedAt: null, receivedAt: null }, cancellationReason: null, updatedAt: '2026-09-12T02:00:00.000Z',
+  buyer: { id: 'b4000000-0000-4000-8000-000000000004', name: 'Pembeli' }, seller: { id: 'b5000000-0000-4000-8000-000000000005', name: 'Penjual' }, items: [{ id: 'b6000000-0000-4000-8000-000000000006', listingId: 'b3000000-0000-4000-8000-000000000003', variantId: null, name: 'Meja', unit: 'unit', quantity: 1, unitPriceRupiah: '100000', lineTotalRupiah: '100000' }], terms: { handoverMethod: 'meetup', handoverNote: 'Lobi', shippingAmountRupiah: '0', subtotalRupiah: '100000', totalRupiah: '100000', dpPercent: 0, dpAmountRupiah: '0', dpDeadline: null }, payments: [], fulfillment: { processingAt: null, readyAt: null, handedAt: null, receivedAt: null }, cancellationReason: null, cancellationRequest: null, refundFollowUpRequired: false, updatedAt: '2026-09-12T02:00:00.000Z',
 };
 
 describe('Supabase order gateway', () => {
@@ -12,5 +12,16 @@ describe('Supabase order gateway', () => {
     const gateway = createSupabaseOrderGateway({ rpc, channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })) } as never);
     await gateway.createQuote('b2000000-0000-4000-8000-000000000002', [{ quantity: '1' }], { handoverMethod: 'meetup', handoverNote: 'Lobi', shippingAmountRupiah: '0', dpPercent: 0, dpDeadline: null, reason: 'Ringkasan' }, 'b7000000-0000-4000-8000-000000000007');
     expect(rpc).toHaveBeenCalledWith('create_order_quote', expect.objectContaining({ p_conversation_id: 'b2000000-0000-4000-8000-000000000002', p_idempotency_key: 'b7000000-0000-4000-8000-000000000007', p_shipping_amount: '0' }));
+  });
+
+  it('maps cancellation commands to explicit RPCs', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: room, error: null });
+    const gateway = createSupabaseOrderGateway({ rpc, channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })) } as never);
+    await gateway.cancel(room.id, 1, 'Tidak jadi membeli.', 'b7000000-0000-4000-8000-000000000007');
+    await gateway.requestCancellation(room.id, 1, 'Ada perubahan kebutuhan.', 'b8000000-0000-4000-8000-000000000008');
+    await gateway.respondCancellation('b9000000-0000-4000-8000-000000000009', 1, true, 'ba000000-0000-4000-8000-000000000010');
+    expect(rpc).toHaveBeenNthCalledWith(1, 'cancel_order', expect.objectContaining({ p_order_id: room.id, p_reason: 'Tidak jadi membeli.' }));
+    expect(rpc).toHaveBeenNthCalledWith(2, 'request_order_cancellation', expect.objectContaining({ p_order_id: room.id, p_reason: 'Ada perubahan kebutuhan.' }));
+    expect(rpc).toHaveBeenNthCalledWith(3, 'respond_order_cancellation', expect.objectContaining({ p_request_id: 'b9000000-0000-4000-8000-000000000009', p_approve: true }));
   });
 });

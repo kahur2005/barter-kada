@@ -22,8 +22,10 @@ import { MyStoresPage } from '../features/stores/MyStoresPage';
 import { ReportPage } from '../features/reports/ReportPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { ReviewPage } from '../features/reviews/ReviewPage';
+import { ReviewListPage } from '../features/reviews/ReviewListPage';
 import { AdminReportsPage } from '../features/admin/AdminReportsPage';
 import { AdminReportDetailPage } from '../features/admin/AdminReportDetailPage';
+import { AdminSettingsLimitsPage } from '../features/admin/AdminSettingsLimitsPage';
 import { TransactionsPage } from '../features/transactions/TransactionsPage';
 
 export function AppRoutes() {
@@ -53,8 +55,10 @@ export function AppRoutes() {
     <Route path="/reports/new" element={<RequireCompletedProfile><ReportPage /></RequireCompletedProfile>} />
     <Route path="/notifications" element={<RequireCompletedProfile><NotificationsPage /></RequireCompletedProfile>} />
     <Route path="/reviews/new" element={<RequireCompletedProfile><ReviewPage /></RequireCompletedProfile>} />
+    <Route path="/reviews" element={<ReviewListPage />} />
     <Route path="/admin/reports" element={<AdminReportsPage />} />
     <Route path="/admin/reports/:id" element={<AdminReportDetailPage />} />
+    <Route path="/admin/settings/limits" element={<AdminSettingsLimitsPage />} />
     <Route path="/admin/*" element={<UnavailablePage />} />
     <Route path="*" element={<UnavailablePage title="Halaman tidak ditemukan" />} />
   </Routes>;

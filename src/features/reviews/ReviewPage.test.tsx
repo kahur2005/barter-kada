@@ -14,7 +14,7 @@ function show(gateway: ReviewGateway) {
 
 describe('review page', () => {
   it('requires a rating while allowing an optional comment', async () => {
-    const gateway: ReviewGateway = { submit: vi.fn().mockResolvedValue({ id: 'f3000000-0000-4000-8000-000000000003', status: 'published' }) };
+    const gateway: ReviewGateway = { submit: vi.fn().mockResolvedValue({ id: 'f3000000-0000-4000-8000-000000000003', status: 'published' }), list: vi.fn(), reply: vi.fn() };
     show(gateway);
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Kirim ulasan' }));

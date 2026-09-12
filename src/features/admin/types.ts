@@ -13,3 +13,26 @@ export const adminReportSchema = z.object({
 });
 export type AdminReport = z.infer<typeof adminReportSchema>;
 export type AdminReportPage = { items: AdminReport[]; nextCursor: string | null };
+
+export type PlanSettings = {
+  version: number;
+  personalActiveLimit: number;
+  storeProductActiveLimit: number;
+  maxStores: number;
+  plusPriceRupiah: string;
+  personalActiveCount: number;
+  storeProductActiveCount: number;
+  personalOverLimitOwners: number;
+  storeOverLimitStores: number;
+};
+
+export type PlanSettingsHistoryItem = {
+  version: number;
+  personalActiveLimit: number;
+  storeProductActiveLimit: number;
+  reason: string;
+  actorName: string | null;
+  effectiveAt: string;
+};
+
+export type PlanSettingsHistoryPage = { items: PlanSettingsHistoryItem[]; nextCursor: number | null };

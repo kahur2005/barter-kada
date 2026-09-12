@@ -55,12 +55,22 @@ svg { display: block; width: 22px; height: 22px; flex-shrink: 0; }
 .rating-choice { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .rating-choice label { min-height: 48px; display: grid; place-items: center; gap: 4px; padding: 8px; border: 1px solid var(--rule); border-radius: 4px; text-align: center; font-size: 13px; }
 .rating-choice input { width: auto; min-height: auto; }
+.review-list { display: grid; gap: 12px; margin-top: 24px; }
+.review-card { padding: 16px; border: 1px solid var(--rule); background: var(--paper); }
+.review-card > header { display: flex; justify-content: space-between; gap: 12px; }
+.review-card time { display: block; margin-top: 8px; color: var(--muted); font-size: 13px; }
+.review-reply { margin-top: 12px; padding: 12px; background: var(--surface); border-left: 3px solid var(--action); }
 .filter-label { display: grid; gap: 6px; max-width: 240px; margin: 24px 0 8px; }
 .admin-report-list { display: grid; margin-top: 16px; border-top: 1px solid var(--rule); }
 .admin-report-list article { padding: 16px 0; border-bottom: 1px solid var(--rule); }
 .admin-report-list time { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; }
 .case-context { display: grid; gap: 8px; margin: 24px 0; padding: 16px; background: var(--surface); border-left: 4px solid var(--rule); }
 .admin-report-detail { max-width: 760px; }
+.admin-settings-page { max-width: 760px; }
+.admin-settings-page header { margin-top: 16px; }
+.admin-history { margin-top: 32px; }
+.checkbox-label { display: flex; align-items: flex-start; gap: 8px; }
+.checkbox-label input { width: auto; min-height: auto; margin-top: 3px; }
 .transaction-list { display: grid; margin-top: 16px; border-top: 1px solid var(--rule); }
 .transaction-list article { padding: 16px 0; border-bottom: 1px solid var(--rule); }
 .transaction-list time { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; }
