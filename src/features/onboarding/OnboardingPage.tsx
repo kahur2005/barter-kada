@@ -69,7 +69,7 @@ function LocationStep({ state, areas, save, editing = false }: { state: Onboardi
     {error && <p className="form-alert" role="alert">{error}</p>}
     <form className="stack-form" onSubmit={submit}>
       <label htmlFor="area">Wilayah</label><select id="area" name="areaId" defaultValue={state.areaId ?? ''} required><option value="" disabled>Pilih wilayah</option>{areas.map(area => <option key={area.areaId} value={area.areaId}>{area.name}</option>)}</select>
-      <label htmlFor="address">Alamat/patokan <span className="optional">(opsional, privat)</span></label><textarea id="address" name="address" rows={3} maxLength={300} autoComplete="street-address" />
+      <label htmlFor="address">Alamat/patokan <span className="optional">(opsional, privat)</span></label><textarea id="address" name="address" rows={3} maxLength={300} autoComplete="street-address" defaultValue={state.address ?? ''} />
       <button className="button secondary" type="button" onClick={locate}>{position ? 'Lokasi perangkat tersimpan' : 'Gunakan lokasi perangkat'}</button>
       <p className="form-help">Akses lokasi hanya diminta ketika tombol di atas ditekan.</p>
       <button className="button" disabled={pending || !position}>{pending ? 'Menyimpan…' : 'Simpan lokasi dan lanjut'}</button>

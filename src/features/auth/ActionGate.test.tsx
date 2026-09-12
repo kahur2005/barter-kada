@@ -11,7 +11,7 @@ const repository = createPreviewRepository([], []);
 const session: AuthSession = { userId: '10000000-0000-4000-8000-000000000001', email: 'rina@example.test' };
 function auth(current: AuthSession | null): AuthGateway { return { getSession: vi.fn().mockResolvedValue(current), subscribe: vi.fn(() => () => undefined), signInWithPassword: vi.fn(), signUpWithPassword: vi.fn(), signInWithGoogle: vi.fn(), signOut: vi.fn().mockResolvedValue(undefined) }; }
 function onboarding(nextStep: OnboardingState['nextStep']): OnboardingGateway {
-  return { getState: vi.fn().mockResolvedValue({ nextStep, displayName: 'Rina', bio: null, areaId: nextStep === 'profile' ? null : 'depok', maskedPhone: nextStep === 'complete' ? '+62••••7890' : null, phoneVerified: nextStep === 'complete' }), listAreas: vi.fn().mockResolvedValue([]), completeProfile: vi.fn(), setLocation: vi.fn(), requestOtp: vi.fn(), verifyOtp: vi.fn() };
+  return { getState: vi.fn().mockResolvedValue({ nextStep, displayName: 'Rina', bio: null, areaId: nextStep === 'profile' ? null : 'depok', address: null, maskedPhone: nextStep === 'complete' ? '+62••••7890' : null, phoneVerified: nextStep === 'complete' }), listAreas: vi.fn().mockResolvedValue([]), completeProfile: vi.fn(), setLocation: vi.fn(), requestOtp: vi.fn(), verifyOtp: vi.fn() };
 }
 function show(path: string, authGateway: AuthGateway, onboardingGateway: OnboardingGateway | null) { return render(<MemoryRouter initialEntries={[path]}><App repository={repository} authGateway={authGateway} onboardingGateway={onboardingGateway} /></MemoryRouter>); }
 

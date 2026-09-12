@@ -9,7 +9,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | Tahap | Keluaran | Acuan | Status |
 | --- | --- | --- | --- |
 | 1 | React/Vite/TypeScript, shell mobile, penemuan/detail/toko read-only, adapter API, test harness | PDR UI-01/02, T-27/46/55 | Selesai dan diverifikasi sebagai fondasi read-only; backend belum terhubung |
-| 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Profil/lokasi privat, OTP OpenWA, pengeditan data diri, pembaruan lokasi, dan penggantian nomor melalui OTP `change_phone` sudah memiliki UI/gateway; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
+| 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Profil/lokasi privat dengan pemuatan ulang alamat/patokan owner-scoped, OTP OpenWA, pengeditan data diri, pembaruan lokasi, dan penggantian nomor melalui OTP `change_phone` sudah memiliki UI/gateway; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
 | 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal dan konteks publisher owner; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
 | 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center, event notification server-side, dan idempotent reminder worker diimplementasikan; runtime Supabase belum diverifikasi |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
@@ -226,6 +226,8 @@ Bukti host pada checkpoint ini:
 - `npm.cmd run build`: TypeScript dan Vite production build lulus; entry 157,12 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
 - Test onboarding memeriksa edit profil dan payload OTP `change_phone`.
 - Runtime Supabase dan Edge Function OpenWA belum diuji pada server karena Docker Linux Engine dan credential belum tersedia.
+
+Perbaikan lanjutan memastikan alamat/patokan privat ikut dikembalikan oleh projection onboarding milik actor dan dipasang sebagai nilai awal form lokasi. Alamat tidak masuk projection publik; assertion owner dan isolation dicatat di `supabase/tests/identity_profile_location_otp.test.sql`, dengan migration `20260912071329_preserve_private_location_address.sql`.
 
 ## Bukti parsial tahap 7: preview alamat publik toko
 

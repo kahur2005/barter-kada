@@ -14,10 +14,10 @@ const auth: AuthGateway = {
   signUpWithPassword: vi.fn(), signInWithGoogle: vi.fn(), signOut: vi.fn(),
 };
 const states: Record<'profile' | 'location' | 'phone' | 'complete', OnboardingState> = {
-  profile: { nextStep: 'profile', displayName: '', bio: null, areaId: null, maskedPhone: null, phoneVerified: false },
-  location: { nextStep: 'location', displayName: 'Rina', bio: 'Katering rumahan', areaId: null, maskedPhone: null, phoneVerified: false },
-  phone: { nextStep: 'phone', displayName: 'Rina', bio: null, areaId: 'depok', maskedPhone: null, phoneVerified: false },
-  complete: { nextStep: 'complete', displayName: 'Rina', bio: null, areaId: 'depok', maskedPhone: '+62••••7890', phoneVerified: true },
+  profile: { nextStep: 'profile', displayName: '', bio: null, areaId: null, address: null, maskedPhone: null, phoneVerified: false },
+  location: { nextStep: 'location', displayName: 'Rina', bio: 'Katering rumahan', areaId: null, address: null, maskedPhone: null, phoneVerified: false },
+  phone: { nextStep: 'phone', displayName: 'Rina', bio: null, areaId: 'depok', address: null, maskedPhone: null, phoneVerified: false },
+  complete: { nextStep: 'complete', displayName: 'Rina', bio: null, areaId: 'depok', address: null, maskedPhone: '+62••••7890', phoneVerified: true },
 };
 function gateway(initial: keyof typeof states): OnboardingGateway {
   return {
@@ -65,9 +65,12 @@ describe('account onboarding', () => {
   });
 
   it('lets a completed account edit its profile and start a change-phone OTP flow', async () => {
-    const user = userEvent.setup(); const api = gateway('complete'); show(api);
+    const user = userEvent.setup(); const api = gateway('complete');
+    vi.mocked(api.getState).mockResolvedValue({ ...states.complete, address: 'Jalan Melati 2, Depok' });
+    show(api);
     expect(await screen.findByRole('heading', { name: 'Perbarui data diri' })).toBeVisible();
     expect(screen.getByLabelText('Wilayah')).toHaveValue('depok');
+    expect(screen.getByLabelText(/Alamat\/patokan/)).toHaveValue('Jalan Melati 2, Depok');
     const name = screen.getByLabelText('Nama yang ditampilkan');
     await user.clear(name); await user.type(name, 'Rina Baru');
     await user.click(screen.getByRole('button', { name: 'Simpan data diri' }));

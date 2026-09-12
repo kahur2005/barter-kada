@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { OnboardingGateway } from './types';
 
-const stateSchema = z.object({ nextStep: z.enum(['profile', 'location', 'phone', 'complete']), displayName: z.string(), bio: z.string().nullable(), areaId: z.string().nullable(), maskedPhone: z.string().nullable(), phoneVerified: z.boolean() });
+const stateSchema = z.object({ nextStep: z.enum(['profile', 'location', 'phone', 'complete']), displayName: z.string(), bio: z.string().nullable(), areaId: z.string().nullable(), address: z.string().nullable(), maskedPhone: z.string().nullable(), phoneVerified: z.boolean() });
 const areaSchema = z.object({ area_id: z.string(), name: z.string() });
 const requestSchema = z.object({ challengeId: z.uuid(), expiresAt: z.iso.datetime({ offset: true }), resendAt: z.iso.datetime({ offset: true }), deliveryStatus: z.enum(['accepted', 'failed', 'unknown']) });
 function failure(): Error { return new Error('Layanan profil belum dapat memproses permintaan.'); }

@@ -1,5 +1,5 @@
 begin;
-select plan(19);
+select plan(21);
 
 select has_schema('private', 'private schema exists');
 select has_table('public', 'profiles', 'safe public profiles exist');
@@ -35,6 +35,16 @@ select throws_ok(
 select lives_ok(
   $$ select public.set_location('test-depok', -6.35, 106.82, 'Privat') $$,
   'owner stores a point inside the enabled service area'
+);
+select is(
+  (select address from private.user_locations where user_id = auth.uid()),
+  'Privat',
+  'owner can retain the private address in the exact-location record'
+);
+select is(
+  public.get_my_onboarding()->>'address',
+  'Privat',
+  'owner onboarding projection returns the private address to its owner'
 );
 select throws_ok(
   $$ select public.set_location('test-depok', -6.0, 107.0, null) $$,

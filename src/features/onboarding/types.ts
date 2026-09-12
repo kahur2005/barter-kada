@@ -4,6 +4,7 @@ export type OnboardingState = {
   displayName: string;
   bio: string | null;
   areaId: string | null;
+  address: string | null;
   maskedPhone: string | null;
   phoneVerified: boolean;
 };
