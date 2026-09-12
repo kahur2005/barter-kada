@@ -2,7 +2,7 @@ begin;
 select plan(11);
 
 select has_function('public', 'get_my_listing', array['uuid'], 'owner listing detail RPC exists');
-select is((select public from storage.buckets where id = 'listing-media'), true, 'processed metadata-free media is publicly deliverable');
+select is((select public from storage.buckets where id = 'listing-media'), false, 'processed media bucket remains private');
 
 insert into auth.users(instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values

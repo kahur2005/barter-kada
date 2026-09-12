@@ -104,7 +104,7 @@ Aturan validasi utama:
 - `handoverMethods`: `pickup`, `meetup`, dan/atau `delivery`.
 - Rating null berarti belum ada ulasan; verifikasi nomor bukan jaminan identitas.
 
-RPC Supabase mengirim `{path, alt}` untuk gambar terproses, bukan URL penuh. Adapter frontend hanya menerima path canonical `OWNER_UUID/ASSET_UUID.webp`, membentuk public URL bucket `listing-media`, lalu memvalidasi hasil akhir ke bentuk `{url, alt}` di atas. Bucket hanya menerima output WebP dari Vercel Function service-role setelah validasi/re-encode; bucket karantina tetap privat.
+RPC Supabase mengirim `{path, alt}` untuk gambar terproses, bukan URL penuh. Adapter frontend hanya menerima path canonical `OWNER_UUID/ASSET_UUID.webp`, meminta signed URL selama 5 menit dari bucket privat `listing-media`, lalu memvalidasi hasil akhir ke bentuk `{url, alt}` di atas. RLS hanya mengizinkan signing untuk aset listing aktif atau listing milik requester. Bucket hanya menerima output WebP dari Vercel Function service-role setelah validasi/re-encode; bucket karantina juga tetap privat.
 
 `variants` berisi `{ id, name, price, unit }`. Untuk pre-order, `preorder` berisi ISO datetime `closesAt`/`availableAt`, integer positif `minimumQty`, `remainingQty` nonnegatif atau null, dan `dpPercent` 1–100 atau null. Untuk catering, `catering` berisi `minimumQty`, `leadTimeHours`, `serviceAreas[]`, dan `notes`.
 

@@ -1,4 +1,17 @@
-update storage.buckets set public = true where id = 'listing-media';
+update storage.buckets set public = false where id = 'listing-media';
+
+create policy listing_media_visible_sign
+on storage.objects for select to anon, authenticated
+using (
+  bucket_id = 'listing-media'
+  and exists (
+    select 1
+    from public.listing_assets asset
+    join public.listings listing on listing.listing_id = asset.listing_id
+    where name = listing.owner_id::text || '/' || asset.asset_id::text || '.webp'
+      and ((listing.lifecycle = 'active' and listing.hidden_at is null) or listing.owner_id = (select auth.uid()))
+  )
+);
 
 create or replace function private.get_my_listing_command(p_listing_id uuid)
 returns jsonb

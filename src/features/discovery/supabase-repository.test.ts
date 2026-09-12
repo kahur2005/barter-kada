@@ -33,7 +33,12 @@ it('rejects malformed response data rather than rendering it', async () => {
 it('materializes processed storage paths without accepting private source paths', async () => {
   const path = '00000000-0000-4000-8000-000000000002/00000000-0000-4000-8000-000000000001.webp';
   const raw = { ...listing, images: [{ path, alt: 'Foto aman' }] };
-  const { repo } = setup(Response.json(raw));
+  const transport = vi.fn<typeof fetch>().mockImplementation(async input => String(input).includes('/rpc/get_listing')
+    ? Response.json(raw)
+    : Response.json({ signedURL: `/storage/v1/object/sign/listing-media/${path}?token=short-lived` }));
+  const client = createClient('https://demo.supabase.co', 'sb_publishable_test', { auth: { storageKey: crypto.randomUUID(), persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }, global: { fetch: transport } });
+  const repo = createSupabaseRepository(client);
   const result = await repo.getListing(listing.id);
-  expect(result?.images).toEqual([{ url: `https://demo.supabase.co/storage/v1/object/public/listing-media/${path}`, alt: 'Foto aman' }]);
+  expect(result?.images[0].url).toContain(`/storage/v1/object/sign/listing-media/${path}?token=short-lived`);
+  expect(transport.mock.calls.some(call => String(call[0]).includes('/storage/v1/object/sign/listing-media/'))).toBe(true);
 });
