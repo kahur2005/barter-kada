@@ -103,7 +103,7 @@
 
 - [x] **Step 1: Record migration names, RPC names, state invariants, and unresolved policy Q-12/Q-17 without marking runtime verification complete.**
 - [x] **Step 2: Run `npm.cmd test -- --run`, `npm.cmd run build`, `npm.cmd run test:e2e -- --workers=1`, `npm.cmd audit --omit=dev`, and `git diff --check`.**
-- [x] **Step 3: Run `supabase --version`; the CLI is unavailable on this host, so `supabase start` cannot be attempted and the explicit runtime limitation is preserved.**
+- [x] **Step 3: Run the pinned Supabase CLI and start local Supabase; `npm.cmd exec --yes --package=supabase@2.117.0 -- supabase --version` returns `2.117.0`, while `supabase start` remains blocked by the unavailable Docker Linux Engine.**
 - [x] **Step 4: Prepare documentation for the implementation checkpoint after executable checks.**
 
 ## Self-review checklist

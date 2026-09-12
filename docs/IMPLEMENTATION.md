@@ -169,6 +169,6 @@ Bukti host pada checkpoint ini:
 - `npm.cmd run build`: TypeScript dan Vite production build lulus; entry 155,95 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
 - `npm.cmd run test:e2e -- --workers=1`: 26 lulus, 1 dilewati karena skenario desktop-only.
 - `npm.cmd audit --omit=dev`: 0 kerentanan dependency produksi.
-- `supabase/tests/order_amendments_refunds.test.sql`: 45 assertion pgTAP static-only; `supabase --version` tidak tersedia pada host ini, sehingga migration, RLS, race, dan RPC belum diuji pada PostgreSQL.
+- `supabase/tests/order_amendments_refunds.test.sql`: 45 assertion pgTAP static-only; binary global `supabase` tidak tersedia, tetapi package-pinned `npm.cmd exec --yes --package=supabase@2.117.0 -- supabase --version` menghasilkan `2.117.0`. `supabase start` tetap tertahan karena Docker Desktop Linux Engine tidak merespons, sehingga migration, RLS, race, dan RPC belum diuji pada PostgreSQL.
 
 Q-12/Q-17 tetap tidak dikunci diam-diam: kebijakan pengembalian nominal dan keputusan admin final masih memerlukan keputusan produk/legal. Implementasi saat ini hanya menyediakan ledger proposal, consent, bukti catatan transfer opsional, dan konfirmasi penerima.

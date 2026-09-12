@@ -4,7 +4,7 @@ Marketplace lingkungan untuk jual beli, barter, pemberian gratis, dan pemasaran 
 
 ## Status
 
-Implementasi sedang berjalan pada fondasi React mobile-first. Discovery barang, detail listing, daftar toko, dan katalog toko tersedia dalam mode preview read-only. UI dan adapter Auth Supabase, onboarding privat, OTP OpenWA, serta create/draft/publish/archive listing personal dan pipeline foto sudah dibuat dan unit-tested. Backend lokal belum terverifikasi karena Docker/Deno belum tersedia. Chat, transaksi, negotiation barter, moderasi, dan langganan Plus belum terhubung; halaman fitur tersebut menampilkan status yang jujur dan tidak membuat data transaksi palsu.
+Implementasi sedang berjalan pada fondasi React mobile-first. Discovery, detail listing, toko/katalog, Auth Supabase, onboarding privat, OTP OpenWA adapter, listing personal, pipeline foto, chat privat, barter versioned, order sale/free/PO, DP manual, toko Plus dummy, notifikasi, laporan/admin, review, analytics, amendment order, dan ledger refund offline telah dibuat serta unit-tested. Mode preview tetap read-only dan tidak membuat data transaksi palsu. Backend lokal, delivery OpenWA nyata, dan deployment Supabase/Vercel belum diverifikasi pada environment ini karena Docker Linux Engine dan kredensial proyek belum tersedia.
 
 Target awal tetap demo terintegrasi selama 9 hari × 3 jam, bukan peluncuran transaksi nyata. Pembayaran langganan Plus masih berupa simulasi.
 
@@ -40,7 +40,7 @@ npm.cmd run test:e2e
 npm.cmd audit --omit=dev
 ```
 
-Supabase lokal telah diinisialisasi di `supabase/`. Saat Docker Desktop aktif:
+Supabase lokal telah diinisialisasi di `supabase/`. Jika binary CLI global tidak tersedia, gunakan package-pinned command berikut saat Docker Desktop Linux Engine aktif:
 
 ```powershell
 npm.cmd exec --yes --package=supabase@2.117.0 -- supabase start
