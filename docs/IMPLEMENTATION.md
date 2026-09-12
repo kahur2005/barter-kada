@@ -14,7 +14,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center, event notification server-side, dan idempotent reminder worker diimplementasikan; runtime Supabase belum diverifikasi |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
 | 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover, pembatalan sebelum proses, permintaan pembatalan pascaproses, amendment sebelum proses, dan refund offline setelah pembatalan diimplementasikan; keputusan admin dan kebijakan refund final tetap terbuka |
-| 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, edit profil toko dengan preview alamat publik berbasis consent, pintu masuk katalog, counter produk aktif, banner Plus berakhir, katalog, selector penerbit, batas produk toko dan rotasi promosi per akun diimplementasikan; runtime database belum diverifikasi |
+| 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, edit profil toko dengan preview alamat publik berbasis consent, hub navigasi Akun, pintu masuk katalog, counter produk aktif, banner Plus berakhir, katalog, selector penerbit, batas produk toko dan rotasi promosi per akun diimplementasikan; runtime database belum diverifikasi |
 | 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, restriction/ban foundation, keputusan `return_required` dengan pihak+tenggat terstruktur, reminder serah-terima 24 jam, dan permintaan bantuan admin setelah 72 jam diimplementasikan; runtime database belum |
 | 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Admin limits/version history, product event privacy boundary, activity-day retention, listing visibility periods, live metrics RPC, halaman `/admin/analytics`, rating toko terpisah, amendment pre-processing, dan ledger refund offline diimplementasikan; runtime database belum diverifikasi |
 | 10 | E2E dua akun, RLS/race/security, mobile/a11y, build Vercel, panduan/demo evidence | Semua requirement R yang berlaku; T-45/46/55; UX-01–13 | Frontend unit/build/E2E/audit terverifikasi; dua akun, RLS/race, Supabase runtime, dan deployment Vercel masih belum diverifikasi |
@@ -228,6 +228,12 @@ Bukti host pada checkpoint ini:
 - Runtime Supabase dan Edge Function OpenWA belum diuji pada server karena Docker Linux Engine dan credential belum tersedia.
 
 Perbaikan lanjutan memastikan alamat/patokan privat ikut dikembalikan oleh projection onboarding milik actor dan dipasang sebagai nilai awal form lokasi. Alamat tidak masuk projection publik; assertion owner dan isolation dicatat di `supabase/tests/identity_profile_location_otp.test.sql`, dengan migration `20260912071329_preserve_private_location_address.sql`.
+
+## Bukti parsial UI-08: hub navigasi Akun
+
+Halaman Akun sekarang menyediakan landmark `Menu akun` yang menghubungkan profil/verifikasi, Listing saya, Toko saya, Akun Plus, Transaksi saya, dan Notifikasi. Semua route tetap melewati guard autentikasi/kelengkapan akun masing-masing; perubahan ini hanya menutup discoverability yang sebelumnya hilang dari PDR.
+
+- Test: `src/features/auth/AccountPage.test.tsx`.
 
 ## Bukti parsial tahap 7: preview alamat publik toko
 
