@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useListingGateway } from './ListingContext';
 import type { ListingDraft, ListingValidationIssue } from './types';
 import { validateListingDraft } from './validation';
 import { useOnboardingGateway } from '../onboarding/OnboardingContext';
 import type { ServiceArea } from '../onboarding/types';
 import { useStoreGateway } from '../stores/StoreContext';
+import { Dialog } from '../../components/Dialog';
 
 const stages = ['Penawaran', 'Detail', 'Ketersediaan', 'Tinjau'] as const;
 const categories = [['food', 'Makanan'], ['clothing', 'Pakaian'], ['home', 'Rumah & furnitur'], ['vehicles', 'Kendaraan'], ['garden', 'Hasil kebun'], ['other', 'Lainnya']] as const;
@@ -22,6 +23,7 @@ export function ListingEditorPage() {
   const gateway = useListingGateway();
   const onboarding = useOnboardingGateway();
   const storesGateway = useStoreGateway();
+  const navigate = useNavigate();
   const { id: listingId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const requestedStoreId = searchParams.get('storeId');
@@ -34,6 +36,7 @@ export function ListingEditorPage() {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [retryFiles, setRetryFiles] = useState<File[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [exitDialog, setExitDialog] = useState(false);
   const [loading, setLoading] = useState(Boolean(listingId && gateway));
   const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
   const stores = useQuery({ queryKey: ['stores', 'mine', 'listing-editor'], queryFn: () => storesGateway!.getMyStores(), enabled: Boolean(storesGateway) });
@@ -80,19 +83,36 @@ export function ListingEditorPage() {
     patch({ modes, negotiable: modes.includes('sale') ? draft.negotiable : false, barter: modes.includes('barter') ? draft.barter ?? { openToOffers: true, wantedDescription: '' } : null, basePriceRupiah: modes.includes('sale') ? draft.basePriceRupiah : null });
   }
   function next() { setIssues(stageIssues); if (stageIssues.length === 0) { setStage(value => Math.min(3, value + 1)); window.scrollTo(0, 0); } }
-  async function saveDraft() {
-    if (!gateway) return; setPending(true); setIssues([]); setNotice(null);
+  async function saveDraft(): Promise<boolean> {
+    if (!gateway) return false; setPending(true); setIssues([]); setNotice(null);
     try {
       const editingActive = draft.sourceLifecycle === 'active';
       const validation = editingActive ? validateListingDraft(draft, { intent: 'publish', now: new Date() }) : [];
-      if (validation.length > 0) { setIssues(validation); return; }
+      if (validation.length > 0) { setIssues(validation); return false; }
       const result = editingActive ? await gateway.publish(draft) : await gateway.saveDraft(draft);
       setDraft(current => ({ ...current, sourceLifecycle: result.lifecycle, listingId: result.listingId, expectedVersion: result.version }));
       setDirty(false);
       setNotice(editingActive ? 'Perubahan listing aktif tersimpan.' : 'Draft tersimpan. Penawaran belum diterbitkan.');
+      return true;
     }
-    catch { setIssues([{ field: 'form', message: 'Draft belum dapat disimpan. Isianmu tetap ada; coba lagi.' }]); }
+    catch { setIssues([{ field: 'form', message: 'Draft belum dapat disimpan. Isianmu tetap ada; coba lagi.' }]); return false; }
     finally { setPending(false); }
+  }
+  function requestExit(event: MouseEvent<HTMLAnchorElement>) {
+    if (!dirty) return;
+    event.preventDefault();
+    setExitDialog(true);
+  }
+  function discardAndExit() {
+    setDirty(false);
+    setExitDialog(false);
+    navigate(listingId ? '/my/listings' : '/');
+  }
+  async function saveAndExit() {
+    if (await saveDraft()) {
+      setExitDialog(false);
+      navigate(listingId ? '/my/listings' : '/');
+    }
   }
   async function publish() {
     if (!gateway) return;
@@ -133,7 +153,7 @@ export function ListingEditorPage() {
   }
 
   if (loading) return <section className="listing-editor" aria-live="polite"><h1>Memuat listing…</h1></section>;
-  return <div className="listing-editor"><header><Link className="back-link" to={listingId ? '/my/listings' : '/'}>Kembali</Link><p className="eyebrow">Jual, barter, atau bagikan</p><h1>{listingId ? 'Edit penawaran' : 'Pasang penawaran'}</h1><p>Isi bertahap. Penawaran yang valid langsung terbit tanpa menunggu persetujuan admin.</p></header>
+  return <div className="listing-editor"><header><Link className="back-link" to={listingId ? '/my/listings' : '/'} onClick={requestExit}>Kembali</Link><p className="eyebrow">Jual, barter, atau bagikan</p><h1>{listingId ? 'Edit penawaran' : 'Pasang penawaran'}</h1><p>Isi bertahap. Penawaran yang valid langsung terbit tanpa menunggu persetujuan admin.</p></header>
     {!gateway && <p className="preview-form-notice">Form contoh — perubahan tidak disimpan atau diterbitkan.</p>}
     <WizardSteps current={stage} />
     {issues.length > 0 && <div className="form-alert" role="alert" tabIndex={-1}><strong>Periksa bagian berikut:</strong><ul>{issues.map((issue, index) => <li key={`${issue.field}-${index}`}>{issue.message}</li>)}</ul></div>}
@@ -159,5 +179,6 @@ export function ListingEditorPage() {
     </section>
     <div className="editor-actions"><button className="button secondary" type="button" onClick={() => setStage(value => Math.max(0, value - 1))} disabled={stage === 0}>Kembali</button>{stage < 3 ? <button className="button" type="button" onClick={next}>Lanjut ke {stages[stage + 1].toLocaleLowerCase('id-ID')}</button> : <button className="button" type="button" onClick={publish} disabled={!gateway || pending}>{gateway ? 'Terbitkan penawaran' : 'Publikasi tidak aktif'}</button>}</div>
     <button className="text-button draft-save" type="button" onClick={saveDraft} disabled={!gateway || pending}>{gateway ? pending ? 'Menyimpan…' : draft.sourceLifecycle === 'active' ? 'Simpan perubahan' : 'Simpan draft' : 'Simpan draft tidak aktif'}</button>
+    {exitDialog && <Dialog title="Simpan perubahan sebelum keluar?" onClose={() => setExitDialog(false)}><p>Isian yang belum disimpan akan hilang jika kamu keluar dari editor.</p><div className="form-actions"><button className="button secondary" type="button" onClick={() => setExitDialog(false)}>Tetap di editor</button><button className="button secondary" type="button" onClick={discardAndExit} disabled={pending}>Buang perubahan</button><button className="button" type="button" onClick={() => void saveAndExit()} disabled={pending || !gateway}>{pending ? 'Menyimpan…' : draft.sourceLifecycle === 'active' ? 'Simpan perubahan & keluar' : 'Simpan draft & keluar'}</button></div></Dialog>}
   </div>;
 }

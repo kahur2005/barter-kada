@@ -237,7 +237,7 @@ Halaman Akun sekarang menyediakan landmark `Menu akun` yang menghubungkan profil
 
 ## Bukti parsial UI-04: pengelolaan foto listing
 
-Editor listing sekarang menampilkan daftar asset foto yang sudah diproses. Pemilik dapat menjadikan foto mana pun sebagai foto utama, menghapus foto, dan mengulangi upload yang gagal tanpa mengulang file yang sudah berhasil diproses. Urutan `assetIds` dikirim ke gateway; migrasi katalog menyimpan urutan tersebut sebagai `listing_assets.position`, sehingga foto pertama menjadi foto utama secara konsisten.
+Editor listing sekarang menampilkan daftar asset foto yang sudah diproses. Pemilik dapat menjadikan foto mana pun sebagai foto utama, menghapus foto, dan mengulangi upload yang gagal tanpa mengulang file yang sudah berhasil diproses. Urutan `assetIds` dikirim ke gateway; migrasi katalog menyimpan urutan tersebut sebagai `listing_assets.position`, sehingga foto pertama menjadi foto utama secara konsisten. Saat keluar dengan perubahan belum tersimpan, editor meminta pengguna tetap di editor, menyimpan draft/perubahan, atau membuang perubahan.
 
 - Test: `src/features/listings/ListingEditorPage.test.tsx`.
 - Runtime upload dan storage Supabase belum diverifikasi karena Docker Desktop Linux Engine/API belum tersedia.

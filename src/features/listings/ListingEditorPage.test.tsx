@@ -25,6 +25,37 @@ describe('listing editor', () => {
     expect(screen.getByText(/Toko adalah fitur Plus/)).toBeVisible();
   });
 
+  it('asks how to handle unsaved listing changes before leaving the editor', async () => {
+    const user = userEvent.setup(); show(gateway());
+    await screen.findByRole('heading', { name: 'Pasang penawaran' });
+    await user.selectOptions(screen.getByLabelText('Kategori'), 'home');
+    await user.click(screen.getByRole('button', { name: 'Lanjut ke detail' }));
+    await user.type(screen.getByLabelText('Nama penawaran'), 'Kursi kayu');
+    await user.click(screen.getByRole('link', { name: 'Kembali' }));
+
+    expect(await screen.findByRole('heading', { name: 'Simpan perubahan sebelum keluar?' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Tetap di editor' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Tetap di editor' }));
+    expect(screen.getByDisplayValue('Kursi kayu')).toBeVisible();
+
+    await user.click(screen.getByRole('link', { name: 'Kembali' }));
+    await user.click(screen.getByRole('button', { name: 'Buang perubahan' }));
+    expect(await screen.findByRole('heading', { name: 'Penawaran di sekitar' })).toBeVisible();
+  });
+
+  it('can save a new listing draft before leaving the editor', async () => {
+    const user = userEvent.setup(); const api = gateway(); show(api);
+    await screen.findByRole('heading', { name: 'Pasang penawaran' });
+    await user.selectOptions(screen.getByLabelText('Kategori'), 'home');
+    await user.click(screen.getByRole('button', { name: 'Lanjut ke detail' }));
+    await user.type(screen.getByLabelText('Nama penawaran'), 'Rak buku');
+    await user.click(screen.getByRole('link', { name: 'Kembali' }));
+    await user.click(screen.getByRole('button', { name: 'Simpan draft & keluar' }));
+
+    expect(api.saveDraft).toHaveBeenCalledWith(expect.objectContaining({ title: 'Rak buku' }));
+    expect(await screen.findByRole('heading', { name: 'Penawaran di sekitar' })).toBeVisible();
+  });
+
   it('saves an incomplete draft through the server without claiming publication', async () => {
     const user = userEvent.setup(); const api = gateway(); show(api);
     await screen.findByRole('heading', { name: 'Pasang penawaran' });
