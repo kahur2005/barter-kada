@@ -52,6 +52,7 @@ function tradeGateway(value: TradeRoom): TradeGateway {
     confirmReceived: vi.fn().mockResolvedValue({ ...value, receipts: { ...value.receipts, actorReceived: true } }),
     acknowledgeTopup: vi.fn().mockResolvedValue(value),
     cancel: vi.fn().mockResolvedValue({ ...value, lifecycle: 'cancelled' }),
+    requestAdminHelp: vi.fn().mockResolvedValue(undefined),
     uploadDirectImage: vi.fn(),
     subscribe: vi.fn(() => () => undefined),
   };
@@ -99,5 +100,19 @@ describe('trade room', () => {
     expect(await screen.findByText(/Periksa barang asli/)).toBeVisible();
     expect(screen.getByRole('button', { name: 'Barang sudah diterima' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Uang tambahan diterima' })).toBeVisible();
+  });
+
+  it('offers scoped admin help only when the server marks the receipt as eligible', async () => {
+    const gateway = show(tradeRoom({
+      lifecycle: 'agreed', acceptedRevision: 2,
+      receipts: { actorReceived: true, counterpartReceived: false },
+      receiptFollowUp: { triggerAt: '2026-09-09T03:00:00.000Z', helpAvailableAt: '2026-09-12T03:00:00.000Z', canRequestAdminHelp: true, adminHelpRequested: false },
+    }));
+    const user = userEvent.setup();
+    expect(await screen.findByText(/Transaksi menggantung/)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Minta bantuan admin' }));
+    await user.type(screen.getByLabelText('Keterangan bantuan'), 'Pihak lain belum mengonfirmasi setelah barang diterima.');
+    await user.click(screen.getByRole('button', { name: 'Kirim ke admin' }));
+    expect(gateway.requestAdminHelp).toHaveBeenCalledWith(transactionId, 'Pihak lain belum mengonfirmasi setelah barang diterima.');
   });
 });

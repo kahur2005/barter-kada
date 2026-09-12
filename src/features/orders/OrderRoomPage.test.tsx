@@ -37,4 +37,14 @@ describe('order room', () => {
     await user.click(screen.getByRole('button', { name: 'Setujui perubahan' }));
     expect(gateway.acceptAmendment).toHaveBeenCalledWith(amendment.id, 1, expect.stringMatching(/^[0-9a-f-]{36}$/));
   });
+
+  it('lets the seller request admin help after the server-side waiting period', async () => {
+    const gateway: OrderGateway = { get: vi.fn().mockResolvedValue({ ...base, actorRole: 'seller', lifecycle: 'awaiting_receipt', acceptedRevision: 1, fulfillment: { ...base.fulfillment, handedAt: '2026-09-09T03:00:00.000Z' }, receiptFollowUp: { triggerAt: '2026-09-09T03:00:00.000Z', helpAvailableAt: '2026-09-12T03:00:00.000Z', canRequestAdminHelp: true, adminHelpRequested: false } }), createQuote: vi.fn(), confirm: vi.fn(), acknowledgePayment: vi.fn(), markProcessing: vi.fn(), markReady: vi.fn(), markHandedOver: vi.fn(), confirmReceived: vi.fn(), cancel: vi.fn(), requestCancellation: vi.fn(), respondCancellation: vi.fn(), proposeAmendment: vi.fn(), acceptAmendment: vi.fn(), rejectAmendment: vi.fn(), withdrawAmendment: vi.fn(), proposeRefund: vi.fn(), acceptRefund: vi.fn(), rejectRefund: vi.fn(), recordRefundSent: vi.fn(), confirmRefundReceived: vi.fn(), requestAdminHelp: vi.fn().mockResolvedValue(undefined), subscribe: vi.fn(() => () => undefined) };
+    show(gateway); const user = userEvent.setup();
+    expect(await screen.findByText(/Transaksi menggantung/)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Minta bantuan admin' }));
+    await user.type(screen.getByLabelText('Keterangan bantuan'), 'Pembeli belum merespons setelah penyerahan barang.');
+    await user.click(screen.getByRole('button', { name: 'Kirim ke admin' }));
+    expect(gateway.requestAdminHelp).toHaveBeenCalledWith(base.id, 'Pembeli belum merespons setelah penyerahan barang.');
+  });
 });

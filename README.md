@@ -4,7 +4,7 @@ Marketplace lingkungan untuk jual beli, barter, pemberian gratis, dan pemasaran 
 
 ## Status
 
-Implementasi sedang berjalan pada fondasi React mobile-first. Discovery, detail listing, toko/katalog, Auth Supabase, onboarding privat, OTP OpenWA adapter, listing personal, pipeline foto, chat privat, barter versioned, order sale/free/PO, DP manual, toko Plus dummy, notifikasi, laporan/admin, review, analytics, amendment order, ledger refund offline, dan keputusan admin `return_required` dengan pihak+tenggat terstruktur telah dibuat serta unit-tested. Mode preview tetap read-only dan tidak membuat data transaksi palsu. Backend lokal, delivery OpenWA nyata, dan deployment Supabase/Vercel belum diverifikasi pada environment ini karena Docker Linux Engine dan kredensial proyek belum tersedia.
+Implementasi sedang berjalan pada fondasi React mobile-first. Discovery, detail listing, toko/katalog, Auth Supabase, onboarding privat, OTP OpenWA adapter, listing personal, pipeline foto, chat privat, barter versioned, order sale/free/PO, DP manual, toko Plus dummy, notifikasi, laporan/admin, review, analytics, amendment order, ledger refund offline, keputusan admin `return_required`, serta pengingat dan bantuan admin untuk transaksi yang menggantung telah dibuat serta unit-tested. Mode preview tetap read-only dan tidak membuat data transaksi palsu. Backend lokal, delivery OpenWA nyata, dan deployment Supabase/Vercel belum diverifikasi pada environment ini karena Docker Linux Engine dan kredensial proyek belum tersedia.
 
 Target awal tetap demo terintegrasi selama 9 hari × 3 jam, bukan peluncuran transaksi nyata. Pembayaran langganan Plus masih berupa simulasi.
 

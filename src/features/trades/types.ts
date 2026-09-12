@@ -1,3 +1,5 @@
+import type { TransactionFollowUp } from '../shared/transaction-follow-up';
+
 export type TradeItemInput =
   | { clientId: string; source: 'listing'; listingId: string }
   | { clientId: string; source: 'direct'; name: string; details: string; quantity: string; assetIds: string[] };
@@ -32,6 +34,7 @@ export type TradeRoom = {
   readiness: { actor: boolean; counterpart: boolean };
   approvals: { actor: boolean; counterpart: boolean };
   receipts: { actorReceived: boolean; counterpartReceived: boolean };
+  receiptFollowUp?: TransactionFollowUp | null;
   cancellationReason: string | null;
   updatedAt: string;
 };

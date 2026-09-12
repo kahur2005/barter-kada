@@ -29,4 +29,11 @@ describe('Supabase trade gateway', () => {
     expect(chatSign).toHaveBeenCalledWith(['rina/jaket.webp'], 60);
     expect(result.ownItems[0].photos[0].url).toBe('https://signed/chat');
   });
+
+  it('sends a scoped admin-help request without changing the trade state client-side', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: { id: 'b8000000-0000-4000-8000-000000000008', status: 'open' }, error: null });
+    const gateway = createSupabaseTradeGateway({ rpc } as never);
+    await gateway.requestAdminHelp?.(room.id, 'Pihak lain belum mengonfirmasi penerimaan barang.');
+    expect(rpc).toHaveBeenCalledWith('request_admin_help', { p_target_type: 'barter', p_target_id: room.id, p_description: 'Pihak lain belum mengonfirmasi penerimaan barang.' });
+  });
 });

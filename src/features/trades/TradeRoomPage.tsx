@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Dialog } from '../../components/Dialog';
 import { StatusPanel } from '../../components/StatusPanel';
 import { formatRupiah } from '../../lib/money';
+import { StuckTransactionPanel } from '../shared/StuckTransactionPanel';
 import { useTradeGateway } from './TradeContext';
 import type { TradeItem, TradeRoom } from './types';
 
@@ -59,6 +60,7 @@ export function TradeRoomPage() {
     },
     onSuccess: data => { client.setQueryData(['trade', id], data); setDialog(null); setCancelReason(''); setCommandKey(null); void client.invalidateQueries({ queryKey: ['chat', data.conversationId, 'messages'] }); },
   });
+  const adminHelp = useMutation({ mutationFn: (description: string) => gateway?.requestAdminHelp ? gateway.requestAdminHelp(id, description) : Promise.reject(new Error('Bantuan admin belum aktif.')), onSuccess: () => { void client.invalidateQueries({ queryKey: ['trade', id] }); } });
   function run(kind: 'ready' | 'approve' | 'receive' | 'topup' | 'cancel') {
     const key = commandKey ?? crypto.randomUUID(); setCommandKey(key); action.mutate({ kind, key });
   }
@@ -77,6 +79,7 @@ export function TradeRoomPage() {
     <Package title={`Penawaran ${room.counterpart.name}`} status={consentStatus(room.readiness.counterpart, room.approvals.counterpart)} items={room.counterpartItems} />
     <section className="trade-topup"><h2>Tambahan uang</h2>{room.topup ? <p><strong>{room.topup.payerId === room.actor.id ? 'Kamu membayar' : `${room.counterpart.name} membayar`} {formatRupiah(room.topup.amountRupiah)}</strong> saat serah terima setelah pemeriksaan.</p> : <p>Tidak ada tambahan uang.</p>}</section>
     <p className="revision-warning">Setiap perubahan barang, foto, detail, jumlah, atau uang membuat versi baru dan mereset status Siap serta Setuju kedua pihak.</p>
+    <StuckTransactionPanel followUp={room.receiptFollowUp} counterpartLabel={room.counterpart.name} pending={adminHelp.isPending} onRequest={gateway.requestAdminHelp ? description => adminHelp.mutateAsync(description).then(() => undefined) : undefined} />
     {action.error && <p className="form-alert" role="alert">Status belum tersimpan. Muat versi terbaru lalu coba lagi; persetujuan tidak dijalankan otomatis.</p>}
     <TradeActions room={room} pending={action.isPending} onApprove={trigger} onReceive={() => setDialog('receive')} onTopup={() => setDialog('topup')} onCancel={() => setDialog('cancel')} />
     {dialog === 'approve' && <Dialog title={`Setujui barter versi ${room.revision}?`} onClose={() => setDialog(null)}><p>Tinjau seluruh barang kedua pihak dan tambahan uang. Persetujuan ini hanya berlaku untuk versi {room.revision}.</p><div className="form-actions"><button className="button secondary" onClick={() => setDialog(null)}>Kembali meninjau</button><button className="button" disabled={action.isPending} onClick={() => run('approve')}>Ya, setujui barter</button></div></Dialog>}

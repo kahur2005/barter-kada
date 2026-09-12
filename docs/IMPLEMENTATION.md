@@ -15,7 +15,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
 | 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover, pembatalan sebelum proses, permintaan pembatalan pascaproses, amendment sebelum proses, dan refund offline setelah pembatalan diimplementasikan; keputusan admin dan kebijakan refund final tetap terbuka |
 | 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, katalog, selector penerbit, batas produk toko dan rotasi promosi per akun diimplementasikan; runtime database belum diverifikasi |
-| 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, restriction/ban foundation, keputusan `return_required` dengan pihak+tenggat terstruktur, dan scheduler publikasi/reminder diimplementasikan; runtime database belum |
+| 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, restriction/ban foundation, keputusan `return_required` dengan pihak+tenggat terstruktur, reminder serah-terima 24 jam, dan permintaan bantuan admin setelah 72 jam diimplementasikan; runtime database belum |
 | 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Admin limits/version history, product event privacy boundary, activity-day retention, listing visibility periods, live metrics RPC, halaman `/admin/analytics`, rating toko terpisah, amendment pre-processing, dan ledger refund offline diimplementasikan; runtime database belum diverifikasi |
 | 10 | E2E dua akun, RLS/race/security, mobile/a11y, build Vercel, panduan/demo evidence | Semua requirement R yang berlaku; T-45/46/55; UX-01–13 | Frontend unit/build/E2E/audit terverifikasi; dua akun, RLS/race, Supabase runtime, dan deployment Vercel masih belum diverifikasi |
 
@@ -39,6 +39,7 @@ Skenario T merupakan kelompok, bukan jumlah tes yang otomatis membuktikan seluru
 - [Chat privat dan realtime](superpowers/plans/2026-09-12-private-chat.md).
 - [Notifikasi, review, dan admin case minimum](superpowers/plans/2026-09-12-notifications-reviews.md).
 - [Amendment order dan refund offline](superpowers/plans/2026-09-12-amendment-refund.md).
+- [Bantuan admin untuk transaksi yang menggantung](superpowers/plans/2026-09-12-stuck-transaction-help.md).
 - Rencana subsystem berikut diturunkan dari tahap 5–10 sebelum kode subsystem terkait dimulai; status belum dibuat di atas tetap aktif sampai ada bukti implementasi.
 
 ## Lingkungan yang harus dipenuhi sebelum verifikasi end-to-end
@@ -184,3 +185,16 @@ Bukti host pada checkpoint ini:
 - `npm.cmd run test:e2e -- --workers=1`: 26 lulus, 1 dilewati karena skenario desktop-only.
 - `npm.cmd audit --omit=dev`: 0 kerentanan dependency produksi.
 - `supabase/tests/admin_cases.test.sql`: 23 assertion pgTAP static-only. Supabase lokal belum dapat menjalankan migration karena Docker Desktop Linux Engine/API masih hang; runtime PostgreSQL, RLS, race, dan RPC belum boleh disebut terverifikasi.
+
+## Bukti parsial tahap 8: transaksi yang menggantung
+
+Implementasi 12 September 2026 menambahkan pengingat in-app 24 jam setelah salah satu pihak menerima barang, lalu membuka permintaan bantuan admin setelah 72 jam jika pihak lain belum mengonfirmasi penerimaan. Server menghitung kelayakan dari timestamp fulfillment, membatasi barter pada pihak yang sudah menerima barang, membatasi order pada penjual, memakai advisory lock dan report aktif sebagai dedupe, lalu memasukkan permintaan ke antrean kasus admin. Tidak ada auto-complete dan aplikasi tetap tidak memindahkan uang atau barang.
+
+UI ruang barter dan pesanan menampilkan waktu dalam WIB; tombol bantuan hanya muncul ketika DTO server mengizinkannya, dan keterangan minimal 10 karakter dikirim melalui RPC khusus.
+
+Bukti host pada checkpoint ini:
+
+- `npm.cmd test -- --run`: 45 file, 149 tes lulus.
+- `npm.cmd run build`: TypeScript dan Vite production build lulus; entry 156,84 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
+- `supabase/tests/receipt_followup.test.sql`: 18 assertion pgTAP static-only untuk trigger reminder, validator queue, worker dispatch, RPC bantuan, privilege, dan field DTO.
+- `supabase start` tetap tertahan karena Docker Desktop Linux Engine/API tidak merespons, sehingga migration, RLS, race, dan RPC belum diuji pada PostgreSQL.

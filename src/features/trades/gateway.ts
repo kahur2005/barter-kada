@@ -14,7 +14,7 @@ const roomSchema: z.ZodType<TradeRoom> = z.object({
   ownItems: z.array(itemSchema), counterpartItems: z.array(itemSchema),
   topup: z.object({ payerId: z.string().uuid(), payeeId: z.string().uuid(), amountRupiah: z.string().regex(/^[1-9][0-9]*$/), acknowledged: z.boolean() }).nullable(),
   readiness: z.object({ actor: z.boolean(), counterpart: z.boolean() }), approvals: z.object({ actor: z.boolean(), counterpart: z.boolean() }),
-  receipts: z.object({ actorReceived: z.boolean(), counterpartReceived: z.boolean() }), cancellationReason: z.string().nullable(), updatedAt: z.string().datetime(),
+  receipts: z.object({ actorReceived: z.boolean(), counterpartReceived: z.boolean() }), receiptFollowUp: z.object({ triggerAt: z.string().datetime(), helpAvailableAt: z.string().datetime(), canRequestAdminHelp: z.boolean(), adminHelpRequested: z.boolean() }).nullable().optional(), cancellationReason: z.string().nullable(), updatedAt: z.string().datetime(),
 });
 
 export interface TradeGateway {
@@ -26,6 +26,7 @@ export interface TradeGateway {
   confirmReceived(transactionId: string, expectedRevision: number, idempotencyKey: string): Promise<TradeRoom>;
   acknowledgeTopup(transactionId: string, expectedRevision: number, idempotencyKey: string): Promise<TradeRoom>;
   cancel(transactionId: string, expectedRevision: number, reason: string, idempotencyKey: string): Promise<TradeRoom>;
+  requestAdminHelp?(transactionId: string, description: string): Promise<void>;
   uploadDirectImage(conversationId: string, file: File, onProgress: (percent: number) => void): Promise<string>;
   subscribe(transactionId: string, onCommittedChange: () => void): () => void;
 }
@@ -58,6 +59,11 @@ export function createSupabaseTradeGateway(client: SupabaseClient): TradeGateway
     confirmReceived: (transactionId, expectedRevision, idempotencyKey) => command('confirm_trade_received', { p_transaction_id: transactionId, p_expected_revision: expectedRevision, p_idempotency_key: idempotencyKey }),
     acknowledgeTopup: (transactionId, expectedRevision, idempotencyKey) => command('acknowledge_trade_topup', { p_transaction_id: transactionId, p_expected_revision: expectedRevision, p_idempotency_key: idempotencyKey }),
     cancel: (transactionId, expectedRevision, reason, idempotencyKey) => command('cancel_trade', { p_transaction_id: transactionId, p_expected_revision: expectedRevision, p_reason: reason, p_idempotency_key: idempotencyKey }),
+    async requestAdminHelp(transactionId, description) {
+      const { data, error } = await client.rpc('request_admin_help', { p_target_type: 'barter', p_target_id: transactionId, p_description: description });
+      const parsed = z.object({ id: z.string().uuid(), status: z.literal('open') }).safeParse(data);
+      if (error || !parsed.success) throw failure();
+    },
     async uploadDirectImage(conversationId, file, onProgress) {
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size < 1 || file.size > 5 * 1024 * 1024) throw failure();
       const { data, error } = await client.rpc('reserve_chat_asset', { p_conversation_id: conversationId, p_mime_type: file.type, p_byte_size: file.size });

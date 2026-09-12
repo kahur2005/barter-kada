@@ -44,4 +44,11 @@ describe('Supabase order gateway', () => {
     expect(rpc).toHaveBeenNthCalledWith(1, 'propose_refund', expect.objectContaining({ p_amount_rupiah: '50000', p_basis: 'cancellation' }));
     expect(rpc).toHaveBeenNthCalledWith(4, 'confirm_refund_received', expect.objectContaining({ p_refund_request_id: 'bf000000-0000-4000-8000-000000000015' }));
   });
+
+  it('sends a scoped admin-help request for a waiting handover', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: { id: 'b8000000-0000-4000-8000-000000000008', status: 'open' }, error: null });
+    const gateway = createSupabaseOrderGateway({ rpc } as never);
+    await gateway.requestAdminHelp?.(room.id, 'Pembeli belum merespons setelah penyerahan barang.');
+    expect(rpc).toHaveBeenCalledWith('request_admin_help', { p_target_type: 'order', p_target_id: room.id, p_description: 'Pembeli belum merespons setelah penyerahan barang.' });
+  });
 });
