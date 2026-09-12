@@ -32,6 +32,7 @@ export function ListingEditorPage() {
   const [pending, setPending] = useState(false);
   const [localFiles, setLocalFiles] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [retryFiles, setRetryFiles] = useState<File[]>([]);
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(Boolean(listingId && gateway));
   const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
@@ -102,19 +103,33 @@ export function ListingEditorPage() {
     catch { setIssues([{ field: 'form', message: 'Penawaran belum dapat diterbitkan. Periksa isian dan batas akun.' }]); }
     finally { setPending(false); }
   }
-  async function upload(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []); event.target.value = '';
+  function removeAsset(assetId: string) {
+    patch({ assetIds: draft.assetIds.filter(id => id !== assetId) });
+  }
+  function makePrimary(assetId: string) {
+    patch({ assetIds: [assetId, ...draft.assetIds.filter(id => id !== assetId)] });
+  }
+  async function processFiles(files: File[]) {
     const invalid = files.find(file => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024);
     if (invalid) { setIssues([{ field: 'assetIds', message: 'Foto harus JPEG, PNG, atau WebP dan maksimal 5 MB.' }]); return; }
     if (draft.assetIds.length + localFiles.length + files.length > 8) { setIssues([{ field: 'assetIds', message: 'Maksimal delapan foto.' }]); return; }
     if (!gateway) { setLocalFiles(current => [...current, ...files.map(file => file.name)]); setDirty(true); return; }
+    setRetryFiles(files);
     setPending(true); setIssues([]);
     try {
-      const ids: string[] = [];
-      for (const file of files) ids.push(await gateway.uploadImage(file, setUploadProgress));
-      patch({ assetIds: [...draft.assetIds, ...ids] });
+      for (const [index, file] of files.entries()) {
+        const id = await gateway.uploadImage(file, setUploadProgress);
+        setDraft(current => ({ ...current, assetIds: [...current.assetIds, id] }));
+        setDirty(true);
+        setRetryFiles(files.slice(index + 1));
+      }
+      setRetryFiles([]);
     } catch { setIssues([{ field: 'assetIds', message: 'Foto belum berhasil diproses. Teks lain tetap tersimpan; coba foto ini lagi.' }]); }
     finally { setUploadProgress(null); setPending(false); }
+  }
+  async function upload(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []); event.target.value = '';
+    await processFiles(files);
   }
 
   if (loading) return <section className="listing-editor" aria-live="polite"><h1>Memuat listing…</h1></section>;
@@ -134,7 +149,7 @@ export function ListingEditorPage() {
         {!['food', 'garden'].includes(draft.categoryId) && draft.fulfillment === 'ready_stock' && <><label htmlFor="condition">Kondisi</label><select id="condition" value={draft.condition ?? ''} onChange={event => patch({ condition: event.target.value as ListingDraft['condition'] })}><option value="">Pilih kondisi</option><option value="new">Baru</option><option value="like_new">Seperti baru</option><option value="good">Baik</option><option value="fair">Cukup</option><option value="needs_repair">Perlu perbaikan</option></select><label htmlFor="defects">Kekurangan/kondisi penting</label><textarea id="defects" rows={3} value={draft.defects} onChange={event => patch({ defects: event.target.value })} /></>}
         {draft.modes.includes('sale') && <><label htmlFor="price">Harga utama (rupiah)</label><input id="price" inputMode="numeric" value={draft.basePriceRupiah ?? ''} onChange={event => patch({ basePriceRupiah: event.target.value || null })} /><label className="check-row"><input type="checkbox" checked={draft.negotiable} onChange={event => patch({ negotiable: event.target.checked })} />Harga bisa ditawar</label></>}
         {draft.modes.includes('barter') && <><label className="check-row"><input type="checkbox" checked={draft.barter?.openToOffers ?? true} onChange={event => patch({ barter: { openToOffers: event.target.checked, wantedDescription: draft.barter?.wantedDescription ?? '' } })} />Terbuka untuk semua tawaran</label>{!draft.barter?.openToOffers && <><label htmlFor="wanted">Barang yang diinginkan</label><textarea id="wanted" value={draft.barter?.wantedDescription ?? ''} onChange={event => patch({ barter: { openToOffers: false, wantedDescription: event.target.value } })} /></>}</>}
-        <label htmlFor="photos">Foto aktual (maksimal 8 × 5 MB)</label><input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={upload} />{uploadProgress !== null && <p role="status">Memproses foto… {uploadProgress}%</p>}{localFiles.length > 0 && <ul className="file-list">{localFiles.map(name => <li key={name}>{name} — contoh lokal, belum diunggah</li>)}</ul>}
+        <label htmlFor="photos">Foto aktual (maksimal 8 × 5 MB)</label><input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={upload} />{uploadProgress !== null && <p role="status">Memproses foto… {uploadProgress}%</p>}{retryFiles.length > 0 && issues.some(issue => issue.field === 'assetIds') && <button className="button secondary" type="button" onClick={() => void processFiles(retryFiles)} disabled={pending}>Ulangi unggah foto</button>}{localFiles.length > 0 && <ul className="file-list">{localFiles.map(name => <li key={name}>{name} — contoh lokal, belum diunggah</li>)}</ul>}{draft.assetIds.length > 0 && <><p className="form-help">Urutan foto pertama menjadi foto utama.</p><ul className="file-list" aria-label="Foto terunggah">{draft.assetIds.map((assetId, index) => <li key={assetId}><span>Foto {index + 1}{index === 0 ? ' — utama' : ''}</span><div className="form-actions">{index > 0 && <button className="button secondary" type="button" onClick={() => makePrimary(assetId)}>Jadikan foto utama {index + 1}</button>}<button className="button secondary" type="button" onClick={() => removeAsset(assetId)}>Hapus foto {index + 1}</button></div></li>)}</ul></>}
       </>}
       {stage === 2 && <><h2>Atur ketersediaan dan penyerahan</h2><fieldset><legend>Cara penyerahan</legend><div className="choice-grid">{([['pickup', 'Diambil'], ['meetup', 'Meet up'], ['delivery', 'Diantar']] as const).map(([method, label]) => <label key={method}><input type="checkbox" checked={draft.handoverMethods.includes(method)} onChange={event => patch({ handoverMethods: event.target.checked ? [...draft.handoverMethods, method] : draft.handoverMethods.filter(item => item !== method) })} />{label}</label>)}</div></fieldset>
         {draft.fulfillment === 'preorder' && <div className="nested-fields"><h3>Ketentuan pre-order</h3><button className="button secondary" type="button" onClick={() => patch({ preorder: draft.preorder ?? { orderClosesAt: '', fulfillmentAt: '', minimumQty: '1', quotaMode: 'unlimited', sharedQuota: null, dpPercent: '0' } })}>Isi ketentuan PO</button>{draft.preorder && <><label>Batas pemesanan<input type="datetime-local" value={draft.preorder.orderClosesAt} onChange={event => patch({ preorder: { ...draft.preorder!, orderClosesAt: event.target.value } })} /></label><label>Jadwal tersedia<input type="datetime-local" value={draft.preorder.fulfillmentAt} onChange={event => patch({ preorder: { ...draft.preorder!, fulfillmentAt: event.target.value } })} /></label><label>Minimum jumlah<input inputMode="numeric" value={draft.preorder.minimumQty} onChange={event => patch({ preorder: { ...draft.preorder!, minimumQty: event.target.value } })} /></label><label>Jenis kuota<select value={draft.preorder.quotaMode} onChange={event => patch({ preorder: { ...draft.preorder!, quotaMode: event.target.value as NonNullable<ListingDraft['preorder']>['quotaMode'], sharedQuota: event.target.value === 'shared' ? draft.preorder?.sharedQuota ?? '' : null } })}><option value="unlimited">Tanpa batas</option><option value="shared">Kuota bersama</option><option value="per_variant">Per varian</option></select></label>{draft.preorder.quotaMode === 'shared' && <label>Kuota tersedia<input inputMode="numeric" value={draft.preorder.sharedQuota ?? ''} onChange={event => patch({ preorder: { ...draft.preorder!, sharedQuota: event.target.value } })} /></label>}<label>DP (%)<input inputMode="numeric" value={draft.preorder.dpPercent} onChange={event => patch({ preorder: { ...draft.preorder!, dpPercent: event.target.value } })} /></label></>}</div>}

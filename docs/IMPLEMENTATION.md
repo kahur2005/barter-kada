@@ -10,7 +10,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | --- | --- | --- | --- |
 | 1 | React/Vite/TypeScript, shell mobile, penemuan/detail/toko read-only, adapter API, test harness | PDR UI-01/02, T-27/46/55 | Selesai dan diverifikasi sebagai fondasi read-only; backend belum terhubung |
 | 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Profil/lokasi privat dengan pemuatan ulang alamat/patokan owner-scoped, OTP OpenWA, pengeditan data diri, pembaruan lokasi, dan penggantian nomor melalui OTP `change_phone` sudah memiliki UI/gateway; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
-| 3 | Listing draft/publish/edit/archive, varian, upload/EXIF, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal dan konteks publisher owner; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
+| 3 | Listing draft/publish/edit/archive, varian, upload/EXIF dan pengelolaan foto, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal dan konteks publisher owner, termasuk foto utama, hapus foto, dan retry upload; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
 | 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center, event notification server-side, dan idempotent reminder worker diimplementasikan; runtime Supabase belum diverifikasi |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
 | 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover, pembatalan sebelum proses, permintaan pembatalan pascaproses, amendment sebelum proses, dan refund offline setelah pembatalan diimplementasikan; keputusan admin dan kebijakan refund final tetap terbuka |
@@ -234,6 +234,13 @@ Perbaikan lanjutan memastikan alamat/patokan privat ikut dikembalikan oleh proje
 Halaman Akun sekarang menyediakan landmark `Menu akun` yang menghubungkan profil/verifikasi, Listing saya, Toko saya, Akun Plus, Transaksi saya, dan Notifikasi. Semua route tetap melewati guard autentikasi/kelengkapan akun masing-masing; perubahan ini hanya menutup discoverability yang sebelumnya hilang dari PDR.
 
 - Test: `src/features/auth/AccountPage.test.tsx`.
+
+## Bukti parsial UI-04: pengelolaan foto listing
+
+Editor listing sekarang menampilkan daftar asset foto yang sudah diproses. Pemilik dapat menjadikan foto mana pun sebagai foto utama, menghapus foto, dan mengulangi upload yang gagal tanpa mengulang file yang sudah berhasil diproses. Urutan `assetIds` dikirim ke gateway; migrasi katalog menyimpan urutan tersebut sebagai `listing_assets.position`, sehingga foto pertama menjadi foto utama secara konsisten.
+
+- Test: `src/features/listings/ListingEditorPage.test.tsx`.
+- Runtime upload dan storage Supabase belum diverifikasi karena Docker Desktop Linux Engine/API belum tersedia.
 
 ## Bukti parsial tahap 7: preview alamat publik toko
 

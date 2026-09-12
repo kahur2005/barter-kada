@@ -63,6 +63,43 @@ describe('listing editor', () => {
     expect(api.publish).toHaveBeenCalledWith(expect.objectContaining({ expectedVersion: 7, title: 'Meja kayu' }));
   });
 
+  it('lets the owner choose the primary photo and remove an uploaded photo', async () => {
+    const user = userEvent.setup(); const api = gateway();
+    vi.mocked(api.getMine).mockResolvedValue({
+      sourceLifecycle: 'active', listingId: '20000000-0000-4000-8000-000000000002', expectedVersion: 7, publisher: { kind: 'personal' },
+      modes: ['sale'], fulfillment: 'ready_stock', categoryId: 'home', title: 'Meja kayu', description: 'Masih kokoh untuk dipakai.',
+      condition: 'good', defects: 'Tidak ada kekurangan.', negotiable: false, barter: null, basePriceRupiah: '120000', variants: [],
+      assetIds: ['30000000-0000-4000-8000-000000000003', '40000000-0000-4000-8000-000000000004'], handoverMethods: ['meetup'], preorder: null, catering: null,
+    });
+    show(api, '/my/listings/20000000-0000-4000-8000-000000000002/edit');
+
+    expect(await screen.findByRole('button', { name: 'Jadikan foto utama 2' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Jadikan foto utama 2' }));
+    expect(screen.getByText('Foto 1 — utama')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Hapus foto 2' }));
+    await user.click(screen.getByRole('button', { name: 'Simpan perubahan' }));
+    expect(api.publish).toHaveBeenCalledWith(expect.objectContaining({ assetIds: ['40000000-0000-4000-8000-000000000004'] }));
+  });
+
+  it('keeps a failed upload retryable without losing the selected file', async () => {
+    const user = userEvent.setup(); const api = gateway();
+    vi.mocked(api.getMine).mockResolvedValue({
+      sourceLifecycle: 'active', listingId: '20000000-0000-4000-8000-000000000002', expectedVersion: 7, publisher: { kind: 'personal' },
+      modes: ['sale'], fulfillment: 'ready_stock', categoryId: 'home', title: 'Meja kayu', description: 'Masih kokoh untuk dipakai.',
+      condition: 'good', defects: 'Tidak ada kekurangan.', negotiable: false, barter: null, basePriceRupiah: '120000', variants: [], assetIds: [],
+      handoverMethods: ['meetup'], preorder: null, catering: null,
+    });
+    vi.mocked(api.uploadImage).mockRejectedValueOnce(new Error('network')).mockResolvedValueOnce('40000000-0000-4000-8000-000000000004');
+    show(api, '/my/listings/20000000-0000-4000-8000-000000000002/edit');
+
+    await screen.findByDisplayValue('Meja kayu');
+    await user.upload(screen.getByLabelText(/Foto aktual/), new File(['image'], 'meja.png', { type: 'image/png' }));
+    expect(await screen.findByRole('button', { name: 'Ulangi unggah foto' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Ulangi unggah foto' }));
+    expect(await screen.findByText('Foto 1 — utama')).toBeVisible();
+    expect(api.uploadImage).toHaveBeenCalledTimes(2);
+  });
+
   it('offers real service-area choices for catering terms', async () => {
     const user = userEvent.setup(); show(gateway()); await screen.findByRole('heading', { name: 'Pasang penawaran' });
     await user.selectOptions(screen.getByLabelText('Kategori'), 'food');
