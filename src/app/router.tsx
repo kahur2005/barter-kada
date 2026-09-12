@@ -24,6 +24,7 @@ import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { ReviewPage } from '../features/reviews/ReviewPage';
 import { AdminReportsPage } from '../features/admin/AdminReportsPage';
 import { AdminReportDetailPage } from '../features/admin/AdminReportDetailPage';
+import { TransactionsPage } from '../features/transactions/TransactionsPage';
 
 export function AppRoutes() {
   return <Routes>
@@ -48,6 +49,7 @@ export function AppRoutes() {
     <Route path="/orders/:id" element={<RequireCompletedProfile><OrderRoomPage /></RequireCompletedProfile>} />
     <Route path="/plus" element={<RequireCompletedProfile><PlusPage /></RequireCompletedProfile>} />
     <Route path="/my/stores" element={<RequireCompletedProfile><MyStoresPage /></RequireCompletedProfile>} />
+    <Route path="/transactions" element={<RequireCompletedProfile><TransactionsPage /></RequireCompletedProfile>} />
     <Route path="/reports/new" element={<RequireCompletedProfile><ReportPage /></RequireCompletedProfile>} />
     <Route path="/notifications" element={<RequireCompletedProfile><NotificationsPage /></RequireCompletedProfile>} />
     <Route path="/reviews/new" element={<RequireCompletedProfile><ReviewPage /></RequireCompletedProfile>} />

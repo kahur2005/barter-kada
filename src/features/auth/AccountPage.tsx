@@ -13,5 +13,5 @@ export function AccountPage() {
     try { await auth.gateway!.signOut(); navigate('/auth/login', { replace: true }); }
     catch { setError('Akun belum dapat dikeluarkan. Coba lagi.'); setPending(false); }
   }
-  return <section className="account-page"><p className="eyebrow">Akun warga</p><h1>Akun</h1><dl><dt>Email</dt><dd>{auth.session?.email ?? 'Tidak tersedia'}</dd><dt>Status profil</dt><dd><Link to="/onboarding">Lihat kelengkapan akun</Link></dd></dl>{error && <p className="form-alert" role="alert">{error}</p>}<button className="button secondary" onClick={signOut} disabled={pending}>{pending ? 'Mengeluarkan…' : 'Keluar dari akun'}</button></section>;
+  return <section className="account-page"><p className="eyebrow">Akun warga</p><h1>Akun</h1><dl><dt>Email</dt><dd>{auth.session?.email ?? 'Tidak tersedia'}</dd><dt>Status profil</dt><dd><Link to="/onboarding">Lihat kelengkapan akun</Link></dd></dl><div className="account-links"><Link className="button secondary" to="/transactions">Transaksi saya</Link><Link className="button secondary" to="/notifications">Notifikasi</Link></div>{error && <p className="form-alert" role="alert">{error}</p>}<button className="button secondary" onClick={signOut} disabled={pending}>{pending ? 'Mengeluarkan…' : 'Keluar dari akun'}</button></section>;
 }

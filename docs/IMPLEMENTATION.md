@@ -119,9 +119,11 @@ Batas yang masih eksplisit: store catalogue editor/promosi rotation, scheduled n
 
 Implementasi lanjutan 12 September 2026 menambahkan pusat notifikasi in-app, trigger deduplikasi untuk pesan/event barter/event order, submit review pascatransaksi dengan target counterpart dari server, aggregate reputasi pada projection listing/toko, scoped report evidence, role admin private, antrean/detail kasus, optimistic decision version, audit keputusan, dan restriction/ban yang diperiksa oleh `assert_active_account`.
 
-- `npm test`: 38 file, 129 tes lulus.
-- `npm run build`: lulus; bundle entry 150,69 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
+- `npm test`: 40 file, 131 tes lulus.
+- `npm run build`: lulus; bundle entry 151,15 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
 - `npm run test:e2e`: 26 lulus, 1 dilewati karena skenario desktop-only; suite tetap memakai lebar 320, 390, dan desktop.
 - Migration/tap test baru: notifications/reviews 14 assertion dan admin cases 18 assertion. Belum dieksekusi karena Docker Linux engine/Supabase lokal masih tidak tersedia.
 
-Batas penting: scheduled reminder/cleanup jobs, barter review publish setelah kedua pihak/14 hari, balasan ulasan, halaman daftar review, admin settings limits, keputusan return/cancel yang benar-benar mengubah fulfillment/refund, dan runtime/RLS integration test tetap belum selesai.
+Batas penting: scheduled reminder/cleanup jobs, barter review publish setelah kedua pihak/14 hari, balasan ulasan, halaman daftar review, admin settings limits, keputusan return/cancel yang benar-benar mengubah fulfillment/refund, analytics, dan runtime/RLS integration test tetap belum selesai.
+
+Daftar transaksi participant-scoped (`/transactions`) juga ditambahkan dari Akun. Migration dan pgTAP statisnya ada di `20260912075000_transaction_index.sql` dan `transaction_index.test.sql`; verifikasi database runtime tetap tertahan karena Docker Linux engine belum tersedia.
