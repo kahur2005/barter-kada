@@ -94,6 +94,17 @@ function StoreForm({ input, editing, pending, error, onChange, onToggleHandover,
         <input type="checkbox" checked={input.publicAddressConsent} onChange={event => onChange('publicAddressConsent', event.target.checked)} />
         Tampilkan alamat ini di profil toko
       </label>
+      {input.publicAddressConsent && input.publicAddress.trim() && (
+        <aside className="store-public-preview">
+          <h3>Pratinjau profil publik</h3>
+          <p>Alamat ini akan terlihat oleh pengunjung.</p>
+          <div className="store-public-preview-card">
+            <strong>{input.name.trim() || 'Nama toko'}</strong>
+            <p>{input.areaLabel}</p>
+            <p>{input.publicAddress.trim()}</p>
+          </div>
+        </aside>
+      )}
       {error && <p className="form-alert" role="alert">{error}</p>}
       <div className="form-actions">
         {editing && <button className="button secondary" type="button" disabled={pending} onClick={onCancel}>Batal</button>}

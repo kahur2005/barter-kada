@@ -29,6 +29,12 @@ describe('my stores', () => {
     expect(screen.getByRole('link', { name: 'Perpanjang Plus' })).toHaveAttribute('href', '/plus');
     expect(screen.getByRole('link', { name: 'Buka transaksi' })).toHaveAttribute('href', '/transactions');
     expect(screen.getByRole('link', { name: 'Tambah produk' })).toHaveAttribute('href', '/listings/new?storeId=d1000000-0000-4000-8000-000000000001');
+    const address = screen.getByLabelText('Alamat publik (opsional)');
+    await user.type(address, 'Jalan Mawar 1, Depok');
+    await user.click(screen.getByLabelText('Tampilkan alamat ini di profil toko'));
+    expect(screen.getByText('Pratinjau profil publik')).toBeVisible();
+    expect(screen.getByText('Alamat ini akan terlihat oleh pengunjung.')).toBeVisible();
+    expect(screen.getByText('Jalan Mawar 1, Depok', { selector: 'p' })).toBeVisible();
     await user.clear(name); await user.type(name, 'Dapur Rina Baru');
     await user.click(screen.getByRole('button', { name: 'Simpan perubahan' }));
     expect(gateway.updateStore).toHaveBeenCalledWith('d1000000-0000-4000-8000-000000000001', expect.objectContaining({ name: 'Dapur Rina Baru', slug: 'dapur-rina' }));

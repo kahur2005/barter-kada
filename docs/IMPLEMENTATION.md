@@ -14,7 +14,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center, event notification server-side, dan idempotent reminder worker diimplementasikan; runtime Supabase belum diverifikasi |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
 | 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover, pembatalan sebelum proses, permintaan pembatalan pascaproses, amendment sebelum proses, dan refund offline setelah pembatalan diimplementasikan; keputusan admin dan kebijakan refund final tetap terbuka |
-| 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, edit profil toko, pintu masuk katalog, counter produk aktif, banner Plus berakhir, katalog, selector penerbit, batas produk toko dan rotasi promosi per akun diimplementasikan; runtime database belum diverifikasi |
+| 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, edit profil toko dengan preview alamat publik berbasis consent, pintu masuk katalog, counter produk aktif, banner Plus berakhir, katalog, selector penerbit, batas produk toko dan rotasi promosi per akun diimplementasikan; runtime database belum diverifikasi |
 | 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, restriction/ban foundation, keputusan `return_required` dengan pihak+tenggat terstruktur, reminder serah-terima 24 jam, dan permintaan bantuan admin setelah 72 jam diimplementasikan; runtime database belum |
 | 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Admin limits/version history, product event privacy boundary, activity-day retention, listing visibility periods, live metrics RPC, halaman `/admin/analytics`, rating toko terpisah, amendment pre-processing, dan ledger refund offline diimplementasikan; runtime database belum diverifikasi |
 | 10 | E2E dua akun, RLS/race/security, mobile/a11y, build Vercel, panduan/demo evidence | Semua requirement R yang berlaku; T-45/46/55; UX-01–13 | Frontend unit/build/E2E/audit terverifikasi; dua akun, RLS/race, Supabase runtime, dan deployment Vercel masih belum diverifikasi |
@@ -226,3 +226,15 @@ Bukti host pada checkpoint ini:
 - `npm.cmd run build`: TypeScript dan Vite production build lulus; entry 157,12 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
 - Test onboarding memeriksa edit profil dan payload OTP `change_phone`.
 - Runtime Supabase dan Edge Function OpenWA belum diuji pada server karena Docker Linux Engine dan credential belum tersedia.
+
+## Bukti parsial tahap 7: preview alamat publik toko
+
+Form profil toko sekarang menampilkan preview lokal ketika pemilik mengisi alamat dan secara eksplisit mencentang consent alamat publik. Preview memperlihatkan nama toko, wilayah, dan alamat yang akan dilihat pengunjung; ketika consent tidak aktif, preview tidak muncul dan perilaku RPC yang mengosongkan alamat publik tetap dipertahankan. Tidak ada endpoint publik tambahan atau perubahan pada kebijakan lokasi perkiraan.
+
+Bukti host pada checkpoint ini:
+
+- `npm.cmd test -- --run`: 46 file, 153 tes lulus.
+- `npm.cmd run build`: TypeScript dan Vite production build lulus; entry 158,04 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
+- `npm.cmd run test:e2e -- --workers=1`: 26 lulus, 1 dilewati pada skenario desktop-only.
+- `npm.cmd audit --omit=dev`: 0 kerentanan dependency produksi.
+- Runtime Supabase, RLS, race, dan RPC tetap belum diverifikasi karena Docker Desktop Linux Engine/API belum merespons.
