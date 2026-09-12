@@ -190,6 +190,7 @@ export function MyStoresPage() {
                 <p>barter.app/stores/{store.slug} · {store.category} · {store.areaLabel}</p>
               </div>
               <div className="form-actions">
+                <Link className="button secondary" to={`/listings/new?storeId=${store.id}`}>Tambah produk</Link>
                 <button className="button secondary" type="button" onClick={() => edit(store)}>Edit profil</button>
                 <Link className="button secondary" to={`/stores/${store.slug}`}>Lihat profil</Link>
               </div>

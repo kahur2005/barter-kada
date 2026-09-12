@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useListingGateway } from './ListingContext';
 import type { ListingDraft, ListingValidationIssue } from './types';
 import { validateListingDraft } from './validation';
@@ -23,6 +23,8 @@ export function ListingEditorPage() {
   const onboarding = useOnboardingGateway();
   const storesGateway = useStoreGateway();
   const { id: listingId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const requestedStoreId = searchParams.get('storeId');
   const [draft, setDraft] = useState<ListingDraft>(initialDraft);
   const [stage, setStage] = useState(listingId ? 1 : 0);
   const [issues, setIssues] = useState<ListingValidationIssue[]>([]);
@@ -58,6 +60,10 @@ export function ListingEditorPage() {
     onboarding.listAreas().then(value => { if (active) setServiceAreas(value); }).catch(() => undefined);
     return () => { active = false; };
   }, [onboarding]);
+  useEffect(() => {
+    if (listingId || !requestedStoreId || !stores.data?.some(store => store.id === requestedStoreId)) return;
+    setDraft(current => current.publisher.kind === 'personal' ? { ...current, publisher: { kind: 'store', storeId: requestedStoreId } } : current);
+  }, [listingId, requestedStoreId, stores.data]);
 
   const stageIssues = useMemo(() => {
     const all = validateListingDraft(draft, { intent: 'publish', now: new Date() });

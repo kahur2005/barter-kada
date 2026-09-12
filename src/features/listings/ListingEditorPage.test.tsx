@@ -7,12 +7,14 @@ import type { AuthGateway } from '../auth/types';
 import { createPreviewRepository } from '../discovery/preview-repository';
 import type { OnboardingGateway } from '../onboarding/types';
 import type { ListingGateway } from './gateway';
+import type { StoreGateway } from '../stores/gateway';
 
 const repository = createPreviewRepository([], []);
 const auth: AuthGateway = { getSession: vi.fn().mockResolvedValue({ userId: '10000000-0000-4000-8000-000000000001', email: 'rina@example.test' }), subscribe: vi.fn(() => () => undefined), signInWithPassword: vi.fn(), signUpWithPassword: vi.fn(), signInWithGoogle: vi.fn(), signOut: vi.fn() };
 const onboarding: OnboardingGateway = { getState: vi.fn().mockResolvedValue({ nextStep: 'complete', displayName: 'Rina', bio: null, areaId: 'depok', maskedPhone: '+62••••7890', phoneVerified: true }), listAreas: vi.fn().mockResolvedValue([{ areaId: 'depok', name: 'Depok' }]), completeProfile: vi.fn(), setLocation: vi.fn(), requestOtp: vi.fn(), verifyOtp: vi.fn() };
 function gateway(): ListingGateway { return { saveDraft: vi.fn().mockResolvedValue({ listingId: '20000000-0000-4000-8000-000000000002', version: 1, lifecycle: 'draft' }), publish: vi.fn().mockResolvedValue({ listingId: '20000000-0000-4000-8000-000000000002', version: 8, lifecycle: 'active' }), getMine: vi.fn().mockResolvedValue(null), uploadImage: vi.fn().mockResolvedValue('30000000-0000-4000-8000-000000000003'), listMine: vi.fn(), archive: vi.fn() }; }
-function show(listingGateway: ListingGateway | null, path = '/listings/new') { return render(<MemoryRouter initialEntries={[path]}><App repository={repository} authGateway={auth} onboardingGateway={onboarding} listingGateway={listingGateway} /></MemoryRouter>); }
+function show(listingGateway: ListingGateway | null, path = '/listings/new', storeGateway: StoreGateway | null = null) { return render(<MemoryRouter initialEntries={[path]}><App repository={repository} authGateway={auth} onboardingGateway={onboarding} listingGateway={listingGateway} storeGateway={storeGateway} /></MemoryRouter>); }
+function storeGateway(): StoreGateway { return { getPlusStatus: vi.fn(), createBillingOrder: vi.fn(), simulateBilling: vi.fn(), createStore: vi.fn(), updateStore: vi.fn(), getMyStores: vi.fn().mockResolvedValue([{ id: '70000000-0000-4000-8000-000000000007', slug: 'dapur-rina', name: 'Dapur Rina', description: 'Menu rumahan.', category: 'Makanan', areaId: 'depok', areaLabel: 'Depok', status: 'active' }]) }; }
 
 describe('listing editor', () => {
   it('shows all four stages and keeps personal publishing independent from Plus', async () => {
@@ -73,5 +75,13 @@ describe('listing editor', () => {
     await user.click(screen.getByRole('button', { name: 'Lanjut ke ketersediaan' }));
     await user.click(screen.getByRole('button', { name: 'Isi ketentuan catering' }));
     expect(await screen.findByRole('checkbox', { name: 'Depok' })).toBeVisible();
+  });
+
+  it('preselects the owner store from the catalogue entry link', async () => {
+    const user = userEvent.setup(); const api = gateway();
+    show(api, '/listings/new?storeId=70000000-0000-4000-8000-000000000007', storeGateway());
+    expect(await screen.findByRole('radio', { name: 'Dapur Rina' })).toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Simpan draft' }));
+    expect(api.saveDraft).toHaveBeenCalledWith(expect.objectContaining({ publisher: { kind: 'store', storeId: '70000000-0000-4000-8000-000000000007' } }));
   });
 });

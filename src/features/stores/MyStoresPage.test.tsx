@@ -23,6 +23,7 @@ describe('my stores', () => {
     await user.click(await screen.findByRole('button', { name: 'Edit profil' }));
     const name = screen.getByLabelText('Nama toko');
     expect(name).toHaveValue('Dapur Rina');
+    expect(screen.getByRole('link', { name: 'Tambah produk' })).toHaveAttribute('href', '/listings/new?storeId=d1000000-0000-4000-8000-000000000001');
     await user.clear(name); await user.type(name, 'Dapur Rina Baru');
     await user.click(screen.getByRole('button', { name: 'Simpan perubahan' }));
     expect(gateway.updateStore).toHaveBeenCalledWith('d1000000-0000-4000-8000-000000000001', expect.objectContaining({ name: 'Dapur Rina Baru', slug: 'dapur-rina' }));
