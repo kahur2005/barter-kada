@@ -10,7 +10,7 @@ describe('admin gateway', () => {
       .mockResolvedValueOnce({ data: { ...report, status: 'decided', decision: { outcome: 'no_action', rationale: 'Konteks sudah diperiksa.', decidedAt: '2026-09-12T03:02:00.000Z' } }, error: null });
     const gateway = createSupabaseAdminGateway({ rpc } as never);
     await gateway.listReports({ status: 'open', cursor: null });
-    await gateway.decide(report.id, 1, { outcome: 'no_action', rationale: 'Konteks sudah diperiksa.', actionUserId: null, sanctionKind: null, durationDays: null });
+    await gateway.decide(report.id, 1, { outcome: 'no_action', rationale: 'Konteks sudah diperiksa.', actionUserId: null, sanctionKind: null, durationDays: null, followUpKind: null, followUpDueAt: null });
     expect(rpc).toHaveBeenNthCalledWith(1, 'admin_list_reports', { p_status: 'open', p_cursor: null, p_limit: 20 });
     expect(rpc).toHaveBeenNthCalledWith(2, 'admin_decide_report', expect.objectContaining({ p_report_id: report.id, p_expected_version: 1, p_outcome: 'no_action' }));
   });

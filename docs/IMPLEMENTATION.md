@@ -15,7 +15,7 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |
 | 6 | Sale/free/PO/catering, quote, DP/balance manual, quota dan handover | PRD 10–12, T-05/06/07/08/32/33/34/35/36/37/38 | Fondasi sale/free/PO quote, reservasi, DP manual, balance, handover, pembatalan sebelum proses, permintaan pembatalan pascaproses, amendment sebelum proses, dan refund offline setelah pembatalan diimplementasikan; keputusan admin dan kebijakan refund final tetap terbuka |
 | 7 | Tiga toko, Plus dummy, expiry, limits dan promosi per akun | PRD 6/8, T-09/10/11/18/28/47/48 | Plus dummy, entitlement expiry, maksimal tiga toko, profil toko, katalog, selector penerbit, batas produk toko dan rotasi promosi per akun diimplementasikan; runtime database belum diverifikasi |
-| 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, restriction/ban foundation, dan scheduler publikasi/reminder diimplementasikan; runtime database belum |
+| 8 | Reports/evidence/admin/sanctions, reviews, assistance dan tindak lanjut | PRD 14/15, T-17/19/42/43/44 | Reports dengan evidence scoped, review pending/publish window, daftar ulasan, balasan satu kali, reputation aggregate, admin case queue/detail/decision version, restriction/ban foundation, keputusan `return_required` dengan pihak+tenggat terstruktur, dan scheduler publikasi/reminder diimplementasikan; runtime database belum |
 | 9 | Amend/refund bersyarat, event/metrics dan operational configuration | RFC 22–24, T-49/50/51/52/53/54 | Admin limits/version history, product event privacy boundary, activity-day retention, listing visibility periods, live metrics RPC, halaman `/admin/analytics`, rating toko terpisah, amendment pre-processing, dan ledger refund offline diimplementasikan; runtime database belum diverifikasi |
 | 10 | E2E dua akun, RLS/race/security, mobile/a11y, build Vercel, panduan/demo evidence | Semua requirement R yang berlaku; T-45/46/55; UX-01–13 | Frontend unit/build/E2E/audit terverifikasi; dua akun, RLS/race, Supabase runtime, dan deployment Vercel masih belum diverifikasi |
 
@@ -172,3 +172,15 @@ Bukti host pada checkpoint ini:
 - `supabase/tests/order_amendments_refunds.test.sql`: 45 assertion pgTAP static-only; binary global `supabase` tidak tersedia, tetapi package-pinned `npm.cmd exec --yes --package=supabase@2.117.0 -- supabase --version` menghasilkan `2.117.0`. `supabase start` tetap tertahan karena Docker Desktop Linux Engine tidak merespons, sehingga migration, RLS, race, dan RPC belum diuji pada PostgreSQL.
 
 Q-12/Q-17 tetap tidak dikunci diam-diam: kebijakan pengembalian nominal dan keputusan admin final masih memerlukan keputusan produk/legal. Implementasi saat ini hanya menyediakan ledger proposal, consent, bukti catatan transfer opsional, dan konfirmasi penerima.
+
+## Bukti parsial tahap 8: follow-up pengembalian barang oleh admin
+
+Implementasi 12 September 2026 menambahkan migration `20260912100000_admin_case_followups.sql`. Admin kini dapat memilih outcome `return_required`, menetapkan UUID pihak yang wajib mengembalikan barang, dan menyimpan tenggat dalam UTC; server hanya mengizinkan pihak yang memang terlibat dalam kasus, menolak tenggat lampau, memakai optimistic decision version, mencatat audit keputusan, dan mengirim notifikasi tindak lanjut. Alur ini tidak mengubah receipt, status fulfillment, saldo, gateway, atau memindahkan uang. UI admin menampilkan tindak lanjut beserta waktu Jakarta dan menjelaskan bahwa pengembalian dilakukan langsung oleh para pihak.
+
+Bukti host pada checkpoint ini:
+
+- `npm.cmd test -- --run`: 45 file, 145 tes lulus.
+- `npm.cmd run build`: TypeScript dan Vite production build lulus; entry 156,25 kB gzip; warning chunk >500 kB masih dicatat sebagai optimasi lanjutan.
+- `npm.cmd run test:e2e -- --workers=1`: 26 lulus, 1 dilewati karena skenario desktop-only.
+- `npm.cmd audit --omit=dev`: 0 kerentanan dependency produksi.
+- `supabase/tests/admin_cases.test.sql`: 23 assertion pgTAP static-only. Supabase lokal belum dapat menjalankan migration karena Docker Desktop Linux Engine/API masih hang; runtime PostgreSQL, RLS, race, dan RPC belum boleh disebut terverifikasi.

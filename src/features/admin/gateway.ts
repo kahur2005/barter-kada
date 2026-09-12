@@ -1,11 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { adminReportSchema, type AdminReport, type AdminReportPage, type PlanSettings, type PlanSettingsHistoryPage, type ProductMetrics, type ReportOutcome, type ReportStatus, type SanctionKind } from './types';
+import { adminReportSchema, type AdminReport, type AdminReportPage, type PlanSettings, type PlanSettingsHistoryPage, type ProductMetrics, type ReportOutcome, type ReportStatus, type SanctionKind, type FollowUpKind } from './types';
 
 export interface AdminGateway {
   listReports(input: { status: ReportStatus | 'all'; cursor: string | null }): Promise<AdminReportPage>;
   getReport(id: string): Promise<AdminReport>;
-  decide(reportId: string, expectedVersion: number, input: { outcome: ReportOutcome; rationale: string; actionUserId: string | null; sanctionKind: SanctionKind | null; durationDays: number | null }): Promise<AdminReport>;
+  decide(reportId: string, expectedVersion: number, input: { outcome: ReportOutcome; rationale: string; actionUserId: string | null; sanctionKind: SanctionKind | null; durationDays: number | null; followUpKind: FollowUpKind | null; followUpDueAt: string | null }): Promise<AdminReport>;
   getPlanSettings(): Promise<PlanSettings>;
   updatePlanLimits(input: { expectedVersion: number; personalActiveLimit: number; storeProductActiveLimit: number; reason: string; idempotencyKey: string }): Promise<PlanSettings>;
   listPlanSettingsHistory(cursor: number | null): Promise<PlanSettingsHistoryPage>;
@@ -27,7 +27,7 @@ export function createSupabaseAdminGateway(client: SupabaseClient): AdminGateway
       const parsed = adminReportSchema.safeParse(data); if (error || !parsed.success) throw failure(); return parsed.data;
     },
     async decide(reportId, expectedVersion, input) {
-      const { data, error } = await client.rpc('admin_decide_report', { p_report_id: reportId, p_expected_version: expectedVersion, p_outcome: input.outcome, p_rationale: input.rationale, p_action_user_id: input.actionUserId, p_sanction_kind: input.sanctionKind, p_duration_days: input.durationDays });
+      const { data, error } = await client.rpc('admin_decide_report', { p_report_id: reportId, p_expected_version: expectedVersion, p_outcome: input.outcome, p_rationale: input.rationale, p_action_user_id: input.actionUserId, p_sanction_kind: input.sanctionKind, p_duration_days: input.durationDays, p_follow_up_kind: input.followUpKind, p_follow_up_due_at: input.followUpDueAt });
       const parsed = adminReportSchema.safeParse(data); if (error || !parsed.success) throw failure(); return parsed.data;
     },
     async getPlanSettings() {

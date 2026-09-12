@@ -1,5 +1,5 @@
 begin;
-select plan(18);
+select plan(23);
 
 select has_table('private', 'admin_roles', 'admin role table exists outside public projection');
 select has_table('public', 'report_evidence', 'report evidence table exists');
@@ -19,6 +19,11 @@ select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'report
 select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'report_decisions_rationale'), 'decision rationale is mandatory');
 select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'account_sanctions_window'), 'sanction expiry cannot precede start');
 select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'reviews_author_once'), 'review uniqueness remains present beside cases');
+select ok(exists (select 1 from pg_catalog.pg_attribute where attrelid = 'public.report_decisions'::regclass and attname = 'follow_up_kind'), 'admin return follow-up kind is stored');
+select ok(exists (select 1 from pg_catalog.pg_attribute where attrelid = 'public.report_decisions'::regclass and attname = 'follow_up_due_at'), 'admin return follow-up deadline is stored');
+select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'report_decisions_followup_fields'), 'return follow-up fields are paired');
+select ok(exists (select 1 from pg_catalog.pg_proc where oid = 'public.admin_decide_report(uuid,integer,text,text,uuid,text,integer,text,timestamptz)'::regprocedure), 'admin decision RPC accepts return follow-up');
+select ok((select prosecdef from pg_catalog.pg_proc where oid = 'public.admin_decide_report(uuid,integer,text,text,uuid,text,integer,text,timestamptz)'::regprocedure), 'return follow-up decision runs server-side');
 
 select * from finish();
 rollback;
