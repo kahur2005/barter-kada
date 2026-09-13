@@ -7,10 +7,14 @@ import type { DiscoveryQuery, PublicListing, PublicStore } from './types';
 import { ListingRow } from '../../components/ListingRow';
 import { StoreRow } from '../../components/StoreRow';
 import { Dialog } from '../../components/Dialog';
-import { Icon } from '../../components/Icon';
+import { Icon, type IconName } from '../../components/Icon';
 import { LoadingRows, StatusPanel } from '../../components/StatusPanel';
 import { FilterForm } from './FilterForm';
 import { AreaPicker } from './AreaPicker';
+
+const categoryIcons: Record<(typeof categories)[number]['id'], IconName> = {
+  food: 'food', clothing: 'clothing', home: 'categoryHome', vehicles: 'vehicles', garden: 'garden', other: 'other',
+};
 
 export function DiscoveryPage() {
   const [params, setParams] = useSearchParams();
@@ -48,7 +52,7 @@ export function DiscoveryPage() {
     <nav className="discovery-tabs" aria-label="Jenis hasil"><Link className={!isStores ? 'selected' : ''} aria-current={!isStores ? 'page' : undefined} to={`/?${params}`}>Barang</Link><Link className={isStores ? 'selected' : ''} aria-current={isStores ? 'page' : undefined} to={`/stores?${params}`}>Toko sekitar</Link></nav>
     <div className="discovery-layout">
       <aside className="discovery-sidebar">
-        <h2 className="sidebar-title">Jelajahi kategori</h2><nav aria-label="Kategori" className="category-directory">{categories.map(c => <button key={c.id} className={query.category === c.id ? 'selected' : ''} onClick={() => apply({ ...query, category: query.category === c.id ? null : c.id, cursor: null })}>{c.name}</button>)}</nav>
+        <h2 className="sidebar-title">Jelajahi kategori</h2><nav aria-label="Kategori" className="category-directory">{categories.map(c => <button key={c.id} className={query.category === c.id ? 'selected' : ''} onClick={() => apply({ ...query, category: query.category === c.id ? null : c.id, cursor: null })}><Icon name={categoryIcons[c.id]} /><span>{c.name}</span></button>)}</nav>
         <div className="desktop-filters"><h2>Saring penawaran</h2><FilterForm key={stateKey} query={query} onApply={apply} stores={isStores} /><p className="sidebar-note">Jual, barter, atau bagikan.<br />Tanpa biaya platform untuk transaksi barang.</p></div>
       </aside>
       <section className="results-section" aria-label={isStores ? 'Daftar toko' : 'Daftar penawaran'}>

@@ -31,7 +31,7 @@ describe('admin gateway', () => {
   });
 
   it('loads aggregate product metrics through the admin RPC', async () => {
-    const metrics = { window: { from: '2026-08-16', to: '2026-09-12' }, activeListingsByArea: [{ weekStart: '2026-09-07', areaId: 'jakarta-selatan', activeListings: 4 }], completedTransactions: [{ kind: 'barter', count: 2 }, { kind: 'order', count: 3 }], averageChatResponseSeconds: 84, retention: { cohortUsers: 10, d7Users: 4, d7Rate: 0.4, w1Users: 5, w1Rate: 0.5 }, activeStoreCount: 2, activePlusUserCount: 3, generatedAt: '2026-09-12T03:00:00.000Z' };
+    const metrics = { window: { from: '2026-08-16', to: '2026-09-12' }, activeListingsByArea: [{ weekStart: '2026-09-07', areaId: 'jakarta-selatan', activeListings: 4 }], completedTransactions: [{ kind: 'barter', count: 2 }, { kind: 'order', count: 3 }], averageChatResponseSeconds: 84, retention: { cohortUsers: 10, d7Users: 4, d7Rate: 0.4, w1Users: 5, w1Rate: 0.5 }, activeStoreCount: 2, activePlusUserCount: 3, generatedAt: '2026-09-12T03:00:00+00:00' };
     const rpc = vi.fn().mockResolvedValue({ data: metrics, error: null });
     const gateway = createSupabaseAdminGateway({ rpc } as never);
     await expect(gateway.getProductMetrics({ from: '2026-08-16', to: '2026-09-12' })).resolves.toEqual(metrics);

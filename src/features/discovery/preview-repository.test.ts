@@ -3,10 +3,19 @@ import { listing } from '../../test/fixtures';
 import { listingSchema } from './types';
 import { parseDiscoveryQuery } from './filters';
 import { createPreviewRepository } from './preview-repository';
+import { demoListings } from './fixtures';
 
 const a = listingSchema.parse(listing);
 const b = { ...a, id: '10000000-0000-4000-8000-000000000002', title: 'Nasi kotak', category: 'food', modes: ['sale'] as const, priceMin: '10000', priceMax: '10000' };
 const query = parseDiscoveryQuery(new URLSearchParams());
+
+it('uses relevant stock photos for the preview selling and barter posts', () => {
+  const demoImageUrls = new Map(demoListings.map(item => [item.title, item.images[0]?.url]));
+  expect(demoImageUrls.get('Kursi kayu bekas')).toMatch(/^https:\/\//);
+  expect(demoImageUrls.get('Nasi kotak untuk Jumat bersama')).toMatch(/^https:\/\//);
+  expect(demoImageUrls.get('Jaket denim ukuran M')).toMatch(/^https:\/\//);
+  expect(demoImageUrls.get('Sepeda kota untuk perjalanan dekat')).toMatch(/^https:\/\//);
+});
 
 it('exposes the synthetic area choices only through the explicit preview repository', async () => {
   const repo = createPreviewRepository([a], []);

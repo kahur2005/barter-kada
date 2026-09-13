@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { StatusPanel } from '../../components/StatusPanel';
+import { BackButton } from '../../components/NavigationLinks';
 import { useStoreGateway } from './StoreContext';
 import type { StoreInput, StoreSummary } from './types';
 
@@ -181,12 +182,13 @@ export function MyStoresPage() {
     else create.mutate();
   }
 
-  if (!gateway) return <StatusPanel title="Toko belum aktif"><p>Aktifkan backend dan Plus untuk mengelola toko.</p></StatusPanel>;
-  if (stores.isPending) return <StatusPanel title="Memuat toko…" />;
-  if (stores.error) return <StatusPanel title="Toko belum dapat dimuat" error><button className="button" onClick={() => void stores.refetch()}>Coba lagi</button></StatusPanel>;
+  if (!gateway) return <section className="stores-page"><BackButton fallback="/profile" /><StatusPanel title="Toko belum aktif"><p>Aktifkan backend dan Plus untuk mengelola toko.</p></StatusPanel></section>;
+  if (stores.isPending) return <section className="stores-page"><BackButton fallback="/profile" /><StatusPanel title="Memuat toko…" /></section>;
+  if (stores.error) return <section className="stores-page"><BackButton fallback="/profile" /><StatusPanel title="Toko belum dapat dimuat" error><button className="button" onClick={() => void stores.refetch()}>Coba lagi</button></StatusPanel></section>;
 
   return (
     <section className="stores-page">
+      <BackButton fallback="/profile" />
       <header>
         <p className="eyebrow">Toko saya</p>
         <h1>Profil usaha</h1>

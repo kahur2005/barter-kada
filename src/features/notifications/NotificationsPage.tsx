@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { BackButton } from '../../components/NavigationLinks';
 import { StatusPanel } from '../../components/StatusPanel';
 import { useNotificationGateway } from './NotificationContext';
 import type { Notification } from './types';
@@ -20,5 +21,5 @@ export function NotificationsPage() {
   if (query.isPending) return <StatusPanel title="Memuat notifikasi…" />;
   if (query.error) return <StatusPanel title="Notifikasi tidak dapat dimuat" error><button className="button" type="button" onClick={() => void query.refetch()}>Coba lagi</button></StatusPanel>;
   const items = query.data?.items ?? [];
-  return <section className="notifications-page"><header><p className="eyebrow">Pusat aktivitas</p><h1>Notifikasi</h1><p>Perubahan chat, barter, dan pesanan muncul di sini. Barter tidak mengirim push notification.</p></header>{items.length ? <div className="notification-list">{items.map(item => <NotificationRow key={item.id} item={item} pending={read.isPending} onRead={id => read.mutate(id)} />)}</div> : <StatusPanel title="Belum ada notifikasi"><p>Aktivitas baru akan muncul setelah ada pesan atau transaksi yang berubah.</p></StatusPanel>}{read.error && <p className="form-alert" role="alert">Status baca belum tersimpan. Coba lagi.</p>}</section>;
+  return <section className="notifications-page"><BackButton fallback="/profile" /><header><p className="eyebrow">Pusat aktivitas</p><h1>Notifikasi</h1><p>Perubahan chat, barter, dan pesanan muncul di sini. Barter tidak mengirim push notification.</p></header>{items.length ? <div className="notification-list">{items.map(item => <NotificationRow key={item.id} item={item} pending={read.isPending} onRead={id => read.mutate(id)} />)}</div> : <StatusPanel title="Belum ada notifikasi"><p>Aktivitas baru akan muncul setelah ada pesan atau transaksi yang berubah.</p></StatusPanel>}{read.error && <p className="form-alert" role="alert">Status baca belum tersimpan. Coba lagi.</p>}</section>;
 }

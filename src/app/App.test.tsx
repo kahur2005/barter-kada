@@ -34,6 +34,13 @@ it('shows a useful empty state instead of silently expanding the radius', async 
   expect(await screen.findByRole('heading', { name: 'Belum ada penawaran yang cocok' })).toBeVisible();
   expect(screen.getByRole('button', { name: /Depok.*5 km/ })).toBeVisible();
 });
+it('shows an icon for every browse category', async () => {
+  show('/search');
+  await screen.findByRole('link', { name: 'Kursi kayu bekas' });
+  for (const name of ['Makanan', 'Pakaian', 'Rumah & furnitur', 'Kendaraan', 'Kebun', 'Lainnya']) {
+    expect(screen.getByRole('button', { name }).querySelector('svg')).not.toBeNull();
+  }
+});
 it('retries a transport failure instead of rendering fake listings', async () => {
   let fail = true;
   const failingRepo = { ...repo, searchListings: async (...args: Parameters<typeof repo.searchListings>) => { if (fail) throw new Error('Tidak dapat memuat data.'); return repo.searchListings(...args); } };

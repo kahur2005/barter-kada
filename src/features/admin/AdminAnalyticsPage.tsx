@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { StatusPanel } from '../../components/StatusPanel';
+import { BackLink } from '../../components/NavigationLinks';
 import { useAdminGateway } from './AdminContext';
 
 function dateInput(daysAgo: number) {
@@ -19,7 +19,7 @@ export function AdminAnalyticsPage() {
   const query = useQuery({ queryKey: ['admin-product-metrics', from, to], queryFn: () => gateway!.getProductMetrics({ from, to }), enabled: Boolean(gateway) && Boolean(from) && Boolean(to) });
   if (!gateway) return <StatusPanel title="Analytics admin belum aktif"><p>Data metrik hanya tersedia setelah backend dan role admin dikonfigurasi.</p></StatusPanel>;
   return <section className="admin-analytics-page">
-    <Link className="back-link" to="/admin/reports">Kembali ke admin</Link>
+    <BackLink to="/admin/reports">Kembali ke admin</BackLink>
     <header><p className="eyebrow">Metrik produk tanpa data pribadi</p><h1>Analytics Barter</h1><p>Ringkasan aktivitas komunitas untuk membantu mengevaluasi listing, transaksi, chat, toko, dan Plus.</p></header>
     <form className="metrics-window" onSubmit={event => { event.preventDefault(); void query.refetch(); }}><label>Dari<input type="date" value={from} onChange={event => setFrom(event.target.value)} /></label><label>Sampai<input type="date" value={to} onChange={event => setTo(event.target.value)} /></label><button className="button" type="submit">Muat metrik</button></form>
     {query.isPending ? <StatusPanel title="Memuat metrik…" /> : query.error || !query.data ? <StatusPanel title="Metrik tidak dapat dimuat" error><p>Pastikan rentang tanggal valid dan akunmu memiliki role admin aktif.</p><button className="button" type="button" onClick={() => void query.refetch()}>Coba lagi</button></StatusPanel> : <>

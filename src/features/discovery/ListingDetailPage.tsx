@@ -5,6 +5,7 @@ import { useRepository } from '../../app/providers';
 import { dateWib, listingPrice, ProductImage } from '../../components/ListingRow';
 import { LoadingRows, StatusPanel } from '../../components/StatusPanel';
 import { Icon } from '../../components/Icon';
+import { ActionLink } from '../../components/NavigationLinks';
 import { Dialog } from '../../components/Dialog';
 import { formatRupiah } from '../../lib/money';
 
@@ -42,7 +43,7 @@ export function ListingDetailPage() {
         <section className="detail-section"><h2>Area penawaran</h2><p>{listing.area.name} · sekitar {listing.area.distanceKm} km</p><p className="metadata">Lokasi disamarkan dan tidak menunjukkan alamat rumah.</p></section>
         <section className="identity-panel"><h2>{listing.publisher.storeSlug ? <Link to={`/stores/${listing.publisher.storeSlug}`} state={{ from: location.pathname }}>{listing.publisher.name}</Link> : listing.publisher.name}</h2><p className="metadata">{listing.publisher.storeSlug ? 'Toko UMKM' : 'Profil pribadi'}</p><p>{listing.publisher.rating ? <Link to={`/reviews?subjectId=${listing.publisher.id}`}>{listing.publisher.rating.toLocaleString('id-ID')} dari 5 ({listing.publisher.reviewCount} ulasan)</Link> : 'Belum ada ulasan'}</p>{listing.publisher.phoneVerified && <p className="metadata">Nomor terverifikasi — bukan jaminan identitas atau keamanan transaksi.</p>}</section>
         <section className="detail-section"><h2>Penyerahan</h2><ul>{listing.handoverMethods.map(method => <li key={method}>{handoverLabels[method]}</li>)}</ul><p className="metadata">Alamat pertemuan dibagikan melalui chat setelah disepakati.{free && ' Barang gratis; ongkir jika ada disepakati terpisah.'}</p></section>
-        <Link className="report-link" to={pending('report')} state={{ from: location.pathname }}>Laporkan listing</Link>
+        <ActionLink className="report-link" to={pending('report')} state={{ from: location.pathname }}>Laporkan listing</ActionLink>
       </div>
     </div>
     <div className="context-actions"><div><p className="metadata">Periksa kondisi barang sebelum menerima.</p><div className="action-buttons">{available ? <>{(sale || free) && <Link className="button" to={`/chat/open/${listing.id}`} state={{ from: location.pathname }}>{chatLabel}</Link>}{barter && <Link className={`button ${sale ? 'secondary' : ''}`} to={`/barter/new/${listing.id}`} state={{ from: location.pathname }}>Ajukan barter</Link>}</> : <button className="button" disabled>Tidak tersedia</button>}</div></div></div>

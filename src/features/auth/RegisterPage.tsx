@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
+import { BackLink } from '../../components/NavigationLinks';
 import { useAuth } from './AuthProvider';
 
 const registration = z.object({
@@ -15,7 +16,7 @@ export function RegisterPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (!auth.available) return <section className="auth-card"><h1>Buat akun Barter</h1><p className="inline-notice">Pendaftaran dinonaktifkan pada mode data contoh. Hubungkan proyek Supabase untuk membuat akun nyata.</p><Link className="button secondary" to="/">Kembali ke beranda</Link></section>;
+  if (!auth.available) return <section className="auth-card"><BackLink to="/">Kembali ke beranda</BackLink><h1>Buat akun Barter</h1><p className="inline-notice">Pendaftaran dinonaktifkan pada mode data contoh. Hubungkan proyek Supabase untuk membuat akun nyata.</p></section>;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,6 +41,7 @@ export function RegisterPage() {
   }
 
   return <section className="auth-card" aria-labelledby="register-title">
+    <BackLink to="/">Kembali ke beranda</BackLink>
     <p className="eyebrow">Mulai dari sekitar</p><h1 id="register-title">Buat akun Barter</h1>
     <p>Setelah mendaftar, lengkapi nama, area, dan verifikasi WhatsApp. Pengguna Google tidak perlu membuat kata sandi Barter.</p>
     {error && <p className="form-alert" role="alert">{error}</p>}

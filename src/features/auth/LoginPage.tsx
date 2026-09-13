@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
+import { BackLink } from '../../components/NavigationLinks';
 import { useAuth } from './AuthProvider';
 
 const credentials = z.object({
@@ -16,7 +17,7 @@ export function LoginPage() {
   const [pending, setPending] = useState(false);
   const returnTo = new URLSearchParams(location.search).get('returnTo');
 
-  if (!auth.available) return <section className="auth-card"><h1>Masuk ke Barter</h1><p className="inline-notice">Login dinonaktifkan pada mode data contoh. Hubungkan proyek Supabase untuk memakai akun nyata.</p><Link className="button secondary" to="/">Kembali ke beranda</Link></section>;
+  if (!auth.available) return <section className="auth-card"><BackLink to="/">Kembali ke beranda</BackLink><h1>Masuk ke Barter</h1><p className="inline-notice">Login dinonaktifkan pada mode data contoh. Hubungkan proyek Supabase untuk memakai akun nyata.</p></section>;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,6 +51,7 @@ export function LoginPage() {
   }
 
   return <section className="auth-card" aria-labelledby="login-title">
+    <BackLink to="/">Kembali ke beranda</BackLink>
     <p className="eyebrow">Akun warga</p><h1 id="login-title">Masuk ke Barter</h1>
     <p>Temukan barang dan usaha tetangga. Data lokasi persis tidak ditampilkan ke publik.</p>
     {error && <p className="form-alert" role="alert">{error}</p>}

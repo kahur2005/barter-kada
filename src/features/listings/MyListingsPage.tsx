@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BackButton, ActionLink } from '../../components/NavigationLinks';
 import { useListingGateway } from './ListingContext';
 import type { MineListing } from './gateway';
 
@@ -23,8 +24,8 @@ export function MyListingsPage() {
     try { await gateway.archive(item.listingId, item.version); await load(); } catch { setError('Listing belum dapat diarsipkan. Periksa apakah ada transaksi aktif.'); }
     finally { setPendingId(null); }
   }
-  if (!gateway) return <section className="my-listings"><h1>Listing saya</h1><p className="preview-form-notice">Daftar milik akun tidak tersedia pada mode data contoh.</p><Link className="button" to="/listings/new">Coba form penawaran</Link></section>;
-  return <section className="my-listings"><header><div><p className="eyebrow">Kelola dagangan dan barang pribadi</p><h1>Listing saya</h1></div><Link className="button" to="/listings/new">Pasang baru</Link></header>
+  if (!gateway) return <section className="my-listings"><BackButton fallback="/profile" /><h1>Listing saya</h1><p className="preview-form-notice">Daftar milik akun tidak tersedia pada mode data contoh.</p><ActionLink to="/listings/new">Coba form penawaran</ActionLink></section>;
+  return <section className="my-listings"><BackButton fallback="/profile" /><header><div><p className="eyebrow">Kelola dagangan dan barang pribadi</p><h1>Listing saya</h1></div><Link className="button" to="/listings/new">Pasang baru</Link></header>
     {data && <p className="quota-counter"><strong>{data.activeCount} dari {data.activeLimit} aktif</strong><span>Batas diambil dari pengaturan server.</span></p>}
     <div className="owner-tabs" role="tablist" aria-label="Status listing">{tabs.map(item => <button key={item.key} role="tab" aria-selected={tab === item.key} onClick={() => { setTab(item.key); setData(null); }}>{item.label}</button>)}</div>
     {error && <p className="form-alert" role="alert">{error}</p>}

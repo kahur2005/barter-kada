@@ -1,10 +1,12 @@
 begin;
-select plan(17);
+select plan(20);
 
 select has_table('public', 'subscriptions', 'Plus entitlement table exists');
 select has_table('public', 'billing_orders', 'dummy billing orders table exists');
 select has_table('public', 'stores', 'optional stores table exists');
 select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'create_store'), 'store creation RPC exists');
+select ok(has_function_privilege('authenticated', 'private.plus_active(uuid)', 'execute'), 'authenticated can read Plus status through the private helper');
+select ok(has_function_privilege('authenticated', 'private.store_public_visible(uuid)', 'execute'), 'authenticated can evaluate the public store visibility policy');
 
 insert into auth.users(instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values ('00000000-0000-0000-0000-000000000000', 'b1000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'plus-owner@example.test', '', now(), now(), now());
@@ -15,6 +17,7 @@ insert into public.service_areas(area_id, name, enabled, boundary_source, bounda
 select set_config('request.jwt.claim.sub', 'b1000000-0000-4000-8000-000000000001', true);
 set local role authenticated;
 select is((public.get_plus_status()->>'active'), 'false', 'Plus is inactive before dummy invoice success');
+select lives_ok($$ select public.create_plus_billing_order('qris') $$, 'authenticated can create a dummy Plus invoice');
 select set_config('test.invoice', (public.create_plus_billing_order('qris')->>'id'), true);
 select is((select status from public.billing_orders where billing_order_id = current_setting('test.invoice')::uuid), 'pending', 'dummy invoice starts pending');
 select is((public.simulate_plus_billing(current_setting('test.invoice')::uuid, 'succeeded')->>'status'), 'succeeded', 'dummy success activates Plus');

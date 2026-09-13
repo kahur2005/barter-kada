@@ -1,5 +1,5 @@
 begin;
-select plan(17);
+select plan(21);
 
 select has_column('public', 'reviews', 'store_id', 'reviews can target a store separately from its owner');
 select ok(exists (select 1 from pg_catalog.pg_index where indexrelid = 'reviews_store_recent_idx'::regclass), 'store reviews have a recent index');
@@ -11,6 +11,10 @@ select ok(exists (select 1 from pg_catalog.pg_trigger where tgname = 'reviews_sc
 select ok(exists (select 1 from pg_catalog.pg_constraint where conname = 'reviews_store_id_fkey'), 'store review target is foreign-keyed');
 select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'search_stores'), 'store search projection exists');
 select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'get_store'), 'store detail projection exists');
+select ok(has_function_privilege('anon', 'private.store_public_visible(uuid)', 'execute'), 'anonymous store discovery can evaluate public visibility');
+select ok(has_function_privilege('authenticated', 'private.store_public_visible(uuid)', 'execute'), 'authenticated store discovery can evaluate public visibility');
+select ok(has_function_privilege('anon', 'private.store_reputation_json(uuid)', 'execute'), 'anonymous store discovery can include reputation');
+select ok(has_function_privilege('authenticated', 'private.store_reputation_json(uuid)', 'execute'), 'authenticated store discovery can include reputation');
 select ok(exists (select 1 from pg_catalog.pg_attribute where attrelid = 'public.reviews'::regclass and attname = 'subject_id'), 'seller identity remains available for replies');
 select ok(exists (select 1 from pg_catalog.pg_attribute where attrelid = 'public.reviews'::regclass and attname = 'transaction_id'), 'review remains tied to a completed transaction');
 select ok(exists (select 1 from pg_catalog.pg_proc where proname = 'reply_review'), 'store owners can use scoped review replies');
