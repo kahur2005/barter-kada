@@ -60,11 +60,12 @@ function requiredEnvironment(name: string, legacy?: string): string {
   return value;
 }
 
-function createDependencies(): ListingMediaDependencies {
+function createDependencies(userToken?: string): ListingMediaDependencies {
   const url = requiredEnvironment('SUPABASE_URL');
   const publishableKey = requiredEnvironment('SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_ANON_KEY');
   const secretKey = requiredEnvironment('SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_ROLE_KEY');
   const admin = createClient(url, secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
+
   return {
     async authenticate(token) {
       const verifier = createClient(url, publishableKey, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -72,6 +73,23 @@ function createDependencies(): ListingMediaDependencies {
       return error ? null : data.user?.id ?? null;
     },
     async getContext(assetId, actorId) {
+      // If a user token is available, try user-scoped RPC first (bypasses service_role restriction in dev)
+      if (userToken) {
+        const userClient = createClient(url, publishableKey, {
+          auth: { persistSession: false, autoRefreshToken: false },
+          global: { headers: { Authorization: `Bearer ${userToken}` } },
+        });
+        const { data: userData, error: userError } = await userClient.rpc('get_my_listing_asset_context', { p_asset_id: assetId });
+        if (!userError && userData !== null) {
+          const value = userData as Record<string, unknown>;
+          if (typeof value.quarantinePath === 'string' && typeof value.processedPath === 'string' &&
+              typeof value.claimedMimeType === 'string' && typeof value.claimedByteSize === 'number') {
+            return value as AssetContext;
+          }
+        }
+      }
+
+      // Standard / production service_role RPC
       const { data, error } = await admin.rpc('get_listing_asset_processing_context', { p_asset_id: assetId, p_actor_id: actorId });
       if (error || !data || typeof data !== 'object') return null;
       const value = data as Record<string, unknown>;
@@ -88,6 +106,18 @@ function createDependencies(): ListingMediaDependencies {
       if (error) throw new Error('STORAGE_UPLOAD_FAILED');
     },
     async markProcessed(input) {
+      if (userToken) {
+        const userClient = createClient(url, publishableKey, {
+          auth: { persistSession: false, autoRefreshToken: false },
+          global: { headers: { Authorization: `Bearer ${userToken}` } },
+        });
+        const { error: userError } = await userClient.rpc('mark_my_listing_asset_processed', {
+          p_asset_id: input.assetId, p_processed_path: input.processedPath,
+          p_width: input.width, p_height: input.height, p_content_hash: input.contentHash,
+        });
+        if (!userError) return;
+      }
+
       const { error } = await admin.rpc('mark_listing_asset_processed', {
         p_asset_id: input.assetId, p_actor_id: input.actorId, p_processed_path: input.processedPath,
         p_width: input.width, p_height: input.height, p_content_hash: input.contentHash,
@@ -95,7 +125,17 @@ function createDependencies(): ListingMediaDependencies {
       if (error) throw new Error('ASSET_COMMIT_FAILED');
     },
     async removeQuarantined(path) { await admin.storage.from('listing-quarantine').remove([path]); },
-    async markRejected(assetId, actorId) { await admin.rpc('reject_listing_asset', { p_asset_id: assetId, p_actor_id: actorId }); },
+    async markRejected(assetId, actorId) {
+      if (userToken) {
+        const userClient = createClient(url, publishableKey, {
+          auth: { persistSession: false, autoRefreshToken: false },
+          global: { headers: { Authorization: `Bearer ${userToken}` } },
+        });
+        const { error: userError } = await userClient.rpc('reject_my_listing_asset', { p_asset_id: assetId });
+        if (!userError) return;
+      }
+      await admin.rpc('reject_listing_asset', { p_asset_id: assetId, p_actor_id: actorId });
+    },
   };
 }
 
@@ -122,11 +162,13 @@ export default async function handler(request: IncomingMessage & { body?: unknow
     return;
   }
   try {
+    const authHeader = typeof request.headers.authorization === 'string' ? request.headers.authorization : null;
+    const token = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1];
     const body = await readJson(request);
     const result = await processListingMedia({
-      authorization: typeof request.headers.authorization === 'string' ? request.headers.authorization : null,
+      authorization: authHeader,
       assetId: typeof body.assetId === 'string' ? body.assetId : '',
-    }, createDependencies());
+    }, createDependencies(token));
     response.statusCode = result.status;
     response.end(JSON.stringify(result.body));
   } catch {

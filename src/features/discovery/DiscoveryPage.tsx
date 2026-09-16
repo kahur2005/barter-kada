@@ -49,7 +49,51 @@ export function DiscoveryPage() {
     <form className="search-form" role="search" onSubmit={e => { e.preventDefault(); const input = new FormData(e.currentTarget).get('query')?.toString().trim().slice(0, 120) ?? ''; apply({ ...query, query: input, sort: input ? 'relevance' : 'newest', cursor: null }); }}>
       <label htmlFor={inputId} className="sr-only">Cari barang, makanan, atau toko</label><Icon name="search" /><input key={stateKey} id={inputId} type="search" name="query" defaultValue={query.query} placeholder="Cari barang, makanan, atau toko" maxLength={120} /><button className="button" type="submit">Cari</button>
     </form>
-    <nav className="discovery-tabs" aria-label="Jenis hasil"><Link className={!isStores ? 'selected' : ''} aria-current={!isStores ? 'page' : undefined} to={`/?${params}`}>Barang</Link><Link className={isStores ? 'selected' : ''} aria-current={isStores ? 'page' : undefined} to={`/stores?${params}`}>Toko sekitar</Link></nav>
+    <nav className="discovery-tabs" aria-label="Jenis hasil">
+      <Link className={!isStores ? 'selected' : ''} aria-current={!isStores ? 'page' : undefined} to={`/?${params}`}>Barang</Link>
+      <Link className={isStores ? 'selected' : ''} aria-current={isStores ? 'page' : undefined} to={`/stores?${params}`}>Toko sekitar</Link>
+    </nav>
+
+    {!isStores && (
+      <div className="quick-chips-row" role="region" aria-label="Filter cepat">
+        <button
+          type="button"
+          className={`chip-btn ${!query.mode && !query.fulfillment ? 'active' : ''}`}
+          onClick={() => apply({ ...query, mode: null, fulfillment: null, cursor: null })}
+        >
+          Semua
+        </button>
+        <button
+          type="button"
+          className={`chip-btn ${query.mode === 'barter' ? 'active' : ''}`}
+          onClick={() => apply({ ...query, mode: query.mode === 'barter' ? null : 'barter', cursor: null })}
+        >
+          <Icon name="repeat" size={16} /> Bisa Barter
+        </button>
+        <button
+          type="button"
+          className={`chip-btn ${query.mode === 'free' ? 'active' : ''}`}
+          onClick={() => apply({ ...query, mode: query.mode === 'free' ? null : 'free', cursor: null })}
+        >
+          <Icon name="gift" size={16} /> Gratis
+        </button>
+        <button
+          type="button"
+          className={`chip-btn ${query.fulfillment === 'ready_stock' ? 'active' : ''}`}
+          onClick={() => apply({ ...query, fulfillment: query.fulfillment === 'ready_stock' ? null : 'ready_stock', cursor: null })}
+        >
+          <Icon name="package" size={16} /> Ready Stock
+        </button>
+        <button
+          type="button"
+          className={`chip-btn ${query.fulfillment === 'preorder' ? 'active' : ''}`}
+          onClick={() => apply({ ...query, fulfillment: query.fulfillment === 'preorder' ? null : 'preorder', cursor: null })}
+        >
+          <Icon name="clock" size={16} /> Pre-order
+        </button>
+      </div>
+    )}
+
     <div className="discovery-layout">
       <aside className="discovery-sidebar">
         <h2 className="sidebar-title">Jelajahi kategori</h2><nav aria-label="Kategori" className="category-directory">{categories.map(c => <button key={c.id} className={query.category === c.id ? 'selected' : ''} onClick={() => apply({ ...query, category: query.category === c.id ? null : c.id, cursor: null })}><Icon name={categoryIcons[c.id]} /><span>{c.name}</span></button>)}</nav>
