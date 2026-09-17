@@ -1,0 +1,6 @@
+Use case: ui-mockup
+Asset type: polished portrait mobile web screen, approximately 390×844, for a neighborhood marketplace
+Primary request: High-fidelity shippable UI mockup for Barter’s final listing review before publishing.
+Subject: One complete mobile screen with Indonesian listing-review copy, a synthetic wooden-chair photo, explicit privacy messaging, and a fixed publish action.
+Direction: Satu Barang Satu Layar, translating a full-viewport vertical media surface into a trustworthy form review rather than a social feed. Near-black #111318, white #FFFFFF, electric lime #D6FF4B, coral #FF7A59. Let one large item image own the upper viewport, place the four wizard stages on a compact right rail, keep facts explicit below, and use a fixed lime publish action.
+Constraints: practical operational review screen; portrait viewport; no engagement controls; no unrelated logos; no watermark.
