@@ -8,11 +8,13 @@ Acuan produk: [PRD v1.3](./PRD.md)
 Target: demo terintegrasi, 9 hari × 3 jam; belum menerima transaksi nyata  
 Lingkup perubahan saat penyusunan RFC: dokumentasi saja
 
+Catatan superseding 15 September 2026: rancangan OpenWA/OTP WhatsApp pada snapshot RFC ini sudah dibatalkan. Implementasi aktif memakai Supabase Auth email/password atau Google OAuth, dan onboarding selesai setelah nama serta lokasi tersimpan. Bagian yang menyebut OTP/OpenWA dibaca sebagai sejarah rancangan, bukan dependency atau acceptance criteria aktif.
+
 Lampiran normatif rancangan: [Matriks PRD → RFC → data/API → tes → prioritas demo](./RFC-001-matriks-cakupan.md). Revisi 1.1 melengkapi rincian di bagian 21–25. Persetujuan pengguna untuk melengkapi dokumen tidak diperlakukan sebagai persetujuan otomatis D-01–D-16 atau kebijakan produk lain yang masih terbuka. Seluruh tes dalam dokumen ini masih rencana.
 
 ## 1. Ringkasan keputusan
 
-RFC ini mengusulkan aplikasi React + TypeScript + Vite di Vercel, dengan Supabase Auth, PostgreSQL, Storage, Realtime, Edge Functions, dan Cron. OpenWA milik rmyndharis berjalan sebagai layanan terpisah untuk mengirim OTP WhatsApp.
+RFC ini mengusulkan aplikasi React + TypeScript + Vite di Vercel, dengan Supabase Auth, PostgreSQL, Storage, Realtime, Edge Functions, dan Cron. Tidak ada provider OTP atau layanan WhatsApp yang menjadi dependency aplikasi aktif.
 
 Aturan transaksi dijalankan melalui fungsi database yang atomik. Browser tidak boleh langsung mengubah status kesepakatan, reservasi, penerimaan pembayaran, verifikasi nomor, sanksi, atau hak Plus. Realtime membantu memperbarui tampilan; database tetap menjadi sumber kebenaran.
 
@@ -27,7 +29,7 @@ Keputusan teknis di RFC ini adalah rekomendasi yang dapat diimplementasikan. Per
 - Mengubah keputusan PRD menjadi batas modul, model data, perintah, dan aturan perubahan status yang jelas.
 - Menjamin persetujuan berlaku atas penawaran yang benar-benar dilihat pengguna.
 - Mencegah barang/kuota yang sama disepakati melebihi ketersediaan.
-- Menjaga lokasi, nomor HP, chat, dan bukti transaksi sesuai hak akses.
+- Menjaga lokasi, data kontak opsional, chat, dan bukti transaksi sesuai hak akses.
 - Memisahkan transaksi antar pengguna dari pembayaran langganan platform.
 - Memungkinkan demo lintas akun dengan status yang tersimpan, bukan simulasi tampilan semata.
 
@@ -45,7 +47,7 @@ Rekomendasi berikut membuat rancangan dapat ditinjau dan dihitung. Saat diputusk
 
 | ID | Rekomendasi RFC | Dampak / hal yang perlu ditinjau |
 | --- | --- | --- |
-| D-01 | Profil wajib nama, nomor terverifikasi, area administratif, dan titik peta; alamat jalan opsional | PRD belum mengunci tingkat detail alamat |
+| D-01 | Profil wajib nama, area administratif, dan titik peta; data kontak opsional; alamat jalan opsional | PRD belum mengunci tingkat detail alamat |
 | D-02 | Pengunjung boleh membaca penawaran; publikasi hanya di Jabodetabek; pilihan radius 5/10/20/50 km | Area akun di luar cakupan tidak otomatis ditolak; radius berbasis lokasi perkiraan |
 | D-03 | Revisi setelah Disepakati boleh dibuka sebelum penyerahan dan sebelum pembayaran tercatat; persetujuan direset, reservasi lama dipertahankan sampai revisi diterima/dibatalkan | Sesudah pembayaran tercatat, demo memakai permintaan perubahan lewat chat/admin; editor langsung dinonaktifkan, bukan mengubah tagihan lama |
 | D-04 | Produk berkuota boleh diedit untuk penawaran baru; pesanan yang sudah ada tetap memakai snapshot lama | Menghindari semua katalog PO terkunci karena satu pesanan |
@@ -54,7 +56,7 @@ Rekomendasi berikut membuat rancangan dapat ditinjau dan dihitung. Saat diputusk
 | D-07 | Setelah Plus habis, chat lama terbuka tetapi toko tidak boleh menerima kesepakatan baru; transaksi yang sudah disepakati tetap berjalan | Draft negosiasi tersimpan, menunggu Plus aktif kembali |
 | D-08 | Blokir mencegah chat/negosiasi baru; kanal transaksi aktif dan sengketa tetap tersedia dengan pembatasan kontekstual | Ban memberi akses hanya ke penyelesaian kasus sendiri, bukan kegiatan marketplace |
 | D-09 | Admin melihat pesan bertag transaksi yang dilaporkan dan pesan yang secara eksplisit dilampirkan sebagai bukti | Chat umum atau transaksi lain tidak otomatis terbuka; permintaan bukti tambahan dicatat |
-| D-10 | OTP 6 digit, 5 menit, resend 60 detik, maksimal 5 salah per challenge | Tambahkan batas per akun/nomor/IP; gagal terkirim tidak memverifikasi nomor |
+| D-10 | Tidak ada verifikasi OTP pada onboarding versi aktif | Data nomor/OTP legacy tidak dipakai untuk menentukan akses akun |
 | D-11 | Gambar maksimum 8 per listing/barang, 5 MB per unggahan; JPEG/PNG/WebP | Dibutuhkan pengolahan server untuk menghapus metadata lokasi; tidak ada video/PDF dalam demo |
 | D-12 | Minimum PO memakai satuan homogen; DP 1–100% atau tidak ada, dibulatkan ke atas ke rupiah utuh | Paket dan pcs berbeda tidak dijumlahkan sebagai satu minimum |
 | D-13 | Setelah penerimaan pertama, status biasa tidak boleh selesai jika ada sengketa terbuka | Keputusan admin memiliki rekam terpisah, tidak memalsukan klik pengguna |
@@ -71,11 +73,9 @@ flowchart LR
   U[Browser mobile atau desktop] --> V[React SPA di Vercel]
   V --> A[Supabase Auth]
   V --> Q[Data API: read dengan RLS dan RPC]
-  V --> E[Edge Functions: OTP, media, billing demo]
+  V --> E[Edge Functions: media, billing demo]
   Q --> D[(PostgreSQL: transaksi dan PostGIS)]
   E --> D
-  E --> W[OpenWA di host terpisah]
-  W --> WA[WhatsApp OTP]
   D --> R[Realtime: data yang boleh dibaca]
   R --> V
   V --> S[Storage privat via izin atau URL sementara]
@@ -91,12 +91,11 @@ flowchart LR
 | Server state | TanStack Query | Cache, refetch setelah mutasi/reconnect, pagination; cache bukan sumber hak akses |
 | Form | React Hook Form + Zod | Validasi input dan pesan field; backend tetap memvalidasi ulang |
 | Backend domain | PostgreSQL functions via Supabase RPC | Satu transaksi untuk persetujuan, stok, audit, dan notifikasi |
-| External I/O | Supabase Edge Functions | OTP/OpenWA, pemrosesan media, dan adapter billing dummy |
+| External I/O | Supabase Edge Functions | Pemrosesan media dan adapter billing dummy |
 | Auth | Supabase Auth | Email/password dan Google OAuth sesuai PRD |
 | Chat live | Supabase Postgres Changes | Volume demo terbatas; pesan disimpan sebelum dikirim ke pelanggan Realtime |
 | Geo | PostGIS + data wilayah layanan | Filter jarak dan batas layanan tanpa mesin pencarian terpisah |
 | Scheduled work | Supabase Cron | Pengingat, kedaluwarsa status turunan, pembukaan ulasan |
-| OTP delivery | rmyndharis/OpenWA via HTTPS | Provider yang dipilih pengguna; bukan @open-wa/wa-automate |
 | Pengujian | Vitest, pgTAP atau integration tests SQL, Playwright | Unit angka, otorisasi/race database, dan alur dua browser |
 
 Vercel mendukung deployment Vite; rancangan menggunakan build SPA dan rewrite rute aplikasi ke entry HTML. Rute fungsi backend berada di Supabase, sehingga tidak membutuhkan server Express tambahan di Vercel. Trade-off: SEO dan preview sosial dinamis per listing belum menjadi keluaran demo. Jika dibutuhkan saat publik, evaluasi prerender/SSR secara terpisah. [Dokumentasi Vite di Vercel](https://vercel.com/docs/frameworks/frontend/vite).

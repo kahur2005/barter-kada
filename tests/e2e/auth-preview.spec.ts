@@ -14,6 +14,6 @@ test('preview auth is explicit, nonfunctional, and responsive', async ({ page })
 test('preview onboarding never invents profile, location, or verified phone state', async ({ page }) => {
   await page.goto('/onboarding');
   await expect(page.getByRole('heading', { name: 'Onboarding tidak aktif di mode contoh' })).toBeVisible();
-  await expect(page.getByText(/menyimpan profil, lokasi privat, dan verifikasi nomor nyata/)).toBeVisible();
+  await expect(page.getByText(/menyimpan profil dan lokasi privat/)).toBeVisible();
   await expect(page.getByText(/Akun siap digunakan/)).toHaveCount(0);
 });

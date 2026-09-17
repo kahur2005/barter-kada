@@ -6,10 +6,12 @@ Mulai: 11 September 2026. Baseline: `187af23`. Branch: `feat/barter-webapp`, fol
 
 ## Status dan bukti
 
+Perubahan 15 September 2026: OpenWA/OTP dicabut dari alur aplikasi. Email/password dan Google tetap menjadi jalur login; onboarding kini selesai setelah profil dan lokasi tersimpan. Migration `20260915120456_remove_openwa_otp_requirement.sql` sudah diterapkan ke project Supabase `barter`. Tabel OTP legacy tidak dihapus agar data historis tetap aman, tetapi Edge Function dan adapter OpenWA sudah dihapus dari repository serta tidak lagi dipanggil.
+
 | Tahap | Keluaran | Acuan | Status |
 | --- | --- | --- | --- |
 | 1 | React/Vite/TypeScript, shell mobile, penemuan/detail/toko read-only, adapter API, test harness | PDR UI-01/02, T-27/46/55 | Selesai dan diverifikasi sebagai fondasi read-only; backend belum terhubung |
-| 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat dan OTP OpenWA | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Profil/lokasi privat dengan pemuatan ulang alamat/patokan owner-scoped, OTP OpenWA, pengeditan data diri, pembaruan lokasi, dan penggantian nomor melalui OTP `change_phone` sudah memiliki UI/gateway; SQL/Edge runtime serta pengiriman nyata belum terverifikasi karena Docker, Deno, credential, dan polygon resmi belum tersedia |
+| 2 | Supabase lokal/demo, schema/grants/RLS, auth Google/email, profil/lokasi privat | PRD 3–5, RFC 5/11/12, T-01/12/20/21/22/23 | Profil/lokasi privat dengan pemuatan ulang alamat/patokan owner-scoped dan pengeditan data diri sudah memiliki UI/gateway; migration onboarding tanpa OTP sudah diterapkan ke Supabase Barter |
 | 3 | Listing draft/publish/edit/archive, varian, upload/EXIF dan pengelolaan foto, discovery PostGIS dan katalog | PRD 7/8/11, T-24/25/26/27/34/35 | Diimplementasikan untuk listing personal dan konteks publisher owner, termasuk foto utama, hapus foto, dan retry upload; verifikasi runtime Supabase tertahan Docker dan store catalogue menunggu tahap Plus |
 | 4 | Chat persisted/realtime, read cursor, notification center dan block policy | PRD 13, T-13/16/39/40/41 | Chat privat, media, read cursor, Realtime invalidation, in-app notification center, event notification server-side, dan idempotent reminder worker diimplementasikan; runtime Supabase belum diverifikasi |
 | 5 | Barter versioned, dua siap/dua setuju, atomic inventory, penerimaan/topup/cancel | PRD 9/14, T-02/03/04/14/15/29/30/31 | Diimplementasikan dan unit-tested; runtime Supabase/pgTAP masih tertahan Docker |

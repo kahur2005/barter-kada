@@ -43,7 +43,7 @@ export function RegisterPage() {
   return <section className="auth-card" aria-labelledby="register-title">
     <BackLink to="/">Kembali ke beranda</BackLink>
     <p className="eyebrow">Mulai dari sekitar</p><h1 id="register-title">Buat akun Barter</h1>
-    <p>Setelah mendaftar, lengkapi nama, area, dan verifikasi WhatsApp. Pengguna Google tidak perlu membuat kata sandi Barter.</p>
+    <p>Setelah mendaftar, lengkapi nama dan area. Pengguna Google tidak perlu membuat kata sandi Barter.</p>
     {error && <p className="form-alert" role="alert">{error}</p>}
     {message && <p className="success-notice" role="status">{message}</p>}
     <form className="stack-form" onSubmit={submit} noValidate>

@@ -10,7 +10,7 @@ import type { ListingGateway } from './gateway';
 
 const repository = createPreviewRepository([], []);
 const auth: AuthGateway = { getSession: vi.fn().mockResolvedValue({ userId: '10000000-0000-4000-8000-000000000001', email: null }), subscribe: vi.fn(() => () => undefined), signInWithPassword: vi.fn(), signUpWithPassword: vi.fn(), signInWithGoogle: vi.fn(), signOut: vi.fn() };
-const onboarding: OnboardingGateway = { getState: vi.fn().mockResolvedValue({ nextStep: 'complete', displayName: 'Rina', bio: null, areaId: 'depok', address: null, maskedPhone: null, phoneVerified: true }), listAreas: vi.fn(), completeProfile: vi.fn(), setLocation: vi.fn(), requestOtp: vi.fn(), verifyOtp: vi.fn() };
+const onboarding: OnboardingGateway = { getState: vi.fn().mockResolvedValue({ nextStep: 'complete', displayName: 'Rina', bio: null, areaId: 'depok', address: null, maskedPhone: null, phoneVerified: false }), listAreas: vi.fn(), completeProfile: vi.fn(), setLocation: vi.fn() };
 const listingGateway: ListingGateway = {
   saveDraft: vi.fn(), publish: vi.fn(), getMine: vi.fn(), uploadImage: vi.fn(), archive: vi.fn().mockResolvedValue(undefined),
   listMine: vi.fn().mockResolvedValue({ activeCount: 12, activeLimit: 20, items: [

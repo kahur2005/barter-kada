@@ -46,6 +46,11 @@ select is(
   'Privat',
   'owner onboarding projection returns the private address to its owner'
 );
+select is(
+  public.get_my_onboarding()->>'nextStep',
+  'complete',
+  'profile and location complete onboarding without WhatsApp verification'
+);
 select throws_ok(
   $$ select public.set_location('test-depok', -6.0, 107.0, null) $$,
   'P0001', 'LOCATION_OUTSIDE_SERVICE_AREA',

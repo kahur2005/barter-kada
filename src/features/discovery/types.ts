@@ -18,7 +18,7 @@ export const listingSchema = z.object({
   fulfillment: z.enum(['ready_stock', 'preorder', 'catering']), category: z.string(),
   condition: z.string(), defects: z.string(), priceMin: amount.nullable(), priceMax: amount.nullable(),
   unit: z.string(), negotiable: z.boolean(), barterPreferences: z.string().nullable(), area,
-  publisher: z.object({ id: z.string().uuid(), name: z.string(), storeSlug: z.string().nullable(), phoneVerified: z.boolean(), ...reputation }),
+  publisher: z.object({ id: z.string().uuid(), name: z.string(), storeSlug: z.string().nullable(), ...reputation }),
   images: z.array(image).max(8),
   variants: z.array(z.object({ id: z.string(), name: z.string(), price: amount, unit: z.string() })),
   preorder: z.object({ closesAt: z.string().datetime(), availableAt: z.string().datetime(), minimumQty: z.number().int().positive(), remainingQty: z.number().int().nonnegative().nullable(), dpPercent: z.number().int().min(1).max(100).nullable() }).nullable(),

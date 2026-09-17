@@ -5,7 +5,7 @@ export const listing = {
   priceMin: '150000', priceMax: '150000', unit: 'buah', negotiable: true,
   barterPreferences: 'Rak buku kecil atau tawaran lain.',
   area: { id: 'depok', name: 'Beji, Depok', distanceKm: 2 },
-  publisher: { id: '20000000-0000-4000-8000-000000000001', name: 'Dita', storeSlug: null, phoneVerified: false, rating: null, reviewCount: 0 },
+  publisher: { id: '20000000-0000-4000-8000-000000000001', name: 'Dita', storeSlug: null, rating: null, reviewCount: 0 },
   images: [], variants: [], preorder: null, catering: null,
   handoverMethods: ['pickup', 'meetup'], availability: 'available', promoted: false,
   createdAt: '2026-09-10T08:00:00Z',

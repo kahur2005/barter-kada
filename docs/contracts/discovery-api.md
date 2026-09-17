@@ -78,7 +78,6 @@ Tidak ada total hasil yang difabrikasi. Frontend menampilkan tombol “Tampilkan
     "id": "00000000-0000-4000-8000-000000000002",
     "name": "Dita",
     "storeSlug": null,
-    "phoneVerified": false,
     "rating": null,
     "reviewCount": 0
   },

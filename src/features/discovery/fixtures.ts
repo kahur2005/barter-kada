@@ -1,7 +1,7 @@
 import { listingSchema, storeSchema, type PublicListing } from './types';
 
 // Fictional catalogue at a fixed demonstration date, not live inventory or reputation.
-const person = { id: '20000000-0000-4000-8000-000000000001', name: 'Dita', storeSlug: null, phoneVerified: false, rating: null, reviewCount: 0 };
+const person = { id: '20000000-0000-4000-8000-000000000001', name: 'Dita', storeSlug: null, rating: null, reviewCount: 0 };
 const demoPhotos = {
   chair: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=1200&q=80',
   food: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80',

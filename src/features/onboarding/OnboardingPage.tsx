@@ -9,11 +9,10 @@ const profileInput = z.object({
   displayName: z.string().trim().min(2, 'Nama minimal 2 karakter.').max(80, 'Nama maksimal 80 karakter.'),
   bio: z.string().trim().max(500, 'Bio maksimal 500 karakter.'),
 });
-const otpCode = z.string().regex(/^\d{6}$/, 'Masukkan enam angka kode verifikasi.');
 
 function Steps({ active }: { active: OnboardingState['nextStep'] }) {
-  const steps = [['profile', 'Data diri'], ['location', 'Lokasi'], ['phone', 'Verifikasi WhatsApp']] as const;
-  const activeIndex = active === 'complete' ? 3 : steps.findIndex(([key]) => key === active);
+  const steps = [['profile', 'Data diri'], ['location', 'Lokasi']] as const;
+  const activeIndex = active === 'complete' ? steps.length : steps.findIndex(([key]) => key === active);
   return <ol className="onboarding-steps" aria-label="Tahap kelengkapan akun">{steps.map(([key, label], index) => <li key={key} className={index <= activeIndex ? 'reached' : ''} aria-current={key === active ? 'step' : undefined}><span>{index + 1}</span>{label}</li>)}</ol>;
 }
 
@@ -31,7 +30,7 @@ function ProfileStep({ state, save, editing = false }: { state: OnboardingState;
     catch { setError('Data diri belum dapat disimpan. Coba lagi.'); }
     finally { setPending(false); }
   }
-  return <section aria-labelledby="profile-title"><h2 id="profile-title">{editing ? 'Perbarui data diri' : 'Perkenalkan dirimu'}</h2><p>{editing ? 'Perubahan nama dan bio langsung tersimpan sebagai identitas publikmu.' : 'Nama ini terlihat oleh warga lain. Nomor WhatsApp dan alamat lengkap tetap privat.'}</p>
+  return <section aria-labelledby="profile-title"><h2 id="profile-title">{editing ? 'Perbarui data diri' : 'Perkenalkan dirimu'}</h2><p>{editing ? 'Perubahan nama dan bio langsung tersimpan sebagai identitas publikmu.' : 'Nama ini terlihat oleh warga lain. Nomor telepon dan alamat lengkap tetap privat.'}</p>
     {error && <p className="form-alert" role="alert">{error}</p>}
     <form className="stack-form" onSubmit={submit} noValidate>
       <label htmlFor="display-name">Nama yang ditampilkan</label><input id="display-name" name="displayName" defaultValue={state.displayName} autoComplete="name" maxLength={80} required />
@@ -77,48 +76,6 @@ function LocationStep({ state, areas, save, editing = false }: { state: Onboardi
   </section>;
 }
 
-function PhoneStep({ save, purpose = 'register' }: { save: (next: OnboardingState) => void; purpose?: 'register' | 'change_phone' }) {
-  const gateway = useOnboardingGateway()!;
-  const [challenge, setChallenge] = useState<{ id: string; resendAt: string } | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!challenge) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 1_000);
-    return () => window.clearInterval(timer);
-  }, [challenge]);
-  const waitSeconds = challenge ? Math.max(0, Math.ceil((Date.parse(challenge.resendAt) - now) / 1_000)) : 0;
-  async function request(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setError(null); setNotice(null); setPending(true);
-    const phone = String(new FormData(event.currentTarget).get('phone') ?? '');
-    try {
-      const result = await gateway.requestOtp({ phone, purpose });
-      setChallenge({ id: result.challengeId, resendAt: result.resendAt }); setNow(Date.now());
-      if (result.deliveryStatus === 'accepted') setNotice('Permintaan kode diterima OpenWA. Masukkan kode dari WhatsApp untuk memverifikasi nomor.');
-      else if (result.deliveryStatus === 'failed') setError('Penyedia menolak pengiriman. Periksa nomor lalu coba lagi setelah jeda.');
-      else setError('Status pengiriman belum pasti. Jangan meminta berulang kali; tunggu lalu coba verifikasi jika kode masuk.');
-    } catch { setError('Kode belum dapat diminta. Periksa nomor atau tunggu sebelum mencoba lagi.'); }
-    finally { setPending(false); }
-  }
-  async function verify(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setError(null);
-    const parsed = otpCode.safeParse(new FormData(event.currentTarget).get('code'));
-    if (!parsed.success || !challenge) { setError(parsed.success ? 'Minta kode terlebih dahulu.' : parsed.error.issues[0]?.message ?? 'Kode tidak valid.'); return; }
-    setPending(true);
-    try { save(await gateway.verifyOtp({ challengeId: challenge.id, code: parsed.data })); }
-    catch { setError('Kode salah, kedaluwarsa, atau sudah digunakan. Periksa lalu coba lagi.'); }
-    finally { setPending(false); }
-  }
-  const changing = purpose === 'change_phone';
-  return <section aria-labelledby="phone-title"><h2 id="phone-title">{changing ? 'Ganti nomor WhatsApp' : 'Verifikasi WhatsApp'}</h2><p>{changing ? 'Nomor lama tetap berlaku sampai nomor baru berhasil diverifikasi.' : 'Nomor dipakai untuk keamanan akun, bukan untuk login dan tidak dibagikan di listing.'}</p>
-    {error && <p className="form-alert" role="alert">{error}</p>}{notice && <p className="success-notice" role="status">{notice}</p>}
-    <form className="stack-form" onSubmit={request}><label htmlFor={changing ? 'new-phone' : 'phone'}>{changing ? 'Nomor WhatsApp baru' : 'Nomor WhatsApp'}</label><input id={changing ? 'new-phone' : 'phone'} name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="0812 3456 7890" required /><button className="button secondary" disabled={pending || waitSeconds > 0}>{pending ? 'Meminta…' : waitSeconds > 0 ? `Kirim ulang dalam ${waitSeconds} dtk` : challenge ? changing ? 'Kirim ulang ke nomor baru' : 'Kirim ulang kode' : changing ? 'Kirim kode ke nomor baru' : 'Kirim kode'}</button></form>
-    {challenge && <form className="stack-form otp-form" onSubmit={verify}><label htmlFor="otp-code">Kode verifikasi</label><input id="otp-code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required /><button className="button" disabled={pending}>Verifikasi nomor</button></form>}
-  </section>;
-}
-
 export function OnboardingPage() {
   const auth = useAuth(); const gateway = useOnboardingGateway();
   const [state, setState] = useState<OnboardingState | null>(null);
@@ -130,12 +87,12 @@ export function OnboardingPage() {
     Promise.all([gateway.getState(), gateway.listAreas()]).then(([next, list]) => { if (active) { setState(next); setAreas(list); } }).catch(() => { if (active) setLoadError(true); });
     return () => { active = false; };
   }, [auth.status, gateway]);
-  if (!auth.available) return <section className="status-panel"><h1>Onboarding tidak aktif di mode contoh</h1><p>Hubungkan Supabase untuk menyimpan profil, lokasi privat, dan verifikasi nomor nyata.</p><Link className="button secondary" to="/">Kembali ke beranda</Link></section>;
+  if (!auth.available) return <section className="status-panel"><h1>Onboarding tidak aktif di mode contoh</h1><p>Hubungkan Supabase untuk menyimpan profil dan lokasi privat.</p><Link className="button secondary" to="/">Kembali ke beranda</Link></section>;
   if (auth.status === 'loading') return <section className="status-panel" role="status"><h1>Memeriksa akun…</h1></section>;
   if (auth.status === 'guest') return <Navigate to="/auth/login?returnTo=%2Fonboarding" replace />;
   if (!gateway || loadError) return <section className="status-panel"><h1>Onboarding belum dapat dimuat</h1><p role="alert">Layanan profil tidak tersedia. Muat ulang halaman untuk mencoba lagi.</p></section>;
   if (!state) return <section className="status-panel" role="status"><h1>Memuat data akun…</h1></section>;
-  return <div className="onboarding-page"><header><p className="eyebrow">Satu akun, dua cara berjualan</p><h1>{state.nextStep === 'complete' ? 'Kelola akun' : 'Lengkapi akun'}</h1><p>{state.nextStep === 'complete' ? 'Perbarui identitas publik, lokasi privat, atau nomor WhatsApp tanpa mengubah transaksi yang sudah berjalan.' : 'Selesaikan tiga tahap ini sebelum memasang barang, membuka toko Plus, mengobrol, atau bertransaksi.'}</p></header><Steps active={state.nextStep} />
-    <div className={`onboarding-panel${state.nextStep === 'complete' ? ' account-settings' : ''}`}>{state.nextStep === 'profile' && <ProfileStep state={state} save={setState} />}{state.nextStep === 'location' && <LocationStep state={state} areas={areas} save={setState} />}{state.nextStep === 'phone' && <PhoneStep save={setState} />}{state.nextStep === 'complete' && <><ProfileStep state={state} save={setState} editing /><LocationStep state={state} areas={areas} save={setState} editing /><PhoneStep save={setState} purpose="change_phone" /><section className="completion-panel"><h2>Akun siap digunakan</h2><p>Profil, lokasi privat, dan nomor {state.maskedPhone ?? 'WhatsApp'} telah lengkap.</p><Link className="button" to="/">Lihat penawaran sekitar</Link></section></>}</div>
+  return <div className="onboarding-page"><header><p className="eyebrow">Satu akun, dua cara berjualan</p><h1>{state.nextStep === 'complete' ? 'Kelola akun' : 'Lengkapi akun'}</h1><p>{state.nextStep === 'complete' ? 'Perbarui identitas publik atau lokasi privat tanpa mengubah transaksi yang sudah berjalan.' : 'Selesaikan dua tahap ini sebelum memasang barang, membuka toko Plus, mengobrol, atau bertransaksi.'}</p></header><Steps active={state.nextStep} />
+    <div className={`onboarding-panel${state.nextStep === 'complete' ? ' account-settings' : ''}`}>{state.nextStep === 'profile' && <ProfileStep state={state} save={setState} />}{state.nextStep === 'location' && <LocationStep state={state} areas={areas} save={setState} />}{state.nextStep === 'complete' && <><ProfileStep state={state} save={setState} editing /><LocationStep state={state} areas={areas} save={setState} editing /><section className="completion-panel"><h2>Akun siap digunakan</h2><p>Profil dan lokasi privat telah lengkap. Nomor telepon tidak diperlukan untuk menggunakan Barter.</p><Link className="button" to="/">Lihat penawaran sekitar</Link></section></>}</div>
   </div>;
 }

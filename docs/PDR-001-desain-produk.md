@@ -111,7 +111,7 @@ Jangan memperbesar mobile menjadi grid kartu tiga kolom secara otomatis. Desktop
 | --- | --- | --- |
 | Penemuan | `/`, `/search`, `/stores` | Feed, filter, hasil produk/toko |
 | Detail publik | `/listings/:id`, `/stores/:slug` | Barang atau profil usaha dan katalog |
-| Masuk dan onboarding | Auth flow; `/onboarding` | Google/email, profil, lokasi, OTP; URL auth final mengikuti routing implementasi |
+| Masuk dan onboarding | Auth flow; `/onboarding` | Google/email, profil, lokasi; URL auth final mengikuti routing implementasi |
 | Kelola penawaran | `/listings/new`, `/my/listings`, `/my/stores` | Form, daftar milik sendiri, katalog toko |
 | Percakapan | Daftar Pesan; `/chat/:id` | Inbox, chat per listing, kartu transaksi |
 | Kesepakatan | `/transactions/:id` | Barter atau pesanan dengan snapshot dan riwayat |
@@ -188,17 +188,15 @@ Status tidak tersedia/reserved/PO tutup menjelaskan alasan dan meniadakan kesepa
 
 Profil toko: nama/foto → deskripsi singkat → reputasi toko → area dan jam → pilihan penyerahan → katalog dengan pencarian/filter sederhana sesuai kebutuhan katalog. Tidak memerlukan cover banner. Alamat lengkap tampil hanya bila toko secara eksplisit opt-in; tidak membuka alamat toko lain milik akun yang sama. Katalog memakai komponen list yang sama dengan feed tanpa mengarang promosi pada halaman toko.
 
-Badge “Nomor terverifikasi” menjelaskan verifikasi kepemilikan nomor, bukan “Penjual dijamin aman”. Plus menandakan langganan, bukan tingkat kepercayaan. Rating tanpa ulasan ditulis “Belum ada ulasan”, bukan 0 bintang.
+Tidak ada badge verifikasi nomor pada versi aktif. Plus menandakan langganan, bukan tingkat kepercayaan. Rating tanpa ulasan ditulis “Belum ada ulasan”, bukan 0 bintang.
 
-## 7. Masuk, profil, dan OTP — UI-03
+## 7. Masuk, profil, dan lokasi — UI-03
 
-Usulan guest browsing mengikuti Q-26. Masuk menawarkan Lanjutkan dengan Google atau email/password; jangan menambahkan login nomor/password yang tidak ditetapkan PRD. Nama dan WhatsApp dikumpulkan saat melengkapi profil, bukan diminta berulang pada login.
+Usulan guest browsing mengikuti Q-26. Masuk menawarkan Lanjutkan dengan Google atau email/password; jangan menambahkan login nomor/password yang tidak ditetapkan PRD. Nama dan lokasi dikumpulkan saat melengkapi profil, bukan diminta berulang pada login.
 
-Onboarding ditampilkan sebagai tiga bagian pendek dengan progress teks: Data diri → Lokasi → Verifikasi WhatsApp. Nama dari Google dapat ditinjau; pengguna Google tidak diminta membuat password. Email dan nomor diberi helper “Tidak ditampilkan di profil publik”. Pisahkan area publik dari detail alamat privat. Keputusan wajib/tidak wajib detail jalan mengikuti Q-01.
+Onboarding ditampilkan sebagai dua bagian pendek dengan progress teks: Data diri → Lokasi. Nama dari Google dapat ditinjau; pengguna Google tidak diminta membuat password. Email dan alamat diberi helper “Tidak ditampilkan di profil publik”. Pisahkan area publik dari detail alamat privat. Keputusan wajib/tidak wajib detail jalan mengikuti Q-01.
 
-Form OTP memakai satu input semantik yang dapat paste kode lengkap, numeric keyboard, dan autocomplete kode; boleh divisualkan bersegmen tanpa enam fokus terpisah. Nomor tujuan dimasking, tersedia Ubah nomor, status pengiriman, waktu kirim ulang dari server, error salah/kedaluwarsa, dan status gangguan pengiriman. Parameter mengikuti Q-27. Jangan menampilkan “Terverifikasi” hanya karena pesan berhasil dikirim.
-
-Nomor sudah dipakai tidak otomatis menautkan akun dan tidak mengungkap pemiliknya. Jalur pemulihan/reset password dan OTP gagal harus dirancang sebelum auth dinyatakan lengkap; jangan menawarkan fallback SMS yang belum tersedia (Q-03). Setelah sesi kedaluwarsa, login ulang mengembalikan konteks tanpa mengeksekusi tindakan sensitif sebelumnya.
+Jalur pemulihan/reset password tetap harus dirancang sebelum auth dinyatakan lengkap. Setelah sesi kedaluwarsa, login ulang mengembalikan konteks tanpa mengeksekusi tindakan sensitif sebelumnya.
 
 ## 8. Pasang dan kelola listing — UI-04
 
@@ -458,7 +456,7 @@ Hal berikut tetap memerlukan keputusan produk; desain di atas hanya menyediakan 
 | Topik | Referensi | Dampak sebelum implementasi final |
 | --- | --- | --- |
 | Guest, lokasi manual, alamat wajib, radius/blur | Q-01, Q-02, Q-04, Q-26 | Gate masuk, field onboarding, pilihan lokasi dan copy jarak |
-| Recovery dan parameter OTP | Q-03, Q-27 | State bantuan, retry, pembatasan dan pemulihan |
+| Recovery akun dan reset password | Q-03 | State bantuan, pemulihan, dan redirect email |
 | Kategori, media, profil toko, kuota parsial/batch | Q-07, Q-10, Q-15, Q-28 | Field wajib, uploader, edit katalog dan jadwal |
 | Batas akun, perpindahan listing/toko, siklus Plus | Q-05, Q-06, Q-08, Q-09 | Counter, editor penerbit, masa aktif, negosiasi saat expired |
 | Amend/refund, DP, ongkir gratis, harga tetap | Q-12, Q-13, Q-14, Q-16, Q-17, Q-31 | Tombol konfirmasi ulang, saldo, pembatalan dan pengembalian |

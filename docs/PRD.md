@@ -40,17 +40,12 @@ Pengguna utama adalah warga pembeli/penjual, usaha rumahan, pemilik toko Plus, d
 
 ## 4. Akun, autentikasi, dan profil
 
-### 4.1 Jalur masuk dan verifikasi
+### 4.1 Jalur masuk
 
 - Login melalui Google OAuth atau email/password menggunakan Supabase Auth.
-- Pengguna yang mendaftar melalui Google tetap wajib melengkapi nama, nomor HP, dan alamat/lokasi.
+- Pengguna yang mendaftar melalui Google tetap wajib melengkapi nama dan alamat/lokasi.
 - Akun Google tidak perlu membuat password Barter untuk menggunakan login Google.
-- Nomor HP diverifikasi melalui OTP WhatsApp dengan **rmyndharis/OpenWA**.
-- Satu nomor WhatsApp terverifikasi hanya dapat terhubung ke satu akun aktif.
-- Mengganti nomor memerlukan verifikasi nomor baru.
-- Nomor yang sudah digunakan tidak otomatis menggabungkan akun; diarahkan ke proses pemulihan akun.
-- Profil lengkap dan verifikasi nomor diperlukan sebelum memposting, mengirim chat, atau memulai transaksi.
-- Verifikasi nomor membuktikan penguasaan nomor, bukan verifikasi identitas hukum.
+- Profil dan lokasi lengkap diperlukan sebelum memposting, mengirim chat, atau memulai transaksi.
 
 ### 4.2 Data profil
 
@@ -58,20 +53,18 @@ Pengguna utama adalah warga pembeli/penjual, usaha rumahan, pemilik toko Plus, d
 | --- | --- | --- |
 | Nama | Wajib | Nama tampilan publik |
 | Email | Untuk akun email atau dari Google | Privat |
-| Nomor WhatsApp | Wajib, terverifikasi | Privat secara default |
+| Nomor telepon | Opsional | Privat secara default |
 | Alamat/lokasi | Wajib untuk konteks lingkungan | Publik hanya area perkiraan |
 | Foto profil dan bio | Usulan opsional | Publik jika diisi |
 | Status verifikasi, reputasi, Plus, sanksi | Dikelola sistem | Sesuai tujuan masing-masing |
 
 **Terbuka:** apakah alamat wajib cukup wilayah administratif dan titik peta atau mencakup jalan/nomor rumah. Rekomendasi brainstorming: area dan titik lokasi wajib, detail alamat rumah opsional. Rekomendasi ini perlu dikonfirmasi sebelum formulir final.
 
-### 4.3 Aturan OTP dan akses pengunjung
-
-**Usulan parameter awal:** kode 6 digit, masa berlaku 5 menit, sekali pakai, jeda kirim ulang 60 detik, serta batas percobaan dan pengiriman. Backend membuat dan memvalidasi kode; OpenWA hanya mengirim pesan. Keberhasilan pengiriman bukan bukti verifikasi nomor.
+### 4.3 Akses pengunjung
 
 **Usulan akses pengunjung:** feed, pencarian, detail listing, dan toko dapat dibuka tanpa login. Login diperlukan untuk aksi pribadi dan transaksi. Izin lokasi perangkat tidak wajib; lokasi bisa dipilih manual.
 
-**Terbuka:** pemulihan akun saat nomor lama hilang, penautan Google dengan akun email yang sudah ada, kebijakan nomor yang didaur ulang, penghapusan akun, dan perilaku ketika OTP tidak terkirim.
+**Terbuka:** penautan Google dengan akun email yang sudah ada, penghapusan akun, dan kebijakan pemulihan akun.
 
 ## 5. Privasi lokasi
 
@@ -304,7 +297,6 @@ Perubahan nama, detail, foto, jumlah/anggota paket barang, nominal uang, atau pi
 - Pusat notifikasi dalam aplikasi untuk pesan, perubahan barter, persetujuan, pesanan, tenggat DP, pembayaran, penyerahan, pembatalan, laporan, keputusan admin, dan Plus.
 - Setiap notifikasi menuju konteks terkait.
 - Pengingat tenggat dikirim sekali per tahap; bukan berulang tanpa batas.
-- WhatsApp hanya digunakan untuk OTP pada versi awal.
 - Tidak ada push notification; saat aplikasi ditutup belum ada pemberitahuan langsung aktivitas transaksi.
 - **Terbuka:** jarak waktu pengingat Plus/DP dan jadwal pengingat relatif terhadap tenggat.
 
@@ -357,24 +349,20 @@ Pilihan pengguna:
 - React untuk antarmuka.
 - Vercel untuk hosting aplikasi.
 - Supabase untuk autentikasi dan backend.
-- rmyndharis/OpenWA untuk pengiriman OTP WhatsApp.
 
 Usulan arsitektur untuk FRD:
 
 - Supabase Database, Storage, dan Realtime untuk data, lampiran, dan chat.
-- Backend memvalidasi tindakan sensitif: OTP, persetujuan, reservasi, kuota, pembayaran manual, hak Plus, dan sanksi. Validasi tidak boleh hanya dilakukan di tampilan.
-- OpenWA berjalan sebagai layanan terpisah dengan sesi tersimpan; kredensialnya hanya di backend.
+- Backend memvalidasi tindakan sensitif: persetujuan, reservasi, kuota, pembayaran manual, hak Plus, dan sanksi. Validasi tidak boleh hanya dilakukan di tampilan.
 - Identitas versi kesepakatan dan pembaruan ketersediaan yang tidak dapat bertabrakan dibutuhkan untuk persetujuan serta reservasi.
 - Data uji dan mode pembayaran dummy diberi penanda yang jelas.
 
-Belum ditentukan: framework/routing React, lokasi backend endpoint, hosting OpenWA, penyedia email produksi, penyedia peta/geocoding, versi dependensi, dan strategi pekerjaan terjadwal. Pemilihan teknis ini tidak boleh dianggap sudah diputuskan hanya karena tercantum sebagai kebutuhan.
+Belum ditentukan: penyedia email produksi, penyedia peta/geocoding, versi dependensi, dan strategi pekerjaan terjadwal. Pemilihan teknis ini tidak boleh dianggap sudah diputuskan hanya karena tercantum sebagai kebutuhan.
 
 Dokumentasi yang sudah ditinjau:
 
 - [Supabase email/password](https://supabase.com/docs/guides/auth/passwords)
 - [Supabase Google OAuth](https://supabase.com/docs/guides/auth/social-login/auth-google)
-- [Supabase phone auth](https://supabase.com/docs/guides/auth/phone-login) — referensi kemampuan; pengiriman yang dipilih pengguna adalah OpenWA.
-- [rmyndharis/OpenWA](https://github.com/rmyndharis/OpenWA) — proyek yang dipilih; bukan paket @open-wa/wa-automate.
 
 ## 17. Target demo 9 hari — usulan prioritas
 
@@ -382,7 +370,7 @@ Ini rancangan pembagian waktu, belum komitmen bahwa seluruh fitur produk selesai
 
 | Hari | Fokus yang diusulkan | Hasil yang ditinjau |
 | --- | --- | --- |
-| 1 | Fondasi aplikasi, model data inti, auth dan profil | Akun uji dapat masuk; keputusan integrasi OpenWA dan akses lingkungan jelas |
+| 1 | Fondasi aplikasi, model data inti, auth dan profil | Akun uji dapat masuk; akses lingkungan jelas |
 | 2 | Listing, lokasi, feed dan pencarian | Penawaran uji dapat dibuat dan ditemukan sesuai area |
 | 3 | Chat dan kartu kesepakatan | Dua akun berkomunikasi dalam konteks listing |
 | 4 | Barter, revisi persetujuan, tambahan uang, reservasi | Demonstrasi dua pihak dari penawaran sampai penerimaan |
@@ -402,7 +390,6 @@ Pengujian yang diprioritaskan:
 - Pengguna tidak bisa mengonfirmasi pembayaran sebagai pihak lain.
 - Plus kedaluwarsa menyembunyikan toko tanpa menghilangkan transaksi berjalan.
 - Profil/koordinat privat dan chat pengguna lain tidak terbuka melalui akses langsung.
-- OTP salah/kedaluwarsa tidak memverifikasi nomor.
 - Laporan admin mempertahankan bukti dan keputusan tercatat.
 
 ## 18. Ukuran keberhasilan dan batas versi awal
@@ -431,7 +418,7 @@ Prioritas pembahasan selanjutnya:
 2. Data listing/form toko, kategori, foto, stok non-PO, dan siklus batch PO.
 3. Penyesuaian kesepakatan setelah reservasi atau DP sudah diterima.
 4. Blokir, ban, sengketa, banding, dan pengembalian barang/dana.
-5. Detail alamat, pemulihan akun, dan kegagalan OTP.
+5. Detail alamat dan pemulihan akun.
 6. Aturan operasional tersisa dan kriteria penerimaan per alur.
 
 Setelah keputusan tersebut cukup jelas, revisi PRD menjadi baseline yang disepakati lalu turunkan ke FRD: model data, state transition, otorisasi, API, pengujian, dan urutan implementasi. Belum ada kode aplikasi atau deployment yang dibuat sebagai bagian penyusunan draft ini.

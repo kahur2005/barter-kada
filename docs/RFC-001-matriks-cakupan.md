@@ -4,6 +4,8 @@ Versi: 1.1
 Tanggal: 11 September 2026  
 Status: pemetaan rancangan; implementasi dan tes belum dijalankan
 
+Catatan superseding 15 September 2026: matriks ini adalah snapshot rancangan sebelum OpenWA/OTP WhatsApp dibatalkan. R-020–R-025, R-032, R-171, dan butir stack yang mengacu OpenWA tidak lagi berlaku untuk implementasi aktif; onboarding sekarang selesai setelah profil dan lokasi tersimpan. Gunakan migration `20260915120456_remove_openwa_otp_requirement.sql` dan kontrak auth/profil/lokasi sebagai sumber terbaru.
+
 Acuan: [PRD v1.3](./PRD.md) dan [RFC-001 revisi 1.1](./RFC-001-arsitektur-barter.md). Snapshot PRD berasal dari commit `4f0d0221853c6ab35ada57065133157b1565800f`; L-n merujuk nomor baris snapshot tersebut, bukan nomor baris RFC. Dokumen ini tidak mengubah keputusan PRD.
 
 ## 1. Cara membaca dan batas klaim

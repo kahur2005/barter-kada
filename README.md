@@ -4,7 +4,7 @@ Marketplace lingkungan untuk jual beli, barter, pemberian gratis, dan pemasaran 
 
 ## Status
 
-Implementasi sedang berjalan pada fondasi React mobile-first. Discovery, detail listing, toko/katalog, Auth Supabase, onboarding privat, pengaturan profil/lokasi, penggantian nomor via OTP OpenWA, listing personal, pipeline foto, chat privat, barter versioned, order sale/free/PO, DP manual, toko Plus dummy, notifikasi, laporan/admin, review, analytics, amendment order, ledger refund offline, keputusan admin `return_required`, serta pengingat dan bantuan admin untuk transaksi yang menggantung telah dibuat serta unit-tested. Mode preview tetap read-only dan tidak membuat data transaksi palsu. Backend lokal, delivery OpenWA nyata, dan deployment Supabase/Vercel belum diverifikasi pada environment ini karena Docker Linux Engine dan kredensial proyek belum tersedia.
+Implementasi sedang berjalan pada fondasi React mobile-first. Discovery, detail listing, toko/katalog, Auth Supabase, onboarding privat, pengaturan profil/lokasi, listing personal, pipeline foto, chat privat, barter versioned, order sale/free/PO, DP manual, toko Plus dummy, notifikasi, laporan/admin, review, analytics, amendment order, ledger refund offline, keputusan admin `return_required`, serta pengingat dan bantuan admin untuk transaksi yang menggantung telah dibuat serta unit-tested. Mode preview tetap read-only dan tidak membuat data transaksi palsu. Backend lokal dan deployment Supabase/Vercel belum diverifikasi pada environment ini karena Docker Linux Engine dan kredensial proyek belum tersedia.
 
 Target awal tetap demo terintegrasi selama 9 hari × 3 jam, bukan peluncuran transaksi nyata. Pembayaran langganan Plus masih berupa simulasi.
 
@@ -26,7 +26,7 @@ VITE_SUPABASE_URL=https://PROJECT_REF.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-Jangan memasukkan service role key, secret key, kredensial OpenWA, atau data pengguna ke variabel `VITE_*`. Tanpa konfigurasi publik yang valid, aplikasi menampilkan petunjuk setup dan tidak berpura-pura tersambung.
+Jangan memasukkan service role key, secret key, atau data pengguna ke variabel `VITE_*`. Tanpa konfigurasi publik yang valid, aplikasi menampilkan petunjuk setup dan tidak berpura-pura tersambung.
 
 Pemroses foto listing berjalan sebagai Vercel Function. Konfigurasikan `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, dan `SUPABASE_SECRET_KEY` sebagai environment server-only di Vercel; hanya fungsi tersebut yang boleh membaca secret key. Browser mengunggah file ke bucket karantina privat melalui RLS, kemudian fungsi memvalidasi dan mengubahnya menjadi WebP tanpa metadata sebelum dapat dipakai listing.
 
@@ -59,7 +59,7 @@ Tes browser memakai Microsoft Edge melalui Playwright secara default. Untuk Chro
 - [Matriks cakupan RFC-001](docs/RFC-001-matriks-cakupan.md): pemetaan butir PRD ke rancangan, data/API, tes, dan prioritas demo.
 - [PDR-001 — Desain produk](docs/PDR-001-desain-produk.md): usulan desain mobile-first terinspirasi Craigslist, fondasi visual, wireframe, spesifikasi layar, dan kriteria penerimaan UI.
 - [Kontrak discovery](docs/contracts/discovery-api.md): payload publik dan RPC provisional yang harus diimplementasikan backend Supabase.
-- [Kontrak auth/profil/OTP](docs/contracts/auth-profile-otp.md): trust boundary, RPC, Edge Function, dan status verifikasinya.
+- [Kontrak auth/profil/lokasi](docs/contracts/auth-profile-otp.md): trust boundary dan RPC kelengkapan akun.
 - [Status implementasi](docs/IMPLEMENTATION.md): urutan subsystem, bukti, dan pekerjaan yang masih terbuka.
 
 Dokumen masih berupa draft. Keputusan yang belum final ditandai di dalam dokumen. Pemetaan kebutuhan dan skenario tes belum berarti implementasi atau pengujiannya sudah selesai.
@@ -68,7 +68,6 @@ Dokumen masih berupa draft. Keputusan yang belum final ditandai di dalam dokumen
 
 - React, TypeScript, Vite, dan Vercel.
 - Supabase untuk autentikasi dan backend.
-- [rmyndharis/OpenWA](https://github.com/rmyndharis/OpenWA) untuk pengiriman OTP WhatsApp.
 - React Router, TanStack Query, Zod, Vitest, Testing Library, dan Playwright pada fondasi aplikasi.
 
 ## Kontribusi
