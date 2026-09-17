@@ -3,14 +3,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { Dialog } from '../../components/Dialog';
 import { StatusPanel } from '../../components/StatusPanel';
+import { Icon } from '../../components/Icon';
 import { formatRupiah } from '../../lib/money';
+import { useToast } from '../../components/Toast';
 import { StuckTransactionPanel } from '../shared/StuckTransactionPanel';
 import { useTradeGateway } from './TradeContext';
 import type { TradeItem, TradeRoom } from './types';
 
 function Package({ title, status, items }: { title: string; status: string; items: TradeItem[] }) {
+  const badgeClass = status === 'Setuju' ? 'badge badge-success' : status === 'Siap' ? 'badge badge-info' : 'badge badge-warning';
   return <section className="trade-package">
-    <header><h2>{title}</h2><span className="label">{status}</span></header>
+    <header><h2>{title}</h2><span className={badgeClass}>{status}</span></header>
     {items.map(item => <article key={item.id} className="trade-item">
       {item.photos[0]?.url ? <img src={item.photos[0].url} alt="" /> : <div className="image-fallback">Foto privat</div>}
       <div><h3>{item.name} · {item.quantity} {item.quantity === 1 ? 'buah' : 'unit'}</h3><p>{item.details}</p><span>{item.source === 'listing' ? 'Dari listing' : 'Hanya di ruang barter'}</span></div>
@@ -44,6 +47,7 @@ function TradeActions({ room, onApprove, onReceive, onTopup, onCancel, pending }
 
 export function TradeRoomPage() {
   const { id = '' } = useParams(); const gateway = useTradeGateway(); const client = useQueryClient();
+  const { showToast } = useToast();
   const [dialog, setDialog] = useState<'approve' | 'receive' | 'topup' | 'cancel' | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [commandKey, setCommandKey] = useState<string | null>(null);
@@ -58,7 +62,21 @@ export function TradeRoomPage() {
       if (kind === 'topup') return gateway!.acknowledgeTopup(id, room.acceptedRevision ?? room.revision, key);
       return gateway!.cancel(id, room.revision, cancelReason.trim(), key);
     },
-    onSuccess: data => { client.setQueryData(['trade', id], data); setDialog(null); setCancelReason(''); setCommandKey(null); void client.invalidateQueries({ queryKey: ['chat', data.conversationId, 'messages'] }); },
+    onSuccess: (data, variables) => {
+      client.setQueryData(['trade', id], data);
+      setDialog(null);
+      setCancelReason('');
+      setCommandKey(null);
+      if (variables.kind === 'ready') showToast('Status Siap dikonfirmasi', 'info');
+      else if (variables.kind === 'approve') showToast('Barter disetujui! Kesepakatan terkunci.', 'success');
+      else if (variables.kind === 'receive') showToast('Penerimaan barang dikonfirmasi', 'success');
+      else if (variables.kind === 'topup') showToast('Penerimaan tambahan uang dikonfirmasi', 'success');
+      else if (variables.kind === 'cancel') showToast('Barter telah dibatalkan', 'warning');
+      void client.invalidateQueries({ queryKey: ['chat', data.conversationId, 'messages'] });
+    },
+    onError: () => {
+      showToast('Aksi belum tersimpan. Silakan coba lagi.', 'error');
+    }
   });
   const adminHelp = useMutation({ mutationFn: (description: string) => gateway?.requestAdminHelp ? gateway.requestAdminHelp(id, description) : Promise.reject(new Error('Bantuan admin belum aktif.')), onSuccess: () => { void client.invalidateQueries({ queryKey: ['trade', id] }); } });
   function run(kind: 'ready' | 'approve' | 'receive' | 'topup' | 'cancel') {
@@ -73,7 +91,26 @@ export function TradeRoomPage() {
     else if (room.lifecycle === 'negotiating') setDialog('approve');
   };
   return <section className="trade-room">
-    <header className="trade-heading"><div><p className="eyebrow">Barter · Versi {room.revision}</p><h1>Barter dengan {room.counterpart.name}</h1><p>{room.lifecycle === 'negotiating' ? 'Susun dan tinjau paket yang sama sebelum menyetujui.' : 'Kesepakatan tersimpan sebagai snapshot.'}</p></div><Link className="text-button" to={`/chat/${room.conversationId}`}>Buka chat</Link></header>
+    <header className="trade-heading">
+      <div>
+        <p className="eyebrow">Barter · Versi {room.revision}</p>
+        <h1>Barter dengan {room.counterpart.name}</h1>
+        <p>{room.lifecycle === 'negotiating' ? 'Susun dan tinjau paket yang sama sebelum menyetujui.' : 'Kesepakatan tersimpan sebagai snapshot.'}</p>
+      </div>
+      <Link className="text-button" to={`/chat/${room.conversationId}`}>Buka chat</Link>
+    </header>
+
+    {room.lifecycle === 'negotiating' && (
+      <div className="safety-card" style={{ marginBottom: '16px' }}>
+        <strong><Icon name="lightbulb" size={18} className="inline-icon" /> Alur Kesepakatan Barter:</strong>
+        <p style={{ marginTop: '4px', fontSize: '13px', lineHeight: '1.4' }}>
+          <strong>1. Tinjau Paket:</strong> Pastikan barang & uang kedua pihak cocok.<br />
+          <strong>2. Klik Siap:</strong> Menandakan Anda siap dengan versi ini.<br />
+          <strong>3. Klik Setuju:</strong> Setelah kedua pihak Siap, klik Setuju untuk mengunci kesepakatan & mengatur serah terima (COD).
+        </p>
+      </div>
+    )}
+
     <Package title="Penawaranmu" status={consentStatus(room.readiness.actor, room.approvals.actor)} items={room.ownItems} />
     {room.lifecycle === 'negotiating' && <Link className="button secondary edit-trade-link" to={`/transactions/${room.id}/edit`}>Ubah penawaranmu</Link>}
     <Package title={`Penawaran ${room.counterpart.name}`} status={consentStatus(room.readiness.counterpart, room.approvals.counterpart)} items={room.counterpartItems} />

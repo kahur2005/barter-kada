@@ -4,7 +4,7 @@ import type { ListingDraft } from './types';
 
 export type ListingSaveResult = { listingId: string; version: number; lifecycle: 'draft' | 'active' };
 export type MineListingPublisher = { kind: 'personal' } | { kind: 'store'; storeId: string; storeName: string; storeSlug: string };
-export type MineListing = { listingId: string; title: string; lifecycle: 'draft' | 'active' | 'archived' | 'completed'; version: number; reserved: boolean; updatedAt: string; publisher?: MineListingPublisher };
+export type MineListing = { listingId: string; title: string; lifecycle: 'draft' | 'active' | 'archived' | 'completed'; version: number; reserved: boolean; updatedAt: string; publisher?: MineListingPublisher; thumbnailUrl?: string | null };
 export interface ListingGateway {
   saveDraft(draft: ListingDraft): Promise<ListingSaveResult>;
   publish(draft: ListingDraft): Promise<ListingSaveResult>;

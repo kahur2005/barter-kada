@@ -1,6 +1,7 @@
 export type AuthSession = {
   userId: string;
   email: string | null;
+  avatarUrl?: string | null;
 };
 
 export interface AuthGateway {
@@ -10,4 +11,6 @@ export interface AuthGateway {
   signUpWithPassword(email: string, password: string, redirectTo: string): Promise<'signed_in' | 'confirmation_required'>;
   signInWithGoogle(redirectTo: string): Promise<void>;
   signOut(): Promise<void>;
+  uploadAvatar?(file: File): Promise<string>;
+  deleteAvatar?(): Promise<void>;
 }

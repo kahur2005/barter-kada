@@ -4,6 +4,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { useListingGateway } from '../listings/ListingContext';
 import { StatusPanel } from '../../components/StatusPanel';
+import { formatRupiah } from '../../lib/money';
+import { useToast } from '../../components/Toast';
 import { useTradeGateway } from './TradeContext';
 import type { TradeItemInput, TradeRoom, TradeTopupInput } from './types';
 
@@ -41,6 +43,7 @@ export function TradeEditPage() {
   const listings = useListingGateway();
   const trade = useTradeGateway();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [room, setRoom] = useState<TradeRoom | null>(null);
   const [items, setItems] = useState<EditableItem[]>([]);
   const [topupDirection, setTopupDirection] = useState<'none' | 'actor' | 'counterpart'>('none');
@@ -63,7 +66,14 @@ export function TradeEditPage() {
 
   const revise = useMutation({
     mutationFn: ({ payload, topup, key }: { payload: TradeItemInput[]; topup: TradeTopupInput; key: string }) => trade!.revise(id, room!.revision, payload, topup, reason.trim(), key),
-    onSuccess: next => { setCommandKey(null); navigate(`/transactions/${next.id}`, { replace: true }); },
+    onSuccess: next => {
+      setCommandKey(null);
+      showToast('Versi penawaran baru berhasil disimpan!', 'success');
+      navigate(`/transactions/${next.id}`, { replace: true });
+    },
+    onError: () => {
+      showToast('Gagal menyimpan revisi barter. Silakan coba lagi.', 'error');
+    }
   });
 
   function update(clientId: string, change: Partial<EditableItem>) {
@@ -131,7 +141,37 @@ export function TradeEditPage() {
         {items.length > 1 && <button className="text-button danger" type="button" onClick={() => setItems(current => current.filter(entry => entry.clientId !== item.clientId))}>Hapus barang {index + 1}</button>}
       </fieldset>)}
       <button className="button secondary" type="button" disabled={items.length >= 10} onClick={() => setItems(current => [...current, { clientId: crypto.randomUUID(), source: 'direct', listingId: '', name: '', details: '', quantity: '1', assetIds: [], photoCount: 0, uploadProgress: 0, uploading: false }])}>Tambah barang lain</button>
-      <section className="trade-item-editor"><h2>Tambahan uang</h2><label>Tambahan uang<select value={topupDirection} onChange={event => setTopupDirection(event.target.value as typeof topupDirection)}><option value="none">Tidak ada</option><option value="actor">Kamu membayar</option><option value="counterpart">{room.counterpart.name} membayar</option></select></label>{topupDirection !== 'none' && <label>Nominal tambahan<input inputMode="numeric" value={topupAmount} onChange={event => setTopupAmount(event.target.value.replace(/\D/g, ''))} /></label>}<p className="form-help">Dibayar langsung saat bertemu setelah barang diperiksa. Barter tidak memakai DP.</p></section>
+      <section className="trade-item-editor">
+        <h2>Tambahan uang (Top-up)</h2>
+        <label>
+          Arah pembayaran tambahan
+          <select value={topupDirection} onChange={event => setTopupDirection(event.target.value as typeof topupDirection)}>
+            <option value="none">Tidak ada tambahan uang</option>
+            <option value="actor">Kamu membayar tambahan uang</option>
+            <option value="counterpart">{room.counterpart.name} membayar tambahan uang</option>
+          </select>
+        </label>
+        {topupDirection !== 'none' && (
+          <label>
+            Nominal tambahan
+            <div className="currency-input-wrap">
+              <span className="currency-prefix">Rp</span>
+              <input
+                inputMode="numeric"
+                value={topupAmount}
+                onChange={event => setTopupAmount(event.target.value.replace(/\D/g, ''))}
+                placeholder="0"
+              />
+            </div>
+            {topupAmount && (
+              <p className="form-help" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                {formatRupiah(topupAmount)}
+              </p>
+            )}
+          </label>
+        )}
+        <p className="form-help">Dibayar langsung saat serah terima/COD setelah fisik barang diperiksa bersama. Barter Kada tidak memakai DP.</p>
+      </section>
       <label>Alasan perubahan<textarea rows={3} minLength={2} maxLength={300} value={reason} onChange={event => setReason(event.target.value)} placeholder="Contoh: mengganti barang karena stok sudah berubah" /></label>
       {(error || revise.error) && <p className="form-alert" role="alert">{error ?? 'Revisi belum tersimpan. Isian tetap ada; coba lagi.'}</p>}
       <button className="button full-button" disabled={revise.isPending || items.some(item => item.uploading)}>{revise.isPending ? 'Menyimpan versi baru…' : 'Simpan versi baru'}</button>
