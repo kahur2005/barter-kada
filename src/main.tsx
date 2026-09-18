@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './app/App';
 import { readPublicConfig } from './lib/env';
 import './app/styles.css';
+import './app/app-shell.css';
 import './app/focused-journey.css';
 import './features/auth/auth-journey.css';
 import './features/listings/listing-editor.css';

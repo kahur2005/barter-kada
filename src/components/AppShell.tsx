@@ -9,10 +9,10 @@ import { useNotificationGateway } from '../features/notifications/NotificationCo
 import { CustomerSupportChat } from './CustomerSupportChat';
 
 const navigation = [
-  { path: '/', text: 'Beranda', icon: 'home' },
+  { path: '/', text: 'Jelajah', icon: 'home' },
   { path: '/search', text: 'Cari', icon: 'search' },
   { path: '/listings/new', text: 'Pasang', icon: 'plus' },
-  { path: '/chat', text: 'Pesan', icon: 'chat' },
+  { path: '/chat', text: 'Chat', icon: 'chat' },
   { path: '/profile', text: 'Akun', icon: 'user' },
 ] as const;
 
@@ -44,10 +44,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Show bottom navigation across all standard browsing and hub screens
   const showBottomNav = ['/', '/search', '/stores', '/chat', '/profile', '/my/listings', '/transactions', '/notifications'].includes(pathname);
   const isImmersive = ['/listings/new'].some(p => pathname.startsWith(p)) || pathname.includes('/edit') || (pathname.startsWith('/chat/') && pathname !== '/chat');
-  const focusedJourney =
-    pathname === '/auth/login' ||
+  const focusedTask =
+    pathname.startsWith('/auth/') ||
+    pathname === '/onboarding' ||
     pathname === '/listings/new' ||
-    /^\/my\/listings\/[^/]+\/edit$/.test(pathname);
+    /^\/my\/listings\/[^/]+\/edit$/.test(pathname) ||
+    (pathname.startsWith('/chat/') && pathname !== '/chat');
 
   const [online, setOnline] = useState(navigator.onLine);
   useEffect(() => {
@@ -75,12 +77,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
       <a className="skip-link" href="#main">Lewati ke isi</a>
-      <header className={`site-header${focusedJourney ? ' focused-header' : ''}`}>
+      <header className="site-header">
         <div className="header-inner">
           <Link className="wordmark" to="/" aria-label="Barter beranda">
             barter<span aria-hidden="true">.</span>
           </Link>
-          {!focusedJourney && (
+          {!focusedTask && (
             <>
               <span className="header-description">Dari sekitar, untuk sekitar.</span>
               <Navigation className="desktop-nav" />
@@ -110,12 +112,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
       <main
         id="main"
-        className={`page-shell ${focusedJourney ? 'focused-journey' : showBottomNav ? 'with-navigation' : isImmersive ? 'with-actions' : ''}`}
+        className={`page-shell ${focusedTask ? 'task-shell focused-journey' : showBottomNav ? 'with-navigation' : isImmersive ? 'with-actions' : ''}`}
       >
         {children}
       </main>
-      {!focusedJourney && showBottomNav && <Navigation className="bottom-nav" />}
-      {!focusedJourney && <CustomerSupportChat />}
+      {!focusedTask && showBottomNav && <Navigation className="bottom-nav" />}
+      {!focusedTask && <CustomerSupportChat />}
     </>
   );
 }

@@ -79,16 +79,16 @@ it('explains when a bookmarked area is no longer active', async () => {
   expect(screen.getByRole('button', { name: 'Pilih area' })).toBeVisible();
 });
 
-it('removes competing chrome only from focused auth journeys', () => {
+it('keeps the Barter shell consistent while focused tasks remove competing navigation', () => {
   const focused = show('/auth/login');
-  expect(document.querySelector('main')).toHaveClass('focused-journey');
-  expect(screen.queryByRole('link', { name: /Notifikasi/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Barter beranda' })).toBeVisible();
   expect(screen.queryByRole('navigation', { name: 'Navigasi utama' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Buka bantuan pelanggan' })).not.toBeInTheDocument();
   focused.unmount();
 
   show('/search');
-  expect(document.querySelector('main')).not.toHaveClass('focused-journey');
+  expect(screen.getAllByRole('link', { name: 'Jelajah' })).not.toHaveLength(0);
+  expect(screen.getAllByRole('link', { name: 'Chat' })).not.toHaveLength(0);
   expect(screen.getByRole('link', { name: /Notifikasi/ })).toBeVisible();
   expect(screen.getAllByRole('navigation', { name: 'Navigasi utama' })).toHaveLength(2);
   expect(screen.getByRole('button', { name: 'Buka bantuan pelanggan' })).toBeVisible();
