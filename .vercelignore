@@ -1,0 +1,5 @@
+api/*.test.ts
+api/**/*.test.ts
+tests/
+test-results/
+playwright-report/
