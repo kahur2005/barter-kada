@@ -4,12 +4,14 @@ import { MemoryRouter } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
 import { App } from './App';
 import './styles.css';
+import '../features/discovery/discovery.css';
 import type { DiscoveryRepository } from '../features/discovery/repository';
 import { createPreviewRepository } from '../features/discovery/preview-repository';
+import { demoStores } from '../features/discovery/fixtures';
 import { listingSchema } from '../features/discovery/types';
 import { listing } from '../test/fixtures';
 
-const repo = createPreviewRepository([listingSchema.parse(listing), listingSchema.parse({ ...listing, id: '10000000-0000-4000-8000-000000000002', title: 'Nasi kotak', category: 'food', modes: ['sale'] })], []);
+const repo = createPreviewRepository([listingSchema.parse(listing), listingSchema.parse({ ...listing, id: '10000000-0000-4000-8000-000000000002', title: 'Nasi kotak', category: 'food', modes: ['sale'] })], demoStores);
 function show(path = '/', repository: DiscoveryRepository = repo) { return render(<MemoryRouter initialEntries={[path]}><App repository={repository} /></MemoryRouter>); }
 it('searches real listing rows and keeps the search value on detail return', async () => {
   const user = userEvent.setup(); show();
@@ -90,6 +92,24 @@ it('gives the first unfiltered offer visual priority and keeps exact location pr
   expect(await screen.findByRole('group', { name: 'Detail penawaran' })).toHaveTextContent('Lokasi tepatTetap privat');
 });
 
+it('limits featured treatment to the first unfiltered home listing', async () => {
+  const home = show('/');
+  await screen.findByRole('article', { name: 'Penawaran utama: Kursi kayu bekas' });
+  expect(document.querySelectorAll('.listing-row--featured')).toHaveLength(1);
+  home.unmount();
+
+  for (const path of ['/search?q=kursi', '/search?category=home', '/stores']) {
+    const view = show(path);
+    if (path === '/stores') {
+      await screen.findByText('Dapur Bu Rina');
+    } else {
+      await screen.findByRole('link', { name: 'Kursi kayu bekas' });
+    }
+    expect(document.querySelectorAll('.listing-row--featured')).toHaveLength(0);
+    view.unmount();
+  }
+});
+
 it('keeps the Barter shell consistent while focused tasks remove competing navigation', () => {
   const focused = show('/auth/login');
   expect(screen.getByRole('link', { name: 'Barter beranda' })).toBeVisible();
@@ -121,7 +141,9 @@ it('uses dark ink for lime category and support message states', async () => {
   const category = screen.getByRole('button', { name: 'Makanan' });
 
   await user.click(category);
-  expect(getComputedStyle(category).color).toBe('rgb(17, 19, 24)');
+  const selectedCategory = await screen.findByRole('button', { name: 'Makanan' });
+  expect(selectedCategory).toHaveClass('selected');
+  expect(getComputedStyle(selectedCategory).color).toBe('rgb(17, 19, 24)');
 
   await user.click(screen.getByRole('button', { name: 'Buka bantuan pelanggan' }));
   await user.type(screen.getByRole('textbox', { name: 'Pesan ke bantuan pelanggan' }), 'Saya perlu bantuan');

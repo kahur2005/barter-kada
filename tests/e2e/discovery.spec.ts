@@ -107,3 +107,28 @@ test('responsive page has no horizontal overflow and shows only one navigation',
   }
   await page.screenshot({ path: testInfo.outputPath('detail.png'), fullPage: true });
 });
+
+test('search controls occupy separate icon, input, and action tracks', async ({ page }) => {
+  await page.goto('/search');
+  const geometry = await page.locator('.search-form').evaluate(form => {
+    const icon = form.querySelector('svg')?.getBoundingClientRect();
+    const input = form.querySelector('input')?.getBoundingClientRect();
+    const button = form.querySelector('button')?.getBoundingClientRect();
+    if (!icon || !input || !button) throw new Error('search controls not found');
+    return {
+      formRight: form.getBoundingClientRect().right,
+      viewportWidth: window.innerWidth,
+      iconRight: icon.right,
+      inputLeft: input.left,
+      inputRight: input.right,
+      buttonLeft: button.left,
+      buttonWidth: button.width,
+    };
+  });
+
+  expect(geometry.formRight).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+  expect(geometry.iconRight).toBeLessThanOrEqual(geometry.inputLeft);
+  expect(geometry.inputRight).toBeLessThanOrEqual(geometry.buttonLeft);
+  expect(geometry.inputRight - geometry.inputLeft).toBeGreaterThan(0);
+  expect(geometry.buttonWidth).toBeLessThan(180);
+});
