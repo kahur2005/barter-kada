@@ -5,10 +5,11 @@ import { useRepository } from '../../app/providers';
 import { dateWib, listingPrice, ProductImage } from '../../components/ListingRow';
 import { LoadingRows, StatusPanel } from '../../components/StatusPanel';
 import { Icon } from '../../components/Icon';
-import { ActionLink } from '../../components/NavigationLinks';
+import { ActionLink, BackLink } from '../../components/NavigationLinks';
 import { Dialog } from '../../components/Dialog';
 import { formatRupiah } from '../../lib/money';
 import { useToast } from '../../components/Toast';
+import { ActionDock, FactList, FactRow } from '../../components/SurfacePrimitives';
 
 export const handoverLabels = {
   pickup: 'Diambil pembeli',
@@ -64,8 +65,8 @@ export function ListingDetailPage() {
 
   return (
     <div className="detail-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <Link className="back-link" to={back}><Icon name="back" />Kembali ke hasil</Link>
+      <div className="detail-toolbar">
+        <BackLink to={back}>Kembali ke hasil</BackLink>
         <button type="button" className="text-button inline-link" onClick={copyShareLink} aria-label="Salin tautan penawaran">
           <Icon name="link" size={16} /> Salin tautan
         </button>
@@ -93,7 +94,7 @@ export function ListingDetailPage() {
           )}
 
           {listing.images.length > 0 && (
-            <button className="gallery-open" onClick={() => setGallery(true)}>
+            <button className="gallery-open" aria-label={`Lihat foto ${photo + 1}/${listing.images.length}`} onClick={() => setGallery(true)}>
               Perbesar foto ({photo + 1}/{listing.images.length})
             </button>
           )}
@@ -118,15 +119,18 @@ export function ListingDetailPage() {
             )}
           </header>
 
+          <section className="detail-facts" role="group" aria-label="Detail penawaran">
+            <FactList label="Detail penawaran">
+              <FactRow icon="tag" label="Kondisi" value={(listing.condition && conditionLabels[listing.condition]) || 'Tidak dijelaskan'} />
+              <FactRow icon="pin" label="Lokasi tepat" value="Tetap privat" />
+              <FactRow icon="package" label="Penyerahan" value={listing.handoverMethods.map(method => handoverLabels[method]).join(', ')} />
+            </FactList>
+          </section>
+
           <section className="detail-section">
             <h2>Tentang penawaran</h2>
             <p className="preserve-lines">{listing.description}</p>
-            <dl>
-              <dt>Kondisi</dt>
-              <dd>{(listing.condition && conditionLabels[listing.condition]) || listing.condition || 'Tidak dijelaskan'}</dd>
-              <dt>Kekurangan</dt>
-              <dd>{listing.defects || 'Tidak ada kekurangan khusus yang dilaporkan.'}</dd>
-            </dl>
+            <p><strong>Kekurangan:</strong> {listing.defects || 'Tidak ada kekurangan khusus yang dilaporkan.'}</p>
           </section>
 
           {barter && (
@@ -180,9 +184,8 @@ export function ListingDetailPage() {
           )}
 
           <section className="detail-section">
-            <h2>Area penawaran</h2>
-            <p>{listing.area.name} · sekitar {listing.area.distanceKm} km</p>
-            <p className="metadata">Lokasi disamarkan demi privasi dan tidak menunjukkan alamat rumah spesifik.</p>
+            <h2>Privasi lokasi</h2>
+            <p className="metadata">Area yang ditampilkan bersifat perkiraan dan tidak menunjukkan alamat rumah spesifik. Alamat pertemuan dibahas lewat chat.</p>
           </section>
 
           <section className="identity-panel">
@@ -208,14 +211,9 @@ export function ListingDetailPage() {
           </section>
 
           <section className="detail-section">
-            <h2>Metode penyerahan</h2>
-            <ul>
-              {listing.handoverMethods.map(method => (
-                <li key={method}>{handoverLabels[method]}</li>
-              ))}
-            </ul>
+            <h2>Menyiapkan penyerahan</h2>
             <p className="metadata">
-              Alamat pertemuan disepakati melalui percakapan chat.{free && ' Barang gratis; ongkir jika ada disepakati terpisah.'}
+              Pilih salah satu metode di atas saat berbicara dengan penjual. Alamat pertemuan disepakati melalui percakapan chat.{free && ' Barang gratis; ongkir jika ada disepakati terpisah.'}
             </p>
           </section>
 
@@ -234,29 +232,12 @@ export function ListingDetailPage() {
         </div>
       </div>
 
-      <div className="context-actions">
-        <div>
-          <p className="metadata">Periksa kondisi barang sebelum menerima.</p>
-          <div className="action-buttons">
-            {available ? (
-              <>
-                {(sale || free) && (
-                  <Link className="button" to={`/chat/open/${listing.id}`} state={{ from: location.pathname }}>
-                    {chatLabel}
-                  </Link>
-                )}
-                {barter && (
-                  <Link className={`button ${sale ? 'secondary' : ''}`} to={`/barter/new/${listing.id}`} state={{ from: location.pathname }}>
-                    Ajukan barter
-                  </Link>
-                )}
-              </>
-            ) : (
-              <button className="button" disabled>Tidak tersedia</button>
-            )}
-          </div>
-        </div>
-      </div>
+      <ActionDock
+        label="Aksi penawaran"
+        note="Periksa kondisi barang sebelum menerima."
+        secondary={barter && available ? <Link className="button secondary" to={`/barter/new/${listing.id}`} state={{ from: location.pathname }}>Ajukan barter</Link> : undefined}
+        primary={available && (sale || free) ? <Link className="button" to={`/chat/open/${listing.id}`} state={{ from: location.pathname }}>{chatLabel}</Link> : <button className="button" disabled>Tidak tersedia</button>}
+      />
 
       {gallery && (
         <Dialog title={`Foto ${photo + 1} dari ${listing.images.length}`} onClose={() => setGallery(false)}>

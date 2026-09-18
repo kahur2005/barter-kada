@@ -8,6 +8,7 @@ import './app/app-shell.css';
 import './app/focused-journey.css';
 import './features/auth/auth-journey.css';
 import './features/listings/listing-editor.css';
+import './features/discovery/discovery.css';
 
 const root = createRoot(document.getElementById('root')!);
 async function start() {

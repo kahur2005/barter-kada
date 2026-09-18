@@ -80,6 +80,16 @@ it('explains when a bookmarked area is no longer active', async () => {
   expect(screen.getByRole('button', { name: 'Pilih area' })).toBeVisible();
 });
 
+it('gives the first unfiltered offer visual priority and keeps exact location private', async () => {
+  const home = show('/');
+  const featured = await screen.findByRole('article', { name: 'Penawaran utama: Kursi kayu bekas' });
+  expect(featured).toContainElement(screen.getByRole('link', { name: 'Kursi kayu bekas' }));
+  home.unmount();
+
+  show(`/listings/${listing.id}`);
+  expect(await screen.findByRole('group', { name: 'Detail penawaran' })).toHaveTextContent('Lokasi tepatTetap privat');
+});
+
 it('keeps the Barter shell consistent while focused tasks remove competing navigation', () => {
   const focused = show('/auth/login');
   expect(screen.getByRole('link', { name: 'Barter beranda' })).toBeVisible();

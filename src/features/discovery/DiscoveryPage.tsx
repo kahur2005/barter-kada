@@ -11,6 +11,7 @@ import { Icon, type IconName } from '../../components/Icon';
 import { LoadingRows, StatusPanel } from '../../components/StatusPanel';
 import { FilterForm } from './FilterForm';
 import { AreaPicker } from './AreaPicker';
+import { PageHeading } from '../../components/SurfacePrimitives';
 
 const categoryIcons: Record<(typeof categories)[number]['id'], IconName> = {
   food: 'food', clothing: 'clothing', home: 'categoryHome', vehicles: 'vehicles', garden: 'garden', other: 'other',
@@ -44,8 +45,12 @@ export function DiscoveryPage() {
   const items = results.data?.pages.flatMap(page => page.items) ?? [];
   const area = selectedArea?.name ?? 'Area belum tersedia';
   const stateKey = location.pathname + params.toString();
-  return <>
-    <div className="discovery-heading"><h1>{isStores ? 'Toko sekitar' : 'Penawaran di sekitar'}</h1><button className="area-button" onClick={() => setDialog('area')}><Icon name="pin" />{area} · {query.radiusKm} km<Icon name="chevron" /></button></div>
+  return <section className="discovery-page">
+    <PageHeading
+      title={isStores ? 'Toko baik di sekitarmu.' : 'Temukan barang baik di sekitarmu.'}
+      description={<button className="area-button" aria-label={`${area} · ${query.radiusKm} km`} onClick={() => setDialog('area')}><Icon name="pin" />{area} · hingga {query.radiusKm} km<Icon name="chevron" /></button>}
+    />
+    {!isStores && <h2 className="sr-only">Penawaran di sekitar</h2>}
     <form className="search-form" role="search" onSubmit={e => { e.preventDefault(); const input = new FormData(e.currentTarget).get('query')?.toString().trim().slice(0, 120) ?? ''; apply({ ...query, query: input, sort: input ? 'relevance' : 'newest', cursor: null }); }}>
       <label htmlFor={inputId} className="sr-only">Cari barang, makanan, atau toko</label><Icon name="search" /><input key={stateKey} id={inputId} type="search" name="query" defaultValue={query.query} placeholder="Cari barang, makanan, atau toko" maxLength={120} /><button className="button" type="submit">Cari</button>
     </form>
@@ -108,12 +113,12 @@ export function DiscoveryPage() {
         {areaReady && results.isPending && <LoadingRows />}
         {areaReady && results.isError && <StatusPanel title="Tidak dapat memuat penawaran" error><p>{results.error.message}</p><button className="button secondary" onClick={() => void results.refetch()}>Coba lagi</button></StatusPanel>}
         {areaReady && !results.isPending && !results.isError && items.length === 0 && <StatusPanel title="Belum ada penawaran yang cocok"><p>Coba kategori lain atau ubah area pencarianmu.</p><button className="button secondary" onClick={() => apply({ ...query, query: '', category: null, mode: null, fulfillment: null, minPrice: null, maxPrice: null })}>Hapus filter pencarian</button><button className="text-button" onClick={() => setDialog('area')}>Ubah area</button></StatusPanel>}
-        <div className="result-list">{items.map((item, index) => 'slug' in item ? <StoreRow key={item.id} store={item} /> : <ListingRow key={item.id} listing={item} eager={index < 3} />)}</div>
+        <div className="result-list">{items.map((item, index) => 'slug' in item ? <StoreRow key={item.id} store={item} /> : <ListingRow key={item.id} listing={item} eager={index < 3} featured={location.pathname === '/' && !query.query && !query.category && index === 0} />)}</div>
         {results.hasNextPage && <button className="button secondary load-more" disabled={results.isFetchingNextPage} onClick={() => void results.fetchNextPage()}>{results.isFetchingNextPage ? 'Memuat…' : 'Tampilkan lagi'}</button>}
         <p className="results-footer">Lokasi disamarkan. Periksa barang dan sepakati penyerahan langsung dengan penjual.</p>
       </section>
     </div>
     {dialog === 'filter' && <Dialog title="Filter pencarian" onClose={() => setDialog(null)}><FilterForm query={query} onApply={apply} stores={isStores} /></Dialog>}
     {dialog === 'area' && <Dialog title="Area pencarian" onClose={() => setDialog(null)}><AreaPicker query={query} areas={areaOptions} onApply={apply} preview={repo.source === 'preview'} /></Dialog>}
-  </>;
+  </section>;
 }

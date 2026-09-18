@@ -37,14 +37,14 @@ export function ProductImage({ image, className = '', eager = false }: { image?:
   );
 }
 
-export function ListingRow({ listing, eager = false }: { listing: PublicListing; eager?: boolean }) {
+export function ListingRow({ listing, eager = false, featured = false }: { listing: PublicListing; eager?: boolean; featured?: boolean }) {
   const location = useLocation();
   const isFree = listing.modes.includes('free');
   const isBarter = listing.modes.includes('barter');
   const isSale = listing.modes.includes('sale');
 
   return (
-    <article className="listing-row">
+    <article className={`listing-row${featured ? ' listing-row--featured' : ''}`} aria-label={featured ? `Penawaran utama: ${listing.title}` : undefined}>
       <div className="listing-image-wrap">
         <ProductImage image={listing.images[0]} eager={eager} />
         <div className="listing-card-badges">

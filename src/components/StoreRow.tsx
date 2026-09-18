@@ -5,7 +5,7 @@ import { Icon } from './Icon';
 export function StoreRow({ store }: { store: PublicStore }) {
   const location = useLocation();
   return (
-    <article className="listing-row store-row-card">
+    <article className="listing-row store-row-card store-row">
       <div className="store-card-header">
         <div className="store-avatar">
           <Icon name="shop" />
