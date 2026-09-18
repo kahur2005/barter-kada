@@ -13,6 +13,14 @@ import { listing } from '../test/fixtures';
 
 const repo = createPreviewRepository([listingSchema.parse(listing), listingSchema.parse({ ...listing, id: '10000000-0000-4000-8000-000000000002', title: 'Nasi kotak', category: 'food', modes: ['sale'] })], demoStores);
 function show(path = '/', repository: DiscoveryRepository = repo) { return render(<MemoryRouter initialEntries={[path]}><App repository={repository} /></MemoryRouter>); }
+it('marks discovery loading as busy for assistive technology', async () => {
+  const pendingRepository: DiscoveryRepository = {
+    ...repo,
+    searchListings: () => new Promise<never>(() => {}),
+  };
+  show('/', pendingRepository);
+  expect(await screen.findByRole('status', { name: 'Memuat penawaran' })).toHaveAttribute('aria-busy', 'true');
+});
 it('searches real listing rows and keeps the search value on detail return', async () => {
   const user = userEvent.setup(); show();
   await screen.findByRole('link', { name: 'Kursi kayu bekas' });

@@ -13,6 +13,7 @@ it('renders a scoped admin report queue', async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><AdminProvider gateway={gateway}><MemoryRouter><AdminReportsPage /></MemoryRouter></AdminProvider></QueryClientProvider>);
   expect(await screen.findByRole('heading', { name: 'Laporan komunitas' })).toBeVisible();
+  expect(screen.getByRole('navigation', { name: 'Admin' })).toBeVisible();
   expect(screen.getByRole('link', { name: 'Percakapan listing' })).toBeVisible();
   expect(gateway.listReports).toHaveBeenCalledWith({ status: 'open', cursor: null });
 });

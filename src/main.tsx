@@ -5,13 +5,14 @@ import { App } from './app/App';
 import { readPublicConfig } from './lib/env';
 import './app/styles.css';
 import './app/app-shell.css';
-import './app/focused-journey.css';
-import './features/auth/auth-journey.css';
 import './features/auth/account-surfaces.css';
-import './features/listings/listing-editor.css';
 import './features/discovery/discovery.css';
 import './features/chat/chat-surfaces.css';
 import './features/transactions/transaction-surfaces.css';
+import './features/shared/support-surfaces.css';
+import './app/focused-journey.css';
+import './features/auth/auth-journey.css';
+import './features/listings/listing-editor.css';
 
 const root = createRoot(document.getElementById('root')!);
 async function start() {
