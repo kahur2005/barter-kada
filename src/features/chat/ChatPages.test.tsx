@@ -71,4 +71,19 @@ describe('private chat pages', () => {
     await user.click(screen.getByRole('button', { name: 'Kirim 2 foto' }));
     expect(gateway.sendImages).toHaveBeenCalledWith(conversationId, expect.arrayContaining([expect.objectContaining({ name: 'a.png' }), expect.objectContaining({ name: 'b.jpg' })]), expect.stringMatching(/^[0-9a-f-]{36}$/), expect.any(Function));
   });
+
+  it('keeps failed image feedback visible with selected previews', async () => {
+    const gateway = chat();
+    vi.mocked(gateway.sendImages).mockRejectedValue(new Error('upload failed'));
+    const user = userEvent.setup(); show(`/chat/${conversationId}`, gateway);
+    await screen.findByText('Masih tersedia?');
+    const input = screen.getByLabelText('Tambahkan foto');
+    await user.upload(input, [new File(['image'], 'preview.png', { type: 'image/png' })]);
+    await user.click(screen.getByRole('button', { name: 'Kirim 1 foto' }));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toBeVisible();
+    expect(alert).toHaveTextContent('Foto belum terkirim. Pilihan tetap tersimpan; coba lagi.');
+    expect(alert.closest('form')).toHaveClass('chat-composer');
+    expect(screen.getByRole('img', { name: 'Pratinjau 1' })).toBeVisible();
+  });
 });

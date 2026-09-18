@@ -128,7 +128,6 @@ export function ChatRoomPage() {
     {(block.error || unblock.error) && <p className="form-alert" role="alert">Pengaturan blokir belum tersimpan. Coba lagi.</p>}
     <div className="message-list" aria-live="polite">{messages.hasNextPage && <button className="text-button" type="button" disabled={messages.isFetchingNextPage} onClick={() => void messages.fetchNextPage()}>{messages.isFetchingNextPage ? 'Memuat…' : 'Muat pesan lama'}</button>}{visibleMessages.map(message => <article key={message.id} className={message.senderId === auth.session?.userId ? 'message own' : 'message'}>{message.body.imageUrls?.length ? <div className="message-images">{message.body.imageUrls.map((url, index) => <a key={url} href={url} target="_blank" rel="noreferrer"><img src={url} alt={`Foto ${index + 1} dari ${message.senderId === auth.session?.userId ? 'Anda' : conversation.counterpart.name}`} /></a>)}</div> : <p>{message.body.text ?? (message.type === 'system' ? 'Status transaksi diperbarui.' : 'Foto sedang dimuat.')}</p>}<footer><time>{time(message.sentAt)}</time>{message.senderId === auth.session?.userId && <span>{message.seq <= counterpartLastRead ? 'Dibaca' : 'Terkirim'}</span>}</footer></article>)}</div>
     {send.error && <p className="form-alert" role="alert">Pesan belum terkirim. Teks tetap ada; coba lagi.</p>}
-    {(imageError || sendImages.error) && <p className="form-alert chat-media-error" role="alert">{imageError ?? 'Foto belum terkirim. Pilihan tetap tersimpan; coba lagi.'}</p>}
     {blocked ? <div className="blocked-notice" role="status"><p>Pengguna diblokir. Pesan baru dihentikan.</p><button className="text-button" type="button" disabled={unblock.isPending} onClick={() => unblock.mutate()}>{unblock.isPending ? 'Membuka…' : 'Buka blokir'}</button></div> : (
       <form className="chat-composer" onSubmit={submit}>
         {previewUrls.length > 0 && (
@@ -162,6 +161,7 @@ export function ChatRoomPage() {
             </>
           )}
         </div>
+        {(imageError || sendImages.error) && <p className="form-alert chat-media-error" role="alert">{imageError ?? 'Foto belum terkirim. Pilihan tetap tersimpan; coba lagi.'}</p>}
         <label htmlFor="chat-message">Pesan</label>
         <textarea
           id="chat-message"
