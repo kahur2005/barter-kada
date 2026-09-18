@@ -3,7 +3,6 @@ import { expect, test } from '@playwright/test';
 test('keeps the mobile support launcher clear of fixed action dock controls', async ({ page }) => {
   await page.goto('/search');
   await page.locator('main').waitFor();
-  await page.addStyleTag({ content: '.bottom-nav { display: none !important; }' });
   await page.evaluate(() => {
     const main = document.querySelector('main');
     if (!main) throw new Error('main not found');
@@ -31,4 +30,7 @@ test('keeps the mobile support launcher clear of fixed action dock controls', as
 
   await page.getByRole('button', { name: 'Aksi utama' }).click();
   await expect(page.getByRole('button', { name: 'Aksi utama' })).toHaveAttribute('data-clicked', 'true');
+
+  await page.getByRole('link', { name: 'Akun' }).click();
+  await expect(page).toHaveURL(/\/profile$/);
 });

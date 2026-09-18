@@ -1,7 +1,31 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Icon, type IconName } from './Icon';
 
-const defaultActionDockHeight = 104;
+const liveDockHeights = new Map<HTMLElement, number | null>();
+
+function publishDockHeight() {
+  const measuredHeights = [...liveDockHeights.values()].filter((height): height is number => height !== null);
+  const maxHeight = measuredHeights.length > 0 ? Math.max(...measuredHeights) : null;
+  if (maxHeight === null) document.body.style.removeProperty('--action-dock-height');
+  else document.body.style.setProperty('--action-dock-height', `${maxHeight}px`);
+}
+
+function registerDock(dock: HTMLElement) {
+  liveDockHeights.set(dock, null);
+  publishDockHeight();
+  return () => {
+    liveDockHeights.delete(dock);
+    publishDockHeight();
+  };
+}
+
+function updateDockHeight(dock: HTMLElement) {
+  const measuredHeight = Math.ceil(dock.getBoundingClientRect().height);
+  if (measuredHeight <= 0 || !liveDockHeights.has(dock)) return null;
+  liveDockHeights.set(dock, measuredHeight);
+  publishDockHeight();
+  return measuredHeight;
+}
 
 export function PageHeading({ kicker, title, description, leading, actions }: { kicker?: ReactNode; title: ReactNode; description?: ReactNode; leading?: ReactNode; actions?: ReactNode }) {
   return <header className="page-heading">
@@ -30,16 +54,16 @@ export function StageRail({ label, stages, current }: { label: string; stages: R
 
 export function ActionDock({ label, primary, secondary, note }: { label: string; primary: ReactNode; secondary?: ReactNode; note?: ReactNode }) {
   const dockRef = useRef<HTMLElement>(null);
-  const [dockHeight, setDockHeight] = useState(defaultActionDockHeight);
+  const [dockHeight, setDockHeight] = useState<number | null>(null);
 
   useLayoutEffect(() => {
     const dock = dockRef.current;
     if (!dock) return;
 
+    const unregister = registerDock(dock);
     const updateHeight = () => {
-      const measuredHeight = Math.max(defaultActionDockHeight, Math.ceil(dock.getBoundingClientRect().height));
-      setDockHeight(previous => previous === measuredHeight ? previous : measuredHeight);
-      document.body.style.setProperty('--action-dock-height', `${measuredHeight}px`);
+      const measuredHeight = updateDockHeight(dock);
+      if (measuredHeight !== null) setDockHeight(previous => previous === measuredHeight ? previous : measuredHeight);
     };
 
     updateHeight();
@@ -47,13 +71,12 @@ export function ActionDock({ label, primary, secondary, note }: { label: string;
     observer?.observe(dock);
     return () => {
       observer?.disconnect();
-      queueMicrotask(() => {
-        if (!document.querySelector('[data-action-dock]')) document.body.style.removeProperty('--action-dock-height');
-      });
+      unregister();
     };
   }, []);
 
-  return <div className="action-dock-anchor" style={{ '--action-dock-height': `${dockHeight}px` } as CSSProperties}>
+  const dockStyle = dockHeight === null ? undefined : { '--action-dock-height': `${dockHeight}px` } as CSSProperties;
+  return <div className="action-dock-anchor" style={dockStyle}>
     <div className="action-dock-reservation" data-action-dock-reservation aria-hidden="true" />
     <aside ref={dockRef} className="action-dock" data-action-dock role="group" aria-label={label}>{note && <p>{note}</p>}<div>{secondary}{primary}</div></aside>
   </div>;
