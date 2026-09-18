@@ -7,6 +7,7 @@ import './app/styles.css';
 import './app/app-shell.css';
 import './app/focused-journey.css';
 import './features/auth/auth-journey.css';
+import './features/auth/account-surfaces.css';
 import './features/listings/listing-editor.css';
 import './features/discovery/discovery.css';
 

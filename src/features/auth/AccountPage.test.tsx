@@ -31,7 +31,8 @@ describe('account navigation', () => {
     const auth = createMockAuth();
     render(<MemoryRouter initialEntries={['/profile']}><App repository={repository} authGateway={auth} /></MemoryRouter>);
     expect(await screen.findByRole('heading', { name: 'Akun' })).toBeVisible();
-    const menu = within(screen.getByRole('navigation', { name: 'Menu akun' }));
+    expect(screen.getByRole('navigation', { name: 'Kelola akun' })).toBeVisible();
+    const menu = within(screen.getByRole('navigation', { name: 'Kelola akun' }));
     expect(menu.getByRole('link', { name: 'Profil & verifikasi' })).toHaveAttribute('href', '/onboarding');
     expect(menu.getByRole('link', { name: 'Listing saya' })).toHaveAttribute('href', '/my/listings');
     expect(menu.getByRole('link', { name: 'Toko saya' })).toHaveAttribute('href', '/my/stores');

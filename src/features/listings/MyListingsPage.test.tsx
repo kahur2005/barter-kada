@@ -23,6 +23,7 @@ it('uses server quota and prevents archiving an exclusively reserved listing', a
   const user = userEvent.setup();
   render(<MemoryRouter initialEntries={['/my/listings']}><App repository={repository} authGateway={auth} onboardingGateway={onboarding} listingGateway={listingGateway} /></MemoryRouter>);
   expect(await screen.findByText('12 dari 20 aktif')).toBeVisible();
+  expect(screen.getByRole('list', { name: 'Listing milikmu' })).toBeVisible();
   expect(screen.getByText('Toko: Dapur Rina')).toBeVisible();
   for (const tab of ['Aktif', 'Draft', 'Arsip', 'Selesai']) expect(screen.getByRole('tab', { name: tab })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Arsipkan Sepeda reserved' })).toBeDisabled();

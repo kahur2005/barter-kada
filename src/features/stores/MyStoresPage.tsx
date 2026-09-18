@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { StatusPanel } from '../../components/StatusPanel';
 import { BackButton } from '../../components/NavigationLinks';
+import { PageHeading } from '../../components/SurfacePrimitives';
 import { useStoreGateway } from './StoreContext';
 import type { StoreInput, StoreSummary } from './types';
 
@@ -188,12 +189,12 @@ export function MyStoresPage() {
 
   return (
     <section className="stores-page">
-      <BackButton fallback="/profile" />
-      <header>
-        <p className="eyebrow">Toko saya</p>
-        <h1>Profil usaha</h1>
-        <p>Satu akun dapat memiliki sampai tiga toko Plus. Produk tetap dikelola lewat listing.</p>
-      </header>
+      <PageHeading
+        kicker="Toko saya"
+        title="Profil usaha"
+        description="Satu akun dapat memiliki sampai tiga toko Plus. Produk tetap dikelola lewat listing."
+        leading={<BackButton fallback="/profile" />}
+      />
       {stores.data?.length && plus.data && !plus.data.active && (
         <div className="plus-expired-banner" role="status">
           <h2>Plus berakhir</h2>

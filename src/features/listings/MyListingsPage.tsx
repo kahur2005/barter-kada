@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BackButton, ActionLink } from '../../components/NavigationLinks';
+import { PageHeading } from '../../components/SurfacePrimitives';
 import { useToast } from '../../components/Toast';
 import { useListingGateway } from './ListingContext';
 import type { MineListing } from './gateway';
@@ -58,8 +59,7 @@ export function MyListingsPage() {
   if (!gateway) {
     return (
       <section className="my-listings">
-        <BackButton fallback="/profile" />
-        <h1>Listing saya</h1>
+        <PageHeading title="Listing saya" leading={<BackButton fallback="/profile" />} />
         <p className="preview-form-notice">Daftar milik akun tidak tersedia pada mode data contoh.</p>
         <ActionLink to="/listings/new">Coba form penawaran</ActionLink>
       </section>
@@ -68,14 +68,12 @@ export function MyListingsPage() {
 
   return (
     <section className="my-listings">
-      <BackButton fallback="/profile" />
-      <header>
-        <div>
-          <p className="eyebrow">Kelola dagangan dan barang pribadi</p>
-          <h1>Listing saya</h1>
-        </div>
-        <Link className="button" to="/listings/new">Pasang baru</Link>
-      </header>
+      <PageHeading
+        kicker="Kelola dagangan dan barang pribadi"
+        title="Listing saya"
+        leading={<BackButton fallback="/profile" />}
+        actions={<Link className="button" to="/listings/new">Pasang baru</Link>}
+      />
 
       {data && (
         <p className="quota-counter">
@@ -108,9 +106,9 @@ export function MyListingsPage() {
         </div>
       )}
 
-      <div className="owner-list">
+      <div className="owner-list" role="list" aria-label="Listing milikmu">
         {data?.items.map(item => (
-          <article key={item.listingId}>
+          <article key={item.listingId} role="listitem">
             <div className="owner-list-item-row">
               {item.thumbnailUrl ? (
                 <img

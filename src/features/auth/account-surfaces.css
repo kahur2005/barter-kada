@@ -1,0 +1,17 @@
+.auth-card, .onboarding-page, .account-page, .my-listings, .plus-page, .stores-page { width: min(100%, 760px); margin-inline: auto; }
+.auth-card, .onboarding-page { min-height: calc(100dvh - 57px); padding: 28px 18px calc(32px + env(safe-area-inset-bottom)); }
+.auth-card h1, .onboarding-page h1 { max-width: 12ch; font-size: clamp(2.4rem, 11vw, 4.8rem); line-height: 1; letter-spacing: -.055em; }
+.stack-form { display: grid; gap: 14px; }
+.stack-form label { display: grid; gap: 7px; font-weight: 700; }
+.account-profile-card, .quota-counter, .plus-panel, .plus-expired-banner { padding: 18px; border: 1px solid var(--rule); border-radius: var(--radius-md); background: var(--surface); }
+.settings-menu { display: grid; border-top: 1px solid var(--rule); }
+.settings-menu-item { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--ink); border-bottom: 1px solid var(--rule); text-decoration: none; }
+.owner-tabs { display: flex; overflow-x: auto; border-bottom: 1px solid var(--rule); }
+.owner-tabs button[aria-selected='true'] { color: var(--action); border-bottom-color: var(--action); }
+.owner-list article { display: grid; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--rule); }
+.owner-list-media { width: 96px; height: 96px; object-fit: cover; border-radius: 12px; }
+.owner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (min-width: 48rem) {
+  .auth-card, .onboarding-page { padding-top: 64px; }
+  .owner-list article { grid-template-columns: minmax(0, 1fr) auto; }
+}

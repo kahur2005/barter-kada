@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { BackLink } from '../../components/NavigationLinks';
 import { Icon } from '../../components/Icon';
+import { PageHeading } from '../../components/SurfacePrimitives';
 import { useAuth } from './AuthProvider';
 import { useToast } from '../../components/Toast';
 
@@ -34,9 +35,8 @@ export function RegisterPage() {
 
   if (!auth.available) {
     return (
-      <section className="auth-card">
-        <BackLink to="/">Kembali ke beranda</BackLink>
-        <h1>Buat akun Barter</h1>
+      <section className="auth-card auth-card--focused">
+        <PageHeading title="Buat akun Barter" leading={<BackLink to="/">Kembali ke beranda</BackLink>} />
         <p className="inline-notice">
           Pendaftaran dinonaktifkan pada mode data contoh. Hubungkan proyek Supabase untuk membuat akun nyata.
         </p>
@@ -99,11 +99,13 @@ export function RegisterPage() {
   }
 
   return (
-    <section className="auth-card" aria-labelledby="register-title">
-      <BackLink to="/">Kembali ke beranda</BackLink>
-      <p className="eyebrow">Mulai dari sekitar</p>
-      <h1 id="register-title">Buat akun Barter</h1>
-      <p>Setelah mendaftar, lengkapi nama dan area. Pengguna Google tidak perlu membuat kata sandi Barter.</p>
+    <section className="auth-card auth-card--focused" aria-labelledby="register-title">
+      <PageHeading
+        kicker="Mulai dari sekitar"
+        title={<span id="register-title">Buat akun Barter</span>}
+        description="Setelah mendaftar, lengkapi nama dan area. Pengguna Google tidak perlu membuat kata sandi Barter."
+        leading={<BackLink to="/">Kembali ke beranda</BackLink>}
+      />
 
       {error && <p className="form-alert" role="alert">{error}</p>}
       {message && <p className="success-notice" role="status">{message}</p>}

@@ -2,6 +2,7 @@ import { useState, useRef, type ChangeEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { BackButton, ActionLink } from '../../components/NavigationLinks';
 import { Icon, type IconName } from '../../components/Icon';
+import { PageHeading } from '../../components/SurfacePrimitives';
 import { useToast } from '../../components/Toast';
 import { useAuth } from './AuthProvider';
 
@@ -35,8 +36,7 @@ export function AccountPage() {
   if (!auth.available) {
     return (
       <section className="account-page">
-        <BackButton fallback="/" />
-        <h1>Akun</h1>
+        <PageHeading title="Akun" leading={<BackButton fallback="/" />} />
         <p>Mode data contoh tidak membuat sesi atau profil palsu.</p>
         <ActionLink to="/auth/login">Lihat cara masuk</ActionLink>
       </section>
@@ -130,9 +130,7 @@ export function AccountPage() {
 
   return (
     <section className="account-page">
-      <BackButton fallback="/" />
-      <p className="eyebrow">Akun warga</p>
-      <h1>Akun</h1>
+      <PageHeading kicker="Akun warga" title="Akun" leading={<BackButton fallback="/" />} />
 
       <div className="account-profile-card">
         <div className="account-avatar-wrapper">
@@ -203,7 +201,7 @@ export function AccountPage() {
         <dd><ActionLink to="/onboarding">Lihat kelengkapan akun</ActionLink></dd>
       </dl>
 
-      <nav className="settings-menu-list" aria-label="Menu akun">
+      <nav className="settings-menu settings-menu-list" aria-label="Kelola akun">
         {menuItems.map(item => (
           <Link key={item.to} to={item.to} className="settings-menu-item" aria-label={item.title}>
             <div className="settings-menu-item-left">

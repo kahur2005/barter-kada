@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { z } from 'zod';
+import { PageHeading } from '../../components/SurfacePrimitives';
 import { useAuth } from '../auth/AuthProvider';
 import { useOnboardingGateway } from './OnboardingContext';
 import type { OnboardingState, ServiceArea } from './types';
@@ -92,7 +93,7 @@ export function OnboardingPage() {
   if (auth.status === 'guest') return <Navigate to="/auth/login?returnTo=%2Fonboarding" replace />;
   if (!gateway || loadError) return <section className="status-panel"><h1>Onboarding belum dapat dimuat</h1><p role="alert">Layanan profil tidak tersedia. Muat ulang halaman untuk mencoba lagi.</p></section>;
   if (!state) return <section className="status-panel" role="status"><h1>Memuat data akun…</h1></section>;
-  return <div className="onboarding-page"><header><p className="eyebrow">Satu akun, dua cara berjualan</p><h1>{state.nextStep === 'complete' ? 'Kelola akun' : 'Lengkapi akun'}</h1><p>{state.nextStep === 'complete' ? 'Perbarui identitas publik atau lokasi privat tanpa mengubah transaksi yang sudah berjalan.' : 'Selesaikan dua tahap ini sebelum memasang barang, membuka toko Plus, mengobrol, atau bertransaksi.'}</p></header><Steps active={state.nextStep} />
+  return <div className="onboarding-page"><PageHeading kicker="Satu akun, dua cara berjualan" title={state.nextStep === 'complete' ? 'Kelola akun' : 'Lengkapi akun'} description={state.nextStep === 'complete' ? 'Perbarui identitas publik atau lokasi privat tanpa mengubah transaksi yang sudah berjalan.' : 'Selesaikan dua tahap ini sebelum memasang barang, membuka toko Plus, mengobrol, atau bertransaksi.'} /><Steps active={state.nextStep} />
     <div className={`onboarding-panel${state.nextStep === 'complete' ? ' account-settings' : ''}`}>{state.nextStep === 'profile' && <ProfileStep state={state} save={setState} />}{state.nextStep === 'location' && <LocationStep state={state} areas={areas} save={setState} />}{state.nextStep === 'complete' && <><ProfileStep state={state} save={setState} editing /><LocationStep state={state} areas={areas} save={setState} editing /><section className="completion-panel"><h2>Akun siap digunakan</h2><p>Profil dan lokasi privat telah lengkap. Nomor telepon tidak diperlukan untuk menggunakan Barter.</p><Link className="button" to="/">Lihat penawaran sekitar</Link></section></>}</div>
   </div>;
 }
