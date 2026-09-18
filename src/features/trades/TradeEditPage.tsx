@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { useListingGateway } from '../listings/ListingContext';
 import { StatusPanel } from '../../components/StatusPanel';
+import { PageHeading } from '../../components/SurfacePrimitives';
 import { formatRupiah } from '../../lib/money';
 import { useToast } from '../../components/Toast';
 import { useTradeGateway } from './TradeContext';
@@ -133,7 +134,7 @@ export function TradeEditPage() {
   if (room.lifecycle !== 'negotiating') return <StatusPanel title="Barter tidak lagi dapat diubah"><p>Perubahan hanya bisa diajukan saat kedua pihak masih menegosiasikan barter.</p><Link className="button" to={`/transactions/${id}`}>Kembali ke ruang barter</Link></StatusPanel>;
 
   return <section className="trade-editor">
-    <header><Link className="back-link" to={`/transactions/${id}`}>Kembali ke barter</Link><p className="eyebrow">Revisi versi {room.revision}</p><h1>Ubah penawaranmu</h1><p>Perubahan akan membuat versi baru dan menghapus status Siap serta Setuju kedua pihak.</p></header>
+    <PageHeading leading={<Link className="back-link" to={`/transactions/${id}`}>Kembali ke barter</Link>} kicker={`Revisi versi ${room.revision}`} title="Ubah penawaranmu" description="Perubahan akan membuat versi baru dan menghapus status Siap serta Setuju kedua pihak." />
     <form onSubmit={submit} className="stack-form">
       {items.map((item, index) => <fieldset key={item.clientId} className="trade-item-editor"><legend>Barangmu {index + 1}</legend>
         <div className="choice-grid"><label><input type="radio" name={`source-${item.clientId}`} checked={item.source === 'listing'} onChange={() => update(item.clientId, { source: 'listing' })} />Pilih listing milikmu</label><label><input type="radio" name={`source-${item.clientId}`} checked={item.source === 'direct'} onChange={() => update(item.clientId, { source: 'direct' })} />Tambah barang di sini</label></div>

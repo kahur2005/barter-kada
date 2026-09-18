@@ -76,6 +76,8 @@ function show(value: TradeRoom) {
 describe('trade room', () => {
   it('marks only the current revision ready', async () => {
     const gateway = show(tradeRoom());
+    expect(await screen.findByRole('list', { name: 'Tahap barter' })).toBeVisible();
+    expect(screen.getByText('Penawaran').closest('li')).toHaveAttribute('aria-current', 'step');
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Siap untuk versi 2' }));
     expect(gateway.markReady).toHaveBeenCalledWith(transactionId, 2, expect.stringMatching(/^[0-9a-f-]{36}$/));

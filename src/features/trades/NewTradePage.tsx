@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useRepository } from '../../app/providers';
 import { StatusPanel } from '../../components/StatusPanel';
+import { PageHeading } from '../../components/SurfacePrimitives';
 import { formatRupiah } from '../../lib/money';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../auth/AuthProvider';
@@ -96,12 +97,12 @@ export function NewTradePage() {
   if (target.isPending || conversation.isPending || mine.isPending || auth.status === 'loading') return <StatusPanel title="Menyiapkan tawaran barter…" />;
   if (target.error || conversation.error || mine.error || !target.data) return <StatusPanel title="Tawaran barter tidak dapat disiapkan" error><Link to={`/listings/${listingId}`}>Kembali ke listing</Link></StatusPanel>;
   return <section className="trade-editor">
-    <header>
-      <Link className="back-link" to={`/listings/${listingId}`}>Kembali ke listing</Link>
-      <p className="eyebrow">Penawaran barter</p>
-      <h1>Ajukan barter untuk {target.data.title}</h1>
-      <p>Pemilik menawarkan listing ini. Pilih listing milikmu atau masukkan barang yang ingin kamu tukarkan.</p>
-    </header>
+    <PageHeading
+      leading={<Link className="back-link" to={`/listings/${listingId}`}>Kembali ke listing</Link>}
+      kicker="Penawaran barter"
+      title={`Ajukan barter untuk ${target.data.title}`}
+      description="Pemilik menawarkan listing ini. Pilih listing milikmu atau masukkan barang yang ingin kamu tukarkan."
+    />
 
     <div className="trade-target-summary" aria-label="Listing target yang akan dibarter">
       {target.data.images?.[0]?.url ? (

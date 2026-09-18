@@ -4,11 +4,24 @@ import { Link, useParams } from 'react-router-dom';
 import { Dialog } from '../../components/Dialog';
 import { StatusPanel } from '../../components/StatusPanel';
 import { Icon } from '../../components/Icon';
+import { ActionDock, PageHeading, StageRail } from '../../components/SurfacePrimitives';
 import { formatRupiah } from '../../lib/money';
 import { useToast } from '../../components/Toast';
 import { StuckTransactionPanel } from '../shared/StuckTransactionPanel';
 import { useTradeGateway } from './TradeContext';
 import type { TradeItem, TradeRoom } from './types';
+
+const tradeStages = [
+  { id: 'offer', label: 'Penawaran' },
+  { id: 'agreement', label: 'Sepakat' },
+  { id: 'handover', label: 'Serah terima' },
+] as const;
+
+function tradeStage(lifecycle: 'negotiating' | 'agreed' | 'completed' | 'cancelled') {
+  if (lifecycle === 'completed') return 'handover';
+  if (lifecycle === 'agreed') return 'agreement';
+  return 'offer';
+}
 
 function Package({ title, status, items }: { title: string; status: string; items: TradeItem[] }) {
   const badgeClass = status === 'Setuju' ? 'badge badge-success' : status === 'Siap' ? 'badge badge-info' : 'badge badge-warning';
@@ -91,14 +104,13 @@ export function TradeRoomPage() {
     else if (room.lifecycle === 'negotiating') setDialog('approve');
   };
   return <section className="trade-room">
-    <header className="trade-heading">
-      <div>
-        <p className="eyebrow">Barter · Versi {room.revision}</p>
-        <h1>Barter dengan {room.counterpart.name}</h1>
-        <p>{room.lifecycle === 'negotiating' ? 'Susun dan tinjau paket yang sama sebelum menyetujui.' : 'Kesepakatan tersimpan sebagai snapshot.'}</p>
-      </div>
-      <Link className="text-button" to={`/chat/${room.conversationId}`}>Buka chat</Link>
-    </header>
+    <PageHeading
+      kicker={`Barter · Versi ${room.revision}`}
+      title={`Barter dengan ${room.counterpart.name}`}
+      description={room.lifecycle === 'negotiating' ? 'Susun dan tinjau paket yang sama sebelum menyetujui.' : 'Kesepakatan tersimpan sebagai snapshot.'}
+      actions={<Link className="text-button" to={`/chat/${room.conversationId}`}>Buka chat</Link>}
+    />
+    {room.lifecycle !== 'cancelled' && <StageRail label="Tahap barter" stages={tradeStages} current={tradeStage(room.lifecycle)} />}
 
     {room.lifecycle === 'negotiating' && (
       <div className="safety-card" style={{ marginBottom: '16px' }}>
@@ -118,7 +130,7 @@ export function TradeRoomPage() {
     <p className="revision-warning">Setiap perubahan barang, foto, detail, jumlah, atau uang membuat versi baru dan mereset status Siap serta Setuju kedua pihak.</p>
     <StuckTransactionPanel followUp={room.receiptFollowUp} counterpartLabel={room.counterpart.name} pending={adminHelp.isPending} onRequest={gateway.requestAdminHelp ? description => adminHelp.mutateAsync(description).then(() => undefined) : undefined} />
     {action.error && <p className="form-alert" role="alert">Status belum tersimpan. Muat versi terbaru lalu coba lagi; persetujuan tidak dijalankan otomatis.</p>}
-    <TradeActions room={room} pending={action.isPending} onApprove={trigger} onReceive={() => setDialog('receive')} onTopup={() => setDialog('topup')} onCancel={() => setDialog('cancel')} />
+    <ActionDock label="Aksi barter" primary={<TradeActions room={room} pending={action.isPending} onApprove={trigger} onReceive={() => setDialog('receive')} onTopup={() => setDialog('topup')} onCancel={() => setDialog('cancel')} />} />
     {dialog === 'approve' && <Dialog title={`Setujui barter versi ${room.revision}?`} onClose={() => setDialog(null)}><p>Tinjau seluruh barang kedua pihak dan tambahan uang. Persetujuan ini hanya berlaku untuk versi {room.revision}.</p><div className="form-actions"><button className="button secondary" onClick={() => setDialog(null)}>Kembali meninjau</button><button className="button" disabled={action.isPending} onClick={() => run('approve')}>Ya, setujui barter</button></div></Dialog>}
     {dialog === 'receive' && <Dialog title="Konfirmasi barang diterima" onClose={() => setDialog(null)}><p>Saya sudah memeriksa barang dari {room.counterpart.name}, mencocokkannya dengan kesepakatan, dan menerimanya.</p><div className="form-actions"><button className="button secondary" onClick={() => setDialog(null)}>Belum</button><button className="button" disabled={action.isPending} onClick={() => run('receive')}>Ya, barang diterima</button></div></Dialog>}
     {dialog === 'topup' && room.topup && <Dialog title="Konfirmasi uang tambahan" onClose={() => setDialog(null)}><p>Sudah menerima {formatRupiah(room.topup.amountRupiah)} dari {room.counterpart.name} setelah memeriksa uang masuk?</p><div className="form-actions"><button className="button secondary" onClick={() => setDialog(null)}>Belum</button><button className="button" disabled={action.isPending} onClick={() => run('topup')}>Ya, uang diterima</button></div></Dialog>}
