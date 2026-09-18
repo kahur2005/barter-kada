@@ -10,7 +10,7 @@ export function StoreRow({ store }: { store: PublicStore }) {
         <div className="store-avatar">
           <Icon name="shop" />
         </div>
-        <span className="badge badge-purple">Toko UMKM</span>
+        <span className="badge badge-neutral">Toko UMKM</span>
       </div>
       <div className="listing-content">
         <h3>

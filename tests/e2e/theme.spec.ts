@@ -5,7 +5,7 @@ test('standard search and support surfaces preserve dark-theme contrast', async 
   const listing = page.locator('.listing-row').filter({ has: page.getByRole('link', { name: 'Kursi kayu bekas' }) });
   const category = page.getByRole('button', { name: 'Makanan' });
 
-  await expect(page.getByRole('searchbox')).toHaveCSS('background-color', 'rgb(26, 29, 35)');
+  await expect(page.locator('.search-form')).toHaveCSS('background-color', 'rgb(26, 29, 35)');
   await expect(page.getByRole('searchbox')).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(category).toHaveCSS('background-color', 'rgb(26, 29, 35)');
   await expect(listing).toHaveCSS('background-color', 'rgb(26, 29, 35)');

@@ -48,7 +48,7 @@ export function ListingRow({ listing, eager = false, featured = false }: { listi
       <div className="listing-image-wrap">
         <ProductImage image={listing.images[0]} eager={eager} />
         <div className="listing-card-badges">
-          {listing.promoted && <span className="badge badge-purple">Dipromosikan</span>}
+          {listing.promoted && <span className="badge badge-neutral">Dipromosikan</span>}
           {isFree && <span className="badge badge-success">Gratis</span>}
           {isBarter && <span className="badge badge-warning">Bisa Barter</span>}
           {listing.fulfillment === 'preorder' && <span className="badge badge-info">Pre-order</span>}

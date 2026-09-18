@@ -1,7 +1,7 @@
 .notifications-page, .review-page, .review-list-page, .reviews-page, .report-page, .admin-reports-page, .admin-report-detail, .admin-settings-page, .admin-analytics-page { width: min(100%, 900px); margin-inline: auto; }
 .notification-list, .review-list, .admin-report-list, .admin-history { border-top: 1px solid var(--rule); }
 .notification-row, .review-card, .admin-report-list article { padding: 18px 0; border-bottom: 1px solid var(--rule); background: transparent; }
-.notification-row.unread { padding-left: 14px; border-left: 4px solid var(--action); }
+.notification-row.unread { padding-inline-start: 15px; border-inline-start: 1px solid var(--action); }
 .review-reply, .case-context, .metrics-window, .metric-card { padding: 16px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
 .metrics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .metrics-grid strong { display: block; color: var(--action); font-size: clamp(1.4rem, 7vw, 2.4rem); }
