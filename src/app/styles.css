@@ -202,7 +202,7 @@ ul { padding-left: 20px; }
 .editor-actions { display: flex; gap: 12px; position: sticky; bottom: 0; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); background: var(--paper); border-top: 1px solid var(--rule); }
 .editor-actions .button { flex: 1; min-width: 0; }
 .draft-save { justify-self: center; }
-@media (min-width: 600px) { .choice-grid { grid-template-columns: repeat(3, 1fr); } .listing-steps li { font-size: 13px; } }
+@media (min-width: 600px) { .choice-grid { grid-template-columns: repeat(3, 1fr); } }
 .my-listings { max-width: 860px; margin: 0 auto; display: grid; gap: 20px; }
 .my-listings > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .my-listings > header > div { display: grid; gap: 6px; }
@@ -932,24 +932,6 @@ input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="
 .trade-target-info p {
   font-size: 13px;
   color: var(--muted);
-}
-
-/* Listing Step Stepper Button */
-.listing-steps button {
-  background: none;
-  border: 0;
-  padding: 0;
-  width: 100%;
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-.listing-steps button:disabled {
-  cursor: not-allowed;
-  background: transparent;
 }
 
 /* My Listings thumbnail in owner list */
