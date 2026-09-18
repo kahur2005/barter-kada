@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('standard search and support surfaces preserve dark-theme contrast', async ({ page }) => {
+test('standard search and support surfaces preserve dark-theme contrast', async ({ page }, testInfo) => {
   await page.goto('/search');
   const listing = page.locator('.listing-row').filter({ has: page.getByRole('link', { name: 'Kursi kayu bekas' }) });
   const category = page.getByRole('button', { name: 'Makanan' });
@@ -15,7 +15,18 @@ test('standard search and support surfaces preserve dark-theme contrast', async 
   await expect(category).toHaveCSS('background-color', 'rgb(214, 255, 75)');
   await expect(category).toHaveCSS('color', 'rgb(17, 19, 24)');
 
-  await page.getByRole('button', { name: 'Buka bantuan pelanggan' }).click();
+  const supportLauncher = page.getByRole('button', { name: 'Buka bantuan pelanggan' });
+  if (testInfo.project.name.startsWith('mobile')) {
+    const [launcherBox, navigationBox] = await Promise.all([
+      supportLauncher.boundingBox(),
+      page.getByRole('navigation', { name: 'Navigasi utama' }).boundingBox(),
+    ]);
+    expect(launcherBox).not.toBeNull();
+    expect(navigationBox).not.toBeNull();
+    expect(launcherBox!.y + launcherBox!.height).toBeLessThanOrEqual(navigationBox!.y - 8);
+  }
+
+  await supportLauncher.click();
   const assistantMessage = page.getByText(/Halo! Saya bantuan Barter/);
   await expect(assistantMessage).toHaveCSS('background-color', 'rgb(36, 39, 46)');
   await expect(assistantMessage).toHaveCSS('color', 'rgb(255, 255, 255)');

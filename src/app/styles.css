@@ -137,7 +137,7 @@ svg { display: block; width: 22px; height: 22px; flex-shrink: 0; }
 .support-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; padding: 10px; border-top: 1px solid var(--rule); background: var(--paper); }
 .support-composer textarea { min-height: 48px; resize: none; font-size: 14px; }
 .support-composer .button { min-height: 48px; padding: 10px 12px; }
-@media (max-width: 520px) { .support-chat { right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); left: 10px; } .support-launcher { justify-self: end; } .support-panel { width: 100%; max-height: calc(100vh - 86px); } }
+@media (max-width: 520px) { .support-chat { right: 10px; bottom: calc(76px + env(safe-area-inset-bottom)); left: 10px; z-index: 40; } .support-launcher { justify-self: end; } .support-panel { width: 100%; max-height: min(600px, calc(100dvh - 199px - env(safe-area-inset-bottom))); } }
 @media (prefers-reduced-motion: reduce) { .support-launcher { transition: none; } }
 .discovery-heading { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .area-button { display: inline-flex; align-items: center; gap: 6px; color: var(--action); padding: 6px 0; font-weight: 600; font-size: 14px; }
