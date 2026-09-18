@@ -19,6 +19,13 @@ function show(path: string, authGateway: AuthGateway | null) {
 }
 
 describe('authentication pages', () => {
+  it('shows the listing return intent on the focused login surface', () => {
+    const auth = gateway(); show('/auth/login?returnTo=/listings/new', auth);
+    const heading = screen.getByRole('heading', { name: 'Masuk, lalu pasang barangmu.' });
+    expect(heading.closest('section')).toHaveClass('auth-card--focused');
+    expect(screen.getByText('Lanjutkan untuk memasang penawaranmu.')).toBeVisible();
+  });
+
   it('validates email and password before trying password login', async () => {
     const user = userEvent.setup(); const auth = gateway(); show('/auth/login', auth);
     await user.type(screen.getByLabelText('Email'), 'bukan-email');

@@ -46,6 +46,20 @@ export default defineConfig(({ mode }) => {
               return;
             }
 
+            if (url === '/api/ai-chat') {
+              try {
+                const mod = await server.ssrLoadModule('./api/ai-chat.ts');
+                await mod.default(req, res);
+              } catch (error) {
+                console.error('Error executing /api/ai-chat:', error);
+                if (!res.headersSent) {
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: 'INTERNAL_SERVER_ERROR' }));
+                }
+              }
+              return;
+            }
+
             if (url === '/api/profile-avatar') {
               try {
                 const mod = await server.ssrLoadModule('./api/profile-avatar.ts');

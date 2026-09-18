@@ -1,0 +1,158 @@
+.focused-header,
+.focused-journey {
+  --paper: #111318;
+  --surface: #1a1d23;
+  --ink: #ffffff;
+  --muted: #b7bac4;
+  --action: #d6ff4b;
+  --action-hover: #c6ee40;
+  --action-light: rgba(214, 255, 75, 0.12);
+  --action-border: rgba(214, 255, 75, 0.46);
+  --danger: #ff957d;
+  --danger-bg: #2a1919;
+  --success: #d6ff4b;
+  --success-bg: #1d2516;
+  --rule: #353942;
+  color: var(--ink);
+  background: #111318;
+  color-scheme: dark;
+}
+
+.focused-header {
+  border-color: #2a2d34;
+}
+
+.focused-header .header-inner {
+  max-width: 1440px;
+  padding-inline: clamp(18px, 4vw, 56px);
+}
+
+.focused-header .wordmark {
+  color: #ffffff;
+}
+
+.focused-header .wordmark span {
+  color: #d6ff4b;
+}
+
+.focused-header ~ .preview-notice {
+  color: #111318;
+  background: #ff7a59;
+  font-weight: 750;
+}
+
+.focused-journey {
+  width: 100%;
+  max-width: none;
+  min-height: calc(100dvh - 57px);
+  margin: 0;
+  padding: 0;
+  overflow-x: clip;
+}
+
+.focused-journey ::selection {
+  color: #111318;
+  background: #d6ff4b;
+}
+
+.focused-journey,
+.focused-journey * {
+  scrollbar-color: #5b616c #17191e;
+}
+
+.focused-journey a {
+  color: #d6ff4b;
+  text-underline-offset: 0.22em;
+}
+
+.focused-journey :focus-visible {
+  outline: 3px solid #d6ff4b;
+  outline-offset: 3px;
+}
+
+.focused-journey input,
+.focused-journey select,
+.focused-journey textarea {
+  color: #ffffff;
+  caret-color: #d6ff4b;
+  background: #17191e;
+  border-color: #414650;
+}
+
+.focused-journey input::placeholder,
+.focused-journey textarea::placeholder {
+  color: #aeb2bd;
+  opacity: 1;
+}
+
+.focused-journey input:focus,
+.focused-journey select:focus,
+.focused-journey textarea:focus {
+  border-color: #d6ff4b;
+  box-shadow: 0 0 0 3px rgba(214, 255, 75, 0.16);
+}
+
+.focused-journey .button {
+  border-color: #d6ff4b;
+  border-radius: 14px;
+  color: #111318;
+  background: #d6ff4b;
+  font-weight: 800;
+}
+
+.focused-journey .button:hover:not(:disabled) {
+  color: #111318;
+  background: #e3ff7e;
+  border-color: #e3ff7e;
+}
+
+.focused-journey .button.secondary {
+  color: #ffffff;
+  background: transparent;
+  border-color: #4b505a;
+}
+
+.focused-journey .button.secondary:hover:not(:disabled) {
+  color: #d6ff4b;
+  background: rgba(214, 255, 75, 0.08);
+  border-color: #d6ff4b;
+}
+
+.focused-journey .button:disabled {
+  color: #858995;
+  background: #24272e;
+  border-color: #363a43;
+  opacity: 1;
+}
+
+.focused-journey .form-alert,
+.focused-journey .success-notice {
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  background: #2a1919;
+  color: #ffb09e !important;
+}
+
+.focused-journey .success-notice {
+  color: #d6ff4b !important;
+  background: #1d2516;
+}
+
+.focused-journey .inline-notice,
+.focused-journey .preview-form-notice {
+  color: #d5d7dd;
+  background: #1a1d23;
+  border: 1px solid #353942;
+  border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focused-journey *,
+  .focused-journey *::before,
+  .focused-journey *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

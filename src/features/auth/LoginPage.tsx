@@ -38,7 +38,7 @@ export function LoginPage() {
 
   if (!auth.available) {
     return (
-      <section className="auth-card">
+      <section className="auth-card auth-card--focused">
         <BackLink to="/">Kembali ke beranda</BackLink>
         <h1>Masuk ke Barter</h1>
         <p className="inline-notice">
@@ -92,11 +92,11 @@ export function LoginPage() {
   }
 
   return (
-    <section className="auth-card" aria-labelledby="login-title">
+    <section className="auth-card auth-card--focused" aria-labelledby="login-title">
       <BackLink to="/">Kembali ke beranda</BackLink>
-      <p className="eyebrow">Akun warga</p>
-      <h1 id="login-title">Masuk ke Barter</h1>
-      <p>Temukan barang dan usaha tetangga. Data lokasi persis tidak ditampilkan ke publik.</p>
+      <h1 id="login-title">{returnTo === '/listings/new' ? 'Masuk, lalu pasang barangmu.' : 'Masuk ke Barter'}</h1>
+      {returnTo === '/listings/new' && <p className="auth-intent">Lanjutkan untuk memasang penawaranmu.</p>}
+      <p>Temukan barang dan usaha tetangga. Lokasi tepat tidak pernah ditampilkan ke publik.</p>
 
       {error && <p className="form-alert" role="alert">{error}</p>}
 

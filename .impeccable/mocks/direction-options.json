@@ -1,0 +1,152 @@
+{
+  "title": "Pilih dunia visual untuk alur pasang listing",
+  "question": "Semua arah mempertahankan login, empat tahap listing, review, dan tombol konfirmasi. Pilih karakter visual yang paling tepat untuk pengguna mobile Barter.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Kartu Sirkulasi Warga",
+      "kicker": "THE ROLL",
+      "lineage": "kartu peminjaman perpustakaan dan kartu inventaris lingkungan",
+      "thesis": "Setiap barang mendapat kartu perjalanan baru sebelum beredar kembali di lingkungan.",
+      "palette": ["#17324D", "#F4EBD8", "#D94A32", "#E2B84B"],
+      "materials": ["kertas kartu hangat", "garis arsip", "cap karet", "tab indeks"],
+      "viewport": "Satu kartu item memenuhi layar; foto menjadi identitas utama, empat tab tahap tersusun di tepi, dan review berubah menjadi kartu publik sebelum cap TERBIT ditekan.",
+      "risk": "Bisa terasa administratif jika cap, foto, dan warna tidak diberi energi yang cukup.",
+      "raised": [
+        {
+          "from": "HyperCard stack",
+          "raise": "Setiap tahap tetap bisa diedit di tempat dan tombol kembali mengikuti jejak pengguna secara tepat."
+        },
+        {
+          "from": "Phosphor terminal",
+          "raise": "Status unggah, simpan, validasi, dan publikasi selalu tertulis jelas, bukan hanya lewat warna atau toast."
+        },
+        {
+          "from": "Origami sequence",
+          "raise": "Satu kartu listing terus bertambah lengkap dari tahap ke tahap, bukan terasa seperti empat formulir terpisah."
+        },
+        {
+          "from": "Iridescent edge",
+          "raise": "Warna cerah terkonsentrasi pada tab tahap dan status agar bidang baca tetap tenang."
+        }
+      ],
+      "comp": ".impeccable/mocks/decision/assigned.png"
+    },
+    {
+      "id": "model-pick",
+      "label": "Meja Packing Penjual",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "ritual memotret, mengecek, melabeli, dan menyiapkan barang untuk pembeli",
+      "thesis": "Membuat listing terasa seperti menyiapkan paket yang rapi, jujur, dan siap ditemukan tetangga.",
+      "palette": ["#164E63", "#FFFDF5", "#FF6B35", "#CBEA7B"],
+      "materials": ["label pengiriman", "kertas kraft", "selotip warna", "contact sheet foto"],
+      "viewport": "Area foto besar menjadi meja kerja; keputusan penting tampil sebagai label yang ditempel bertahap, lalu review merangkum semuanya seperti label paket sebelum dikirim ke feed.",
+      "risk": "Arah paling mudah dipahami, tetapi dapat terasa seperti aplikasi logistik jika konteks lingkungan tidak terus hadir.",
+      "comp": ".impeccable/mocks/decision/model-pick.png"
+    },
+    {
+      "id": "challenger-video",
+      "label": "Satu Barang Satu Layar",
+      "verdict": "competitive",
+      "lineage": "full-viewport vertical media surface",
+      "thesis": "Satu keputusan listing menguasai satu layar sehingga perhatian mobile tidak terpecah.",
+      "palette": ["#111318", "#FFFFFF", "#D6FF4B", "#FF7A59"],
+      "materials": ["foto penuh layar", "scrim gelap", "rel aksi vertikal"],
+      "viewport": "Foto barang memenuhi bagian atas layar, pilihan tahap aktif berada pada rel kanan, dan CTA lanjut menempel di bawah dengan satu keputusan utama setiap kali.",
+      "case": "Sangat akrab bagi pengguna mobile dan berani secara visual, tetapi perlu menahan gestur feed agar tugas formulir tetap jelas.",
+      "risk": "Dapat terasa seperti media sosial dan menyembunyikan konteks form yang perlu dibandingkan.",
+      "comp": ".impeccable/mocks/decision/challenger-video.png",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface.webp"
+    },
+    {
+      "id": "challenger-manual",
+      "label": "Manual Tab Transparan",
+      "verdict": "competitive",
+      "lineage": "boxed-software reference manual with acetate tabs",
+      "thesis": "Empat tahap listing menjadi lapisan transparan yang memperlihatkan apa yang sudah lengkap dan apa yang masih kurang.",
+      "palette": ["#F4C430", "#EF7D32", "#258B8B", "#3155A4"],
+      "materials": ["asetat susu", "papan tab warna", "lubang jilid", "slip errata"],
+      "viewport": "Tab warna di tepi menunjukkan seluruh perjalanan; lembar aktif melayang tipis di atas ringkasan listing dan error hadir sebagai slip merah yang menunjuk bidang terkait.",
+      "case": "Kejelasan tahap dan status sangat kuat, meski referensi manual teknis kurang dekat dengan kehidupan sehari-hari pengguna.",
+      "risk": "Bisa terasa terlalu teknis atau padat bila lapisan visual tidak disederhanakan untuk layar 320 piksel.",
+      "comp": ".impeccable/mocks/decision/challenger-manual.png",
+      "hero": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board.webp"
+    },
+    {
+      "id": "challenger-hypercard",
+      "label": "Stack Kartu Editable",
+      "verdict": "declined",
+      "lineage": "HyperCard shoebox stack",
+      "thesis": "Setiap tahap adalah kartu hitam-putih yang dapat diedit langsung.",
+      "palette": ["#FFFFFF", "#000000", "#8A8A8A"],
+      "materials": ["piksel satu-bit", "garis gambar tangan", "tombol terbalik"],
+      "viewport": "Satu kartu tetap dengan tombol yang membuka tahap berikutnya.",
+      "case": "Struktur wizard jelas, tetapi dunia komputer retro tidak mengenali konteks warga Jabodetabek.",
+      "kept": "Mode baca dan edit tetap berada pada objek yang sama.",
+      "risk": "Terasa seperti nostalgia komputer dan membatasi kekayaan foto barang.",
+      "hero": "https://impeccable.style/worlds/cards/medium-native-hypercard-stack-shoebox-hero.webp"
+    },
+    {
+      "id": "challenger-terminal",
+      "label": "Terminal Status Hidup",
+      "verdict": "declined",
+      "lineage": "green-phosphor terminal",
+      "thesis": "Setiap tindakan mencetak statusnya sendiri dalam riwayat yang tidak ambigu.",
+      "palette": ["#07110C", "#7CFF9B", "#2A6B3A"],
+      "materials": ["kaca gelap", "phosphor", "scanline"],
+      "viewport": "Alur listing menjadi transkrip langkah dan status dengan input di baris aktif.",
+      "case": "Status sangat eksplisit, tetapi bahasa terminal tidak inklusif bagi pengguna umum.",
+      "kept": "Status sistem selalu terlihat sebagai teks persisten.",
+      "risk": "Melelahkan untuk dibaca di luar ruangan dan menurunkan kepercayaan pengguna nonteknis.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-phosphor-terminal-midnight-hero.webp"
+    },
+    {
+      "id": "challenger-origami",
+      "label": "Lembaran yang Terbentuk",
+      "verdict": "declined",
+      "lineage": "origami fold sequence",
+      "thesis": "Listing tumbuh dari satu lembar kosong menjadi objek publik yang selesai.",
+      "palette": ["#E34B3F", "#F5F0E5", "#171717", "#C8A95A"],
+      "materials": ["serat kertas", "garis lipat", "tinta sumi"],
+      "viewport": "Satu bidang berubah bentuk setelah setiap keputusan pengguna.",
+      "case": "Progres terasa bermakna, tetapi metafora lipatan tidak menjelaskan foto, harga, dan penyerahan sejelas sistem form.",
+      "kept": "Tahap sebelumnya tetap terasa sebagai bagian dari hasil akhir.",
+      "risk": "Motion dan metafora dapat memperlambat tugas berulang.",
+      "hero": "https://impeccable.style/worlds/cards/paper-folds-pleats-deployable-orizuru-crane-sequence-hero.webp"
+    },
+    {
+      "id": "challenger-cloud",
+      "label": "Tepi Spektrum",
+      "verdict": "declined",
+      "lineage": "iridescent cloud edge",
+      "thesis": "Bidang kerja tetap tenang sementara warna hanya menandai batas perubahan status.",
+      "palette": ["#F7F8F8", "#48505A", "#91E4CF", "#DFA4D8"],
+      "materials": ["bidang putih", "tepi spektrum", "garis tipis"],
+      "viewport": "Form putih luas dengan pita warna tipis yang bergerak mengikuti tahap aktif.",
+      "case": "Rapi dan mudah dibaca, tetapi tidak cukup mengidentifikasi produk atau budaya pengguna.",
+      "kept": "Warna ekspresif ditempatkan pada batas dan status, bukan sebagai hiasan acak.",
+      "risk": "Kembali terasa terlalu sederhana dan lembut untuk menyelesaikan keluhan dull.",
+      "hero": "https://impeccable.style/worlds/cards/clouds-storms-auroras-iridescent-cloud-edge-hero.webp"
+    }
+  ],
+  "reroll": {
+    "registers": ["safer", "bolder"]
+  },
+  "buildPath": {
+    "value": "comp",
+    "toggle": true
+  },
+  "canon": true,
+  "canonCard": {
+    "label": "Marketplace mobile standar",
+    "thesis": "Wizard marketplace yang familier, dieksekusi dengan sangat rapi.",
+    "palette": ["#FFFFFF", "#111827", "#6B21A8", "#F3E8FF"],
+    "materials": ["kartu bersih", "foto produk", "stepper horizontal"],
+    "viewport": "Header, stepper empat tahap, kartu form putih, dan CTA tetap di bawah.",
+    "risk": "Mudah dipahami tetapi sulit dibedakan dari marketplace lain dan dekat dengan tampilan yang sekarang terasa dull.",
+    "comp": ".impeccable/mocks/decision/canon.png"
+  },
+  "steer": true
+}

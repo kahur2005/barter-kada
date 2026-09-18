@@ -10,32 +10,21 @@ import { useStoreGateway } from '../stores/StoreContext';
 import { Dialog } from '../../components/Dialog';
 import { Icon } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
+import { ListingMediaHero } from './ListingMediaHero';
+import { ListingProgressRail } from './ListingProgressRail';
+import { ListingReview } from './ListingReview';
+import { listingStages, stageForListingField, type ListingStage } from './listing-presenters';
 
-const stages = ['Penawaran', 'Detail', 'Ketersediaan', 'Tinjau'] as const;
 const categories = [['food', 'Makanan'], ['clothing', 'Pakaian'], ['home', 'Rumah & furnitur'], ['vehicles', 'Kendaraan'], ['garden', 'Hasil kebun'], ['other', 'Lainnya']] as const;
 const initialDraft: ListingDraft = {
   sourceLifecycle: null, listingId: null, expectedVersion: null, publisher: { kind: 'personal' }, modes: ['sale'], fulfillment: 'ready_stock', categoryId: '', title: '', description: '', condition: null, defects: '', negotiable: false, barter: null, basePriceRupiah: null, variants: [], assetIds: [], handoverMethods: [], preorder: null, catering: null,
 };
-
-function WizardSteps({ current, onSelect }: { current: number; onSelect: (index: number) => void }) {
-  return (
-    <ol className="listing-steps" aria-label="Tahap memasang penawaran">
-      {stages.map((label, index) => (
-        <li key={label} className={index <= current ? 'reached' : ''} aria-current={index === current ? 'step' : undefined}>
-          <button
-            type="button"
-            disabled={index > current}
-            onClick={() => onSelect(index)}
-            aria-label={`Tahap ${index + 1}: ${label}`}
-          >
-            <span>{index + 1}</span>
-            {label}
-          </button>
-        </li>
-      ))}
-    </ol>
-  );
-}
+const stageHeadings = [
+  'Pilih jenis penawaran',
+  'Jelaskan barang atau produk',
+  'Atur ketersediaan dan penyerahan',
+  'Tinjau penawaran',
+] as const;
 
 export function ListingEditorPage() {
   const gateway = useListingGateway();
@@ -44,12 +33,16 @@ export function ListingEditorPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const stageHeadingRef = useRef<HTMLHeadingElement>(null);
+  const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const pendingFocusRef = useRef<'heading' | 'errors' | null>(null);
 
   const { id: listingId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const requestedStoreId = searchParams.get('storeId');
   const [draft, setDraft] = useState<ListingDraft>(initialDraft);
-  const [stage, setStage] = useState(listingId ? 1 : 0);
+  const [stage, setStage] = useState<ListingStage>(listingId ? 1 : 0);
+  const [furthestReached, setFurthestReached] = useState<ListingStage>(listingId ? 3 : 0);
   const [issues, setIssues] = useState<ListingValidationIssue[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -64,6 +57,12 @@ export function ListingEditorPage() {
   const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
   const stores = useQuery({ queryKey: ['stores', 'mine', 'listing-editor'], queryFn: () => storesGateway!.getMyStores(), enabled: Boolean(storesGateway) });
   const patch = (next: Partial<ListingDraft>) => { setDraft(current => ({ ...current, ...next })); setDirty(true); setNotice(null); };
+
+  useEffect(() => {
+    if (pendingFocusRef.current === 'heading') stageHeadingRef.current?.focus();
+    if (pendingFocusRef.current === 'errors') errorSummaryRef.current?.focus();
+    pendingFocusRef.current = null;
+  }, [issues, stage]);
 
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => { if (dirty) event.preventDefault(); };
@@ -118,10 +117,30 @@ export function ListingEditorPage() {
     patch({ modes, negotiable: modes.includes('sale') ? draft.negotiable : false, barter: modes.includes('barter') ? draft.barter ?? { openToOffers: true, wantedDescription: '' } : null, basePriceRupiah: modes.includes('sale') ? draft.basePriceRupiah : null });
   }
 
+  function selectStage(nextStage: ListingStage, focus: 'heading' | 'errors' = 'heading') {
+    if (nextStage > furthestReached) return;
+    pendingFocusRef.current = focus;
+    setStage(nextStage);
+    window.scrollTo(0, 0);
+  }
+
+  function exposeValidation(validation: ListingValidationIssue[]) {
+    setIssues(validation);
+    if (validation.length === 0) return;
+    const owner = stageForListingField(validation[0].field);
+    pendingFocusRef.current = 'errors';
+    setFurthestReached(current => Math.max(current, owner) as ListingStage);
+    setStage(owner);
+    window.scrollTo(0, 0);
+  }
+
   function next() {
     setIssues(stageIssues);
     if (stageIssues.length === 0) {
-      setStage(value => Math.min(3, value + 1));
+      const nextStage = Math.min(3, stage + 1) as ListingStage;
+      setFurthestReached(current => Math.max(current, nextStage) as ListingStage);
+      pendingFocusRef.current = 'heading';
+      setStage(nextStage);
       window.scrollTo(0, 0);
     }
   }
@@ -132,7 +151,7 @@ export function ListingEditorPage() {
     try {
       const editingActive = draft.sourceLifecycle === 'active';
       const validation = editingActive ? validateListingDraft(draft, { intent: 'publish', now: new Date() }) : [];
-      if (validation.length > 0) { setIssues(validation); return false; }
+      if (validation.length > 0) { exposeValidation(validation); return false; }
       const result = editingActive ? await gateway.publish(draft) : await gateway.saveDraft(draft);
       setDraft(current => ({ ...current, sourceLifecycle: result.lifecycle, listingId: result.listingId, expectedVersion: result.version }));
       setDirty(false);
@@ -172,7 +191,7 @@ export function ListingEditorPage() {
   async function publish() {
     if (!gateway) return;
     const validation = validateListingDraft(draft, { intent: 'publish', now: new Date() });
-    setIssues(validation);
+    exposeValidation(validation);
     if (validation.length > 0) return;
     setPending(true); setNotice(null);
     try {
@@ -245,32 +264,36 @@ export function ListingEditorPage() {
     await processFiles(files);
   }
 
-  if (loading) return <section className="listing-editor" aria-live="polite"><h1>Memuat listing…</h1></section>;
+  if (loading) return <section className="listing-editor listing-editor--immersive" aria-live="polite"><h1>Memuat listing…</h1></section>;
 
   return (
-    <div className="listing-editor">
-      <header>
+    <div className="listing-editor listing-editor--immersive">
+      <header className="listing-editor-header">
         <Link className="back-link" to={listingId ? '/my/listings' : '/'} onClick={requestExit}>Kembali</Link>
-        <p className="eyebrow">Jual, barter, atau bagikan</p>
         <h1>{listingId ? 'Edit penawaran' : 'Pasang penawaran'}</h1>
-        <p>Tahap {stage + 1} dari 4: {stages[stage]}. Penawaran yang valid langsung terbit tanpa menunggu persetujuan admin.</p>
+        <p>Tahap {stage + 1} dari 4 · {listingStages[stage]}. Penawaran yang valid langsung terbit.</p>
       </header>
 
-      {!gateway && <p className="preview-form-notice">Form contoh — perubahan tidak disimpan atau diterbitkan.</p>}
-      <WizardSteps current={stage} onSelect={s => { setStage(s); window.scrollTo(0, 0); }} />
+      <div className="listing-editor-visual">
+        <ListingMediaHero draft={draft} stage={stage} assetPreviews={assetPreviews} />
+        <ListingProgressRail current={stage} furthestReached={furthestReached} onSelect={selectStage} />
+      </div>
 
-      {issues.length > 0 && (
-        <div className="form-alert" role="alert" tabIndex={-1}>
-          <strong>Periksa bagian berikut:</strong>
-          <ul>{issues.map((issue, index) => <li key={`${issue.field}-${index}`}>{issue.message}</li>)}</ul>
-        </div>
-      )}
-      {notice && <p className="success-notice" role="status">{notice}</p>}
+      <div className="listing-editor-content">
+        {!gateway && <p className="preview-form-notice">Form contoh — perubahan tidak disimpan atau diterbitkan.</p>}
 
-      <section className="listing-editor-panel">
+        {issues.length > 0 && (
+          <div id="listing-errors" ref={errorSummaryRef} className="form-alert" role="alert" tabIndex={-1}>
+            <strong>Periksa bagian berikut:</strong>
+            <ul>{issues.map((issue, index) => <li key={`${issue.field}-${index}`}>{issue.message}</li>)}</ul>
+          </div>
+        )}
+        {notice && <p className="success-notice" role="status">{notice}</p>}
+
+        <section className="listing-editor-panel" aria-labelledby="listing-stage-heading">
+          <h2 id="listing-stage-heading" ref={stageHeadingRef} tabIndex={-1}>{stageHeadings[stage]}</h2>
         {stage === 0 && (
           <>
-            <h2>Pilih jenis penawaran</h2>
             <div className="publisher-choice">
               <strong>Profil pribadi</strong>
               <span>Semua akun lengkap dapat menerbitkan dagangan, PO, dan catering.</span>
@@ -330,7 +353,6 @@ export function ListingEditorPage() {
 
         {stage === 1 && (
           <>
-            <h2>Jelaskan barang atau produk</h2>
             <label htmlFor="listing-title">Nama penawaran</label>
             <input
               id="listing-title"
@@ -511,7 +533,6 @@ export function ListingEditorPage() {
 
         {stage === 2 && (
           <>
-            <h2>Atur ketersediaan dan penyerahan</h2>
             <fieldset>
               <legend>Cara penyerahan</legend>
               <div className="choice-grid">
@@ -578,76 +599,29 @@ export function ListingEditorPage() {
         )}
 
         {stage === 3 && (
-          <>
-            <h2>Tinjau penawaran</h2>
-            <div className="listing-review">
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <span className="badge badge-info">{draft.publisher.kind === 'personal' ? 'Pribadi' : 'Toko'}</span>
-                {draft.modes.map(m => (
-                  <span key={m} className={`badge ${m === 'free' ? 'badge-success' : m === 'barter' ? 'badge-warning' : 'badge-info'}`}>
-                    {m === 'free' ? 'Gratis' : m === 'barter' ? 'Barter' : 'Jual'}
-                  </span>
-                ))}
-              </div>
-              <h3>{draft.title || 'Nama belum diisi'}</h3>
-              <p>{draft.description || 'Detail belum diisi.'}</p>
-
-              {draft.assetIds.length > 0 && (
-                <div style={{ margin: '8px 0' }}>
-                  <p className="sidebar-title">Pratinjau Foto ({draft.assetIds.length})</p>
-                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 0' }}>
-                    {draft.assetIds.map((id, idx) => (
-                      <div key={id} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--rule)', flexShrink: 0 }}>
-                        <img src={assetPreviews[id]} alt={`Foto ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        {idx === 0 && <span style={{ position: 'absolute', bottom: '2px', left: '2px', background: 'var(--action)', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '1px 4px', borderRadius: '2px' }}>UTAMA</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <dl>
-                <dt>Pemenuhan</dt>
-                <dd>{draft.fulfillment === 'ready_stock' ? 'Ready Stock' : draft.fulfillment === 'preorder' ? 'Pre-Order' : 'Catering'}</dd>
-                {draft.modes.includes('sale') && (
-                  <>
-                    <dt>Harga</dt>
-                    <dd><strong>{draft.basePriceRupiah ? `Rp ${Number(draft.basePriceRupiah).toLocaleString('id-ID')}` : 'Belum diisi'}</strong>{draft.negotiable ? ' (Bisa ditawar)' : ' (Harga tetap)'}</dd>
-                  </>
-                )}
-                {draft.condition && (
-                  <>
-                    <dt>Kondisi</dt>
-                    <dd>{draft.condition === 'new' ? 'Baru' : draft.condition === 'like_new' ? 'Seperti Baru' : draft.condition === 'good' ? 'Baik' : draft.condition === 'fair' ? 'Cukup' : 'Perlu Perbaikan'}</dd>
-                  </>
-                )}
-                <dt>Penyerahan</dt>
-                <dd>{draft.handoverMethods.map(h => h === 'pickup' ? 'Diambil' : h === 'meetup' ? 'Meet Up' : 'Diantar').join(', ') || 'Belum dipilih'}</dd>
-              </dl>
-            </div>
-            <p className="inline-notice">Lokasi tepat tidak ditampilkan. Penawaran memakai area perkiraan dari profil atau toko.</p>
-          </>
+          <ListingReview draft={draft} onEdit={selectStage} />
         )}
-      </section>
+        </section>
 
-      <div className="editor-actions">
-        <button className="button secondary" type="button" onClick={() => setStage(value => Math.max(0, value - 1))} disabled={stage === 0}>
-          Kembali
+        <div className="editor-actions">
+          <button className="button secondary" type="button" onClick={() => selectStage(Math.max(0, stage - 1) as ListingStage)} disabled={stage === 0}>
+            Kembali
+          </button>
+          {stage < 3 ? (
+            <button className="button" type="button" onClick={next}>
+              Lanjut ke {listingStages[stage + 1].toLocaleLowerCase('id-ID')}
+            </button>
+          ) : (
+            <button className="button" type="button" onClick={publish} disabled={!gateway || pending}>
+              {gateway ? (pending ? 'Menerbitkan…' : 'Terbitkan penawaran') : 'Publikasi tidak aktif'}
+            </button>
+          )}
+        </div>
+
+        <button className="text-button draft-save" type="button" onClick={saveDraft} disabled={!gateway || pending}>
+          {gateway ? (pending ? 'Menyimpan…' : draft.sourceLifecycle === 'active' ? 'Simpan perubahan' : 'Simpan draft') : 'Simpan draft tidak aktif'}
         </button>
-        {stage < 3 ? (
-          <button className="button" type="button" onClick={next}>
-            Lanjut ke {stages[stage + 1].toLocaleLowerCase('id-ID')}
-          </button>
-        ) : (
-          <button className="button" type="button" onClick={publish} disabled={!gateway || pending}>
-            {gateway ? (pending ? 'Menerbitkan…' : 'Terbitkan penawaran') : 'Publikasi tidak aktif'}
-          </button>
-        )}
       </div>
-
-      <button className="text-button draft-save" type="button" onClick={saveDraft} disabled={!gateway || pending}>
-        {gateway ? (pending ? 'Menyimpan…' : draft.sourceLifecycle === 'active' ? 'Simpan perubahan' : 'Simpan draft') : 'Simpan draft tidak aktif'}
-      </button>
 
       {exitDialog && (
         <Dialog title="Simpan perubahan sebelum keluar?" onClose={() => setExitDialog(false)}>

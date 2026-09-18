@@ -16,13 +16,58 @@ function gateway(): ListingGateway { return { saveDraft: vi.fn().mockResolvedVal
 function show(listingGateway: ListingGateway | null, path = '/listings/new', storeGateway: StoreGateway | null = null) { return render(<MemoryRouter initialEntries={[path]}><App repository={repository} authGateway={auth} onboardingGateway={onboarding} listingGateway={listingGateway} storeGateway={storeGateway} /></MemoryRouter>); }
 function storeGateway(): StoreGateway { return { getPlusStatus: vi.fn(), createBillingOrder: vi.fn(), simulateBilling: vi.fn(), createStore: vi.fn(), updateStore: vi.fn(), getMyStores: vi.fn().mockResolvedValue([{ id: '70000000-0000-4000-8000-000000000007', slug: 'dapur-rina', name: 'Dapur Rina', description: 'Menu rumahan.', category: 'Makanan', areaId: 'depok', areaLabel: 'Depok', status: 'active' }]) }; }
 
+async function reachReview(user: ReturnType<typeof userEvent.setup>) {
+  await screen.findByRole('heading', { name: 'Pasang penawaran' });
+  await user.selectOptions(screen.getByLabelText('Kategori'), 'home');
+  await user.click(screen.getByRole('button', { name: 'Lanjut ke detail' }));
+  await user.type(screen.getByLabelText('Nama penawaran'), 'Kursi kayu');
+  await user.type(screen.getByLabelText('Detail'), 'Kursi kayu kokoh untuk ruang makan.');
+  await user.selectOptions(screen.getByLabelText('Kondisi barang'), 'good');
+  await user.type(screen.getByLabelText(/Kekurangan/), 'Ada bekas pakai ringan.');
+  await user.type(screen.getByLabelText('Harga utama (rupiah)'), '120000');
+  await user.upload(screen.getByLabelText(/Foto aktual/), new File(['image'], 'kursi.png', { type: 'image/png' }));
+  await screen.findByText('Foto 1 — utama');
+  await user.click(screen.getByRole('button', { name: 'Lanjut ke ketersediaan' }));
+  await user.click(screen.getByLabelText('Meet up'));
+  await user.click(screen.getByRole('button', { name: 'Lanjut ke tinjau' }));
+}
+
 describe('listing editor', () => {
   it('shows all four stages and keeps personal publishing independent from Plus', async () => {
     show(gateway());
     expect(await screen.findByRole('heading', { name: 'Pasang penawaran' })).toBeVisible();
-    for (const label of ['Penawaran', 'Detail', 'Ketersediaan', 'Tinjau']) expect(screen.getByText(label)).toBeVisible();
+    for (const [index, label] of ['Penawaran', 'Detail', 'Ketersediaan', 'Tinjau'].entries()) {
+      expect(screen.getByRole('button', { name: `Tahap ${index + 1}: ${label}` })).toBeVisible();
+    }
+    expect(screen.getByRole('button', { name: 'Tahap 1: Penawaran' })).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('button', { name: 'Tahap 4: Tinjau' })).toBeDisabled();
     expect(screen.getByText(/Profil pribadi/)).toBeVisible();
     expect(screen.getByText(/Toko adalah fitur Plus/)).toBeVisible();
+  });
+
+  it('returns from review to an editable stage without losing the draft', async () => {
+    const user = userEvent.setup(); show(gateway());
+    await reachReview(user);
+
+    expect(screen.getByRole('button', { name: 'Tahap 4: Tinjau' })).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('heading', { name: 'Kursi kayu' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Edit detail penawaran' }));
+    expect(screen.getByRole('heading', { name: 'Jelaskan barang atau produk' })).toHaveFocus();
+    expect(screen.getByDisplayValue('Kursi kayu')).toBeVisible();
+  });
+
+  it('moves a failed final validation to its owning stage and focuses the summary', async () => {
+    const user = userEvent.setup(); show(gateway());
+    await reachReview(user);
+    await user.click(screen.getByRole('button', { name: 'Edit detail penawaran' }));
+    await user.clear(screen.getByLabelText('Nama penawaran'));
+    await user.click(screen.getByRole('button', { name: 'Tahap 4: Tinjau' }));
+    await user.click(screen.getByRole('button', { name: 'Terbitkan penawaran' }));
+
+    expect(screen.getByRole('button', { name: 'Tahap 2: Detail' })).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('alert')).toHaveFocus();
+    expect(screen.getAllByText('Nama penawaran harus 3–120 karakter.')).toHaveLength(2);
+    expect(screen.getByText('Foto 1 — utama')).toBeVisible();
   });
 
   it('asks how to handle unsaved listing changes before leaving the editor', async () => {

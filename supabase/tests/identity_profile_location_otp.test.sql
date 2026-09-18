@@ -1,5 +1,5 @@
 begin;
-select plan(21);
+select plan(23);
 
 select has_schema('private', 'private schema exists');
 select has_table('public', 'profiles', 'safe public profiles exist');
@@ -55,6 +55,21 @@ select throws_ok(
   $$ select public.set_location('test-depok', -6.0, 107.0, null) $$,
   'P0001', 'LOCATION_OUTSIDE_SERVICE_AREA',
   'publishing outside the enabled polygon is rejected'
+);
+
+reset role;
+delete from public.profiles where id = '10000000-0000-4000-8000-000000000001';
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000001', true);
+set local role authenticated;
+select lives_ok(
+  $$ select public.complete_profile('Rina Recovered', null) $$,
+  'profile command recreates a missing profile row for an existing auth user'
+);
+select is(
+  (select display_name from public.profiles where id = auth.uid()),
+  'Rina Recovered',
+  'profile recovery stores the actor display name'
 );
 
 reset role;

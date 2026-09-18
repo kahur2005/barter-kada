@@ -1,0 +1,81 @@
+.auth-card--focused {
+  width: min(100%, 34rem);
+  min-height: calc(100dvh - 57px);
+  margin: 0 auto;
+  padding: clamp(24px, 7vw, 72px) clamp(20px, 6vw, 48px) 48px;
+  align-content: start;
+  gap: 18px;
+}
+
+.auth-card--focused .back-link {
+  width: max-content;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-card--focused h1 {
+  max-width: 11ch;
+  margin-top: clamp(18px, 6vh, 54px);
+  font-size: clamp(2.55rem, 11vw, 4.9rem);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.auth-card--focused > p {
+  max-width: 52ch;
+  color: #b7bac4;
+}
+
+.auth-card--focused .auth-intent {
+  color: #ff7a59;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.auth-card--focused .stack-form {
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.auth-card--focused .stack-form label {
+  color: #d9dbe1;
+  font-size: 0.9rem;
+}
+
+.auth-card--focused input {
+  min-height: 56px;
+  border-radius: 12px;
+}
+
+.auth-card--focused .password-toggle-btn {
+  color: #d9dbe1;
+}
+
+.auth-card--focused .stack-form .button,
+.auth-card--focused > .button {
+  min-height: 58px;
+  margin-top: 10px;
+}
+
+.auth-card--focused .auth-divider {
+  color: #9ea2ad;
+}
+
+.auth-card--focused .auth-divider::before,
+.auth-card--focused .auth-divider::after {
+  border-color: #353942;
+}
+
+.auth-card--focused > p:last-child {
+  margin-top: 8px;
+  text-align: center;
+}
+
+@media (min-width: 48rem) {
+  .auth-card--focused {
+    width: min(100%, 42rem);
+    padding-top: clamp(48px, 9vh, 96px);
+  }
+}
