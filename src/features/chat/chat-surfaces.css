@@ -1,0 +1,13 @@
+.chat-inbox, .chat-room, .transactions-page { width: min(100%, 760px); margin-inline: auto; }
+.conversation-list, .transaction-list { border-top: 1px solid var(--rule); }
+.conversation-list > a, .transaction-list article { min-height: 84px; padding: 16px 0; border-bottom: 1px solid var(--rule); color: var(--ink); text-decoration: none; }
+.chat-header { position: sticky; top: 57px; z-index: 12; padding: 10px 0 14px; background: var(--paper); border-bottom: 1px solid var(--rule); }
+.chat-privacy-note { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 14px; margin-top: 18px; padding: 14px 0; border-block: 1px solid var(--rule); color: var(--muted); }
+.chat-privacy-note > span { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); color: var(--ink); }
+.message-list { min-height: 45vh; display: flex; flex-direction: column; gap: 12px; padding: 20px 0 190px; }
+.message { max-width: 82%; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 18px 18px 18px 4px; background: var(--surface); }
+.message.own { align-self: flex-end; color: #111318; background: var(--action); border-color: var(--action); border-radius: 18px 18px 4px 18px; }
+.message.own footer { color: rgb(17 19 24 / 68%); }
+.chat-composer, .blocked-notice { position: fixed; inset: auto 0 0; z-index: 25; padding: 10px max(18px, calc((100vw - 760px) / 2)) calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--rule); background: rgb(17 19 24 / 98%); }
+.chat-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.chat-composer textarea { min-height: 52px; max-height: 132px; resize: vertical; border-radius: 18px; }

@@ -10,6 +10,7 @@ import './features/auth/auth-journey.css';
 import './features/auth/account-surfaces.css';
 import './features/listings/listing-editor.css';
 import './features/discovery/discovery.css';
+import './features/chat/chat-surfaces.css';
 
 const root = createRoot(document.getElementById('root')!);
 async function start() {

@@ -30,6 +30,7 @@ describe('private chat pages', () => {
   it('fetches committed messages, marks the cursor, and sends text with a client id', async () => {
     const user = userEvent.setup(); const gateway = show(`/chat/${conversationId}`);
     expect(await screen.findByText('Masih tersedia?')).toBeVisible();
+    expect(await screen.findByRole('note', { name: 'Privasi lokasi' })).toHaveTextContent('Lokasi tepat tetap privat');
     expect(gateway.markRead).toHaveBeenCalledWith(conversationId, 1);
     await user.type(screen.getByLabelText('Pesan'), 'Masih, silakan.');
     await user.click(screen.getByRole('button', { name: 'Kirim' }));
