@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
 import { App } from './App';
+import './styles.css';
 import type { DiscoveryRepository } from '../features/discovery/repository';
 import { createPreviewRepository } from '../features/discovery/preview-repository';
 import { listingSchema } from '../features/discovery/types';
@@ -92,4 +93,13 @@ it('keeps the Barter shell consistent while focused tasks remove competing navig
   expect(screen.getByRole('link', { name: /Notifikasi/ })).toBeVisible();
   expect(screen.getAllByRole('navigation', { name: 'Navigasi utama' })).toHaveLength(2);
   expect(screen.getByRole('button', { name: 'Buka bantuan pelanggan' })).toBeVisible();
+});
+
+it('uses contrast-safe action colors on standard search controls', async () => {
+  show('/search');
+  await screen.findByRole('link', { name: 'Kursi kayu bekas' });
+
+  expect(getComputedStyle(screen.getByRole('button', { name: 'Cari' })).color).toBe('rgb(17, 19, 24)');
+  expect(getComputedStyle(screen.getByRole('button', { name: 'Reset', hidden: true })).backgroundColor).toBe('rgb(26, 29, 35)');
+  expect(getComputedStyle(screen.getByRole('button', { name: 'Buka bantuan pelanggan' })).color).toBe('rgb(17, 19, 24)');
 });
