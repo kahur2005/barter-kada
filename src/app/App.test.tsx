@@ -103,3 +103,18 @@ it('uses contrast-safe action colors on standard search controls', async () => {
   expect(getComputedStyle(screen.getByRole('button', { name: 'Reset', hidden: true })).backgroundColor).toBe('rgb(26, 29, 35)');
   expect(getComputedStyle(screen.getByRole('button', { name: 'Buka bantuan pelanggan' })).color).toBe('rgb(17, 19, 24)');
 });
+
+it('uses dark ink for lime category and support message states', async () => {
+  const user = userEvent.setup();
+  show('/search');
+  await screen.findByRole('link', { name: 'Kursi kayu bekas' });
+  const category = screen.getByRole('button', { name: 'Makanan' });
+
+  await user.click(category);
+  expect(getComputedStyle(category).color).toBe('rgb(17, 19, 24)');
+
+  await user.click(screen.getByRole('button', { name: 'Buka bantuan pelanggan' }));
+  await user.type(screen.getByRole('textbox', { name: 'Pesan ke bantuan pelanggan' }), 'Saya perlu bantuan');
+  await user.click(screen.getByRole('button', { name: 'Kirim pertanyaan' }));
+  expect(getComputedStyle(await screen.findByText('Saya perlu bantuan')).color).toBe('rgb(17, 19, 24)');
+});
