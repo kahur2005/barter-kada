@@ -1,0 +1,9 @@
+Use case: ui-mockup
+Asset type: polished portrait mobile web screen for a neighborhood marketplace
+Primary request: Create a high-fidelity practical final-review screen for Barter, an Indonesian mobile-first marketplace. Treat the whole listing as one accumulated neighborhood inventory record / Indonesian library borrower card, not a stack of generic cards.
+Scene/backdrop: warm archival card-stock ground #F4EBD8 with subtle paper grain and flat-color print design.
+Subject: final review record for a simple wooden chair listing with a realistic but synthetic chair photo.
+Style/medium: refined production UI inspired by Indonesian library borrower cards and neighborhood inventory cards. Deep navy #17324D ink, rubber-stamp red #D94A32, mustard #E2B84B. Ruled archival fields, four small stage index tabs, subtle punched-card details, and one energetic red stamp accent.
+Composition/framing: portrait mobile full screen, 390x844 aspect, one coherent listing record with header, stage tabs, chair photo, fields, and fixed full-width thumb-sized CTA.
+Text (verbatim): "barter.", "Tinjau penawaran", "Tahap 4 dari 4", "Kursi kayu", "Rp 120.000", "Baik", "Meet up", "Lokasi tepat tetap privat", "Terbitkan penawaran".
+Constraints: no gradients, glassmorphism, social-feed chrome, desktop frame, watermark, unrelated logos, claims, testimonials, people, or unrelated copy. Operationally clear, WCAG-minded, and shippable.

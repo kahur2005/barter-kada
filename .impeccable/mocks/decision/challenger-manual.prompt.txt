@@ -1,0 +1,6 @@
+Use case: ui-mockup
+Asset type: polished portrait mobile web screen, approximately 390×844, for a neighborhood marketplace
+Primary request: High-fidelity shippable UI mockup for Barter’s final listing review before publishing
+Subject: One complete mobile screen with Indonesian listing-review copy, a synthetic wooden-chair photo, explicit privacy messaging, and a fixed publish action.
+Direction: Manual Tab Transparan, translating a boxed-software reference manual with punched acetate divider leaves into a modern mobile listing wizard. Use chrome yellow #F4C430, oxide orange #EF7D32, teal #258B8B, and ultramarine #3155A4 with milk-translucent layers, a stepped four-tab rail, clear permanent labels, and a thumb-friendly fixed bottom action.
+Constraints: practical production UI; portrait viewport; strong contrast; no generic purple marketplace styling; no social-feed controls; no unrelated logos; no watermark.

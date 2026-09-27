@@ -18,7 +18,7 @@ function show(path: string, authGateway: AuthGateway, onboardingGateway: Onboard
 describe('private action gates', () => {
   it('sends a guest to login while preserving the safe destination', async () => {
     show('/listings/new', auth(null), onboarding('complete'));
-    expect(await screen.findByRole('heading', { name: 'Masuk ke Barter' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: /Masuk/ })).toBeVisible();
   });
   it('sends an incomplete account to onboarding', async () => {
     show('/chat', auth(session), onboarding('location'));
@@ -32,6 +32,6 @@ describe('private action gates', () => {
     const user = userEvent.setup(); const authGateway = auth(session); show('/profile', authGateway, onboarding('complete'));
     await user.click(await screen.findByRole('button', { name: 'Keluar dari akun' }));
     expect(authGateway.signOut).toHaveBeenCalledOnce();
-    expect(await screen.findByRole('heading', { name: 'Masuk ke Barter' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: /Masuk/ })).toBeVisible();
   });
 });

@@ -1,0 +1,6 @@
+Use case: ui-mockup
+Asset type: polished portrait mobile web screen, approximately 390×844, for a neighborhood marketplace
+Primary request: High-fidelity shippable UI mockup for Barter’s final listing review before publishing, deliberately representing the familiar category-standard marketplace approach.
+Subject: One complete mobile screen with Indonesian listing-review copy, a synthetic wooden-chair photo, explicit privacy messaging, and a fixed publish action.
+Direction: Marketplace mobile standard using crisp white #FFFFFF, ink #111827, royal purple #6B21A8, and pale lavender #F3E8FF. Use a conventional app bar, four-step stepper, clean review card, metadata rows, edit actions, privacy callout, and fixed purple CTA.
+Constraints: practical production UI; portrait viewport; excellent spacing and accessibility; no social engagement controls; no unrelated logos; no watermark.

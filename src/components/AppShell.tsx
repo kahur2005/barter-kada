@@ -6,6 +6,7 @@ import { useRepository } from '../app/providers';
 import { useScrollRestoration } from '../app/useScrollRestoration';
 import { useAuth } from '../features/auth/AuthProvider';
 import { useNotificationGateway } from '../features/notifications/NotificationContext';
+import { CustomerSupportChat } from './CustomerSupportChat';
 
 const navigation = [
   { path: '/', text: 'Beranda', icon: 'home' },
@@ -43,6 +44,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Show bottom navigation across all standard browsing and hub screens
   const showBottomNav = ['/', '/search', '/stores', '/chat', '/profile', '/my/listings', '/transactions', '/notifications'].includes(pathname);
   const isImmersive = ['/listings/new'].some(p => pathname.startsWith(p)) || pathname.includes('/edit') || (pathname.startsWith('/chat/') && pathname !== '/chat');
+  const focusedJourney =
+    pathname === '/auth/login' ||
+    pathname === '/listings/new' ||
+    /^\/my\/listings\/[^/]+\/edit$/.test(pathname);
 
   const [online, setOnline] = useState(navigator.onLine);
   useEffect(() => {
@@ -70,25 +75,29 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
       <a className="skip-link" href="#main">Lewati ke isi</a>
-      <header className="site-header">
+      <header className={`site-header${focusedJourney ? ' focused-header' : ''}`}>
         <div className="header-inner">
           <Link className="wordmark" to="/" aria-label="Barter beranda">
             barter<span aria-hidden="true">.</span>
           </Link>
-          <span className="header-description">Dari sekitar, untuk sekitar.</span>
-          <Navigation className="desktop-nav" />
-          <Link
-            to="/notifications"
-            className="icon-button notification-link"
-            aria-label={`Notifikasi${unreadCount > 0 ? ` (${unreadCount} belum dibaca)` : ''}`}
-          >
-            <Icon name="bell" />
-            {unreadCount > 0 && (
-              <span className="notification-badge-dot" aria-hidden="true">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </Link>
+          {!focusedJourney && (
+            <>
+              <span className="header-description">Dari sekitar, untuk sekitar.</span>
+              <Navigation className="desktop-nav" />
+              <Link
+                to="/notifications"
+                className="icon-button notification-link"
+                aria-label={`Notifikasi${unreadCount > 0 ? ` (${unreadCount} belum dibaca)` : ''}`}
+              >
+                <Icon name="bell" />
+                {unreadCount > 0 && (
+                  <span className="notification-badge-dot" aria-hidden="true">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            </>
+          )}
         </div>
       </header>
       {source === 'preview' && (
@@ -101,11 +110,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
       <main
         id="main"
-        className={`page-shell ${showBottomNav ? 'with-navigation' : isImmersive ? 'with-actions' : ''}`}
+        className={`page-shell ${focusedJourney ? 'focused-journey' : showBottomNav ? 'with-navigation' : isImmersive ? 'with-actions' : ''}`}
       >
         {children}
       </main>
-      {showBottomNav && <Navigation className="bottom-nav" />}
+      {!focusedJourney && showBottomNav && <Navigation className="bottom-nav" />}
+      {!focusedJourney && <CustomerSupportChat />}
     </>
   );
 }
